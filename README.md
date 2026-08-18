@@ -5,7 +5,7 @@
 ## Project structure
 
 ```
-CSE3CWA-HealthCoverSim/
+Basilix-Leafy-AI/
 ├── database
 │
 ├── leafy-ai
