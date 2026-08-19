@@ -1,17 +1,17 @@
+import sys
 from detector import detect_health
 
-image_path = (
-    "C:/LeafyAI_Vision_Work/03_test_images/"
-    "health_tests/basil_test.jpg"
-)
 
-result = detect_health(image_path)
+if len(sys.argv) != 2:
+    print("Usage: python test_integration.py <image_path>")
+    sys.exit(1)
+
+result = detect_health(sys.argv[1])
 
 print(result)
 
 assert result["status"] == "success"
-assert "health" in result
-assert "primary_condition" in result["health"]
-assert "confidence" in result["health"]
+assert result["health"]["condition"] in ["healthy", "downy_mildew"]
+assert 0 <= result["health"]["confidence"] <= 1
 
 print("Vision integration test passed.")

@@ -64,3 +64,4 @@ runs/
 
 __pycache__/
 *.pyc
+!leafy-ai/ai/vision/models/basil_health_yolo26s_final.pt

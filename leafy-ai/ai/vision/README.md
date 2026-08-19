@@ -2,35 +2,41 @@
 AI Vision module for basil health classification.
 
 ## Main model
-`models/health_classifier_v1.pt`
+`models/basil_health_yolo26s_final.pt`
+
+Model architecture:
+
+`YOLO26s-cls`
 
 Current health classes:
 
-- bacterial_spot
 - downy_mildew
 - healthy
-- powdery_mildew
 
 The classifier is the primary model used by AI Core.
 
-## Optional debug model
-`models/health_detector_v2.pt`
-This model provides bounding boxes for debugging only.
-It is not used for the official health classification result.
-
 ## Current evaluation
-Clean holdout test:
+Clean validation:
 
-- Overall accuracy: 81.25%
-- bacterial_spot: 50% (2 test images only)
-- downy_mildew: 80%
-- healthy: 80%
-- powdery_mildew: 90%
+- Top-1 accuracy: 97.2%
+- Top-5 accuracy: 100%
 
-Known limitation:
+Untouched test set:
 
-Pink greenhouse lighting can cause incorrect classifications.
-More real greenhouse camera data is required for further domain adaptation.
+- Overall accuracy: 98.1%
+- 108 test images
+- Test images were not used during training
+
+Real greenhouse testing:
+
+- Tested on real farm images
+- Tested under strong pink grow-light conditions
+- Real farm screenshot tests were classified correctly as healthy
+
+Per-class test accuracy:
+
+- healthy: 98.78% (81/82)
+- downy_mildew: 96.15% (25/26)
 
 ## Setup
 
@@ -45,7 +51,7 @@ pip install -r requirements.txt
 From the project root:
 
 ```bash
-python leafy-ai/ai/vision/detector.py "C:/LeafyAI_Vision_Work/03_test_images/health_tests/basil_test.jpg"
+python leafy-ai/ai/vision/detector.py "path/to/image.jpg"
 ```
 
 Example output:
@@ -55,8 +61,24 @@ Example output:
   "source": "vision",
   "status": "success",
   "health": {
-    "primary_condition": "healthy",
-    "confidence": 0.9975
+    "condition": "healthy",
+    "confidence": 0.9991,
+    "flagged": false,
+    "action": "none"
+  }
+}
+```
+Possible downy mildew result:
+
+```json
+{
+  "source": "vision",
+  "status": "success",
+  "health": {
+    "condition": "downy_mildew",
+    "confidence": 0.95,
+    "flagged": true,
+    "action": "review_required"
   }
 }
 ```
@@ -83,6 +105,15 @@ The function returns a JSON-compatible Python dictionary.
 
 ## Important limitation
 
+The current model only classifies:
+
+- healthy
+- downy_mildew
+
+Other basil health conditions such as bacterial leaf spot, nutrient deficiency, overwatering, dryness and other plant stress are not currently classified by this model.
+
+These conditions can be added later when suitable training data is available.
+
 Model confidence is not guaranteed diagnostic certainty.
 
-The current model is a prototype and should be combined with sensor data and AI Core reasoning before operational decisions are made.
+Vision results should be combined with sensor data and AI Core reasoning before operational decisions are made.
