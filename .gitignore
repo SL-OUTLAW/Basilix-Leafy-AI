@@ -54,3 +54,14 @@ $RECYCLE.BIN/
 
 # Windows shortcuts
 *.lnk
+leafy-ai/ai/vision/dataset/
+runs/
+*.pt
+
+!leafy-ai/ai/vision/models/
+!leafy-ai/ai/vision/models/health_classifier_v1.pt
+!leafy-ai/ai/vision/models/health_detector_v2.pt
+
+__pycache__/
+*.pyc
+!leafy-ai/ai/vision/models/basil_health_yolo26s_final.pt
