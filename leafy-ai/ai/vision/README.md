@@ -60,6 +60,10 @@ Example output:
 {
   "source": "vision",
   "status": "success",
+  "image": {
+    "width": 1707,
+    "height": 985
+  },
   "health": {
     "condition": "healthy",
     "confidence": 0.9991,
@@ -74,6 +78,10 @@ Possible downy mildew result:
 {
   "source": "vision",
   "status": "success",
+  "image": {
+    "width": 1707,
+    "height": 985
+  },
   "health": {
     "condition": "downy_mildew",
     "confidence": 0.95,
@@ -96,12 +104,26 @@ The code automatically uses GPU when available and falls back to CPU.
 ## AI Core Integration
 
 ```python
-from detector import detect_health
+from detector import analyse_plants
 
-result = detect_health("image.jpg")
+result = analyse_plants("image.jpg")
 ```
 
 The function returns a JSON-compatible Python dictionary.
+
+`analyse_plants()` is the main Vision entry point.
+
+It analyses the image once and returns the available plant information in a JSON-compatible Python dictionary.
+
+Current output includes:
+
+- image dimensions
+- health classification
+- confidence
+- health flag
+- review action
+
+Additional plant analysis such as size, crowding and other visual health indicators can be added later when suitable farm data and validated methods are available.
 
 ## Important limitation
 

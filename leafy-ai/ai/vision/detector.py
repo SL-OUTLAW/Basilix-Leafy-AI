@@ -2,6 +2,7 @@ from pathlib import Path
 import json
 import sys
 
+import cv2
 import torch
 from ultralytics import YOLO
 
@@ -31,11 +32,9 @@ def validate_image(image_path):
 
     return image_path
 
-def classify_health(image_path):
-    image_path = validate_image(image_path)
-
+def classify_health(image):
     results = health_classifier.predict(
-        source=str(image_path),
+        source=image,
         imgsz=224,
         device=DEVICE,
         verbose=False
@@ -56,13 +55,20 @@ def classify_health(image_path):
         "action": "review_required" if condition != "healthy" else "none"
     }
 
-def detect_health(image_path):
+def analyse_plants(image_path):
     try:
-        health_result = classify_health(image_path)
+        image_path = validate_image(image_path)
+        image = cv2.imread(str(image_path))
+        if image is None:
+            raise ValueError("Could not read image.")
+        height, width = image.shape[:2]
+        health = classify_health(image)
+
         return {
             "source": "vision",
             "status": "success",
-            "health": health_result
+            "image": {"width": width, "height": height},
+            "health": health,
         }
     except Exception as error:
         return {
@@ -71,10 +77,21 @@ def detect_health(image_path):
             "error": str(error)
         }
 
+def detect_health(image_path):
+    result = analyse_plants(image_path)
+
+    if result["status"] == "error":
+        return result
+    return {
+        "source": result["source"],
+        "status": result["status"],
+        "health": result["health"]
+    }
+
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
+    if len(sys.argv) != 2:
         print("Usage: python detector.py <image_path>")
         sys.exit(1)
 
-    result = detect_health(sys.argv[1])
+    result = analyse_plants(sys.argv[1])
     print(json.dumps(result, indent=2))
