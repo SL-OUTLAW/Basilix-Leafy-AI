@@ -360,7 +360,64 @@ CREATE INDEX IF NOT EXISTS idx_audit_logs_action_type
 CREATE INDEX IF NOT EXISTS idx_audit_logs_created
     ON audit_logs (created_at DESC);
 
+-- ============================================================
+-- RAG DOCUMENTS
+-- ============================================================
 
+CREATE TABLE IF NOT EXISTS rag_documents (
+    document_id BIGSERIAL PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    source VARCHAR(500),
+    document_type VARCHAR(100),
+    content_hash VARCHAR(128),
+    metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_rag_documents_source
+    ON rag_documents (source);
+
+CREATE INDEX IF NOT EXISTS idx_rag_documents_type
+    ON rag_documents (document_type);
+
+CREATE INDEX IF NOT EXISTS idx_rag_documents_metadata
+    ON rag_documents
+    USING GIN (metadata);
+
+
+-- ============================================================
+-- RAG DOCUMENT CHUNKS + EMBEDDINGS
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS rag_document_chunks (
+    chunk_id BIGSERIAL PRIMARY KEY,
+    document_id BIGINT NOT NULL,
+    chunk_index INTEGER NOT NULL,
+    content TEXT NOT NULL,
+    metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+    embedding vector(768),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+    CONSTRAINT fk_rag_chunks_document
+        FOREIGN KEY (document_id)
+        REFERENCES rag_documents(document_id)
+        ON DELETE CASCADE,
+
+    CONSTRAINT uq_rag_document_chunk
+        UNIQUE (document_id, chunk_index)
+);
+
+CREATE INDEX IF NOT EXISTS idx_rag_chunks_document
+    ON rag_document_chunks (document_id);
+
+CREATE INDEX IF NOT EXISTS idx_rag_chunks_metadata
+    ON rag_document_chunks
+    USING GIN (metadata);
+
+CREATE INDEX IF NOT EXISTS idx_rag_chunks_embedding_hnsw
+    ON rag_document_chunks
+    USING hnsw (embedding vector_cosine_ops);
 -- ============================================================
 -- 13. FARM MONITORING VIEW
 -- ============================================================
