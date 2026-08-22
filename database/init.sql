@@ -472,5 +472,80 @@ AS $$
         );
 $$;
 
+-- ============================================================
+-- DATABASE ACCESS CONTROL
+-- ============================================================
+
+-- Group roles
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_roles WHERE rolname = 'leafy_ai_readonly'
+    ) THEN
+        CREATE ROLE leafy_ai_readonly NOLOGIN;
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_roles WHERE rolname = 'leafy_ai_app'
+    ) THEN
+        CREATE ROLE leafy_ai_app NOLOGIN;
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_roles WHERE rolname = 'leafy_ai_admin'
+    ) THEN
+        CREATE ROLE leafy_ai_admin NOLOGIN;
+    END IF;
+END
+$$;
+
+-- Read-only access
+GRANT CONNECT ON DATABASE leafy_ai TO leafy_ai_readonly;
+
+GRANT USAGE ON SCHEMA public
+TO leafy_ai_readonly;
+
+GRANT SELECT ON ALL TABLES IN SCHEMA public
+TO leafy_ai_readonly;
+
+-- Application access
+GRANT CONNECT ON DATABASE leafy_ai TO leafy_ai_app;
+
+GRANT USAGE ON SCHEMA public
+TO leafy_ai_app;
+
+GRANT SELECT, INSERT, UPDATE, DELETE
+ON ALL TABLES IN SCHEMA public
+TO leafy_ai_app;
+
+GRANT USAGE, SELECT
+ON ALL SEQUENCES IN SCHEMA public
+TO leafy_ai_app;
+
+-- Administrative access
+GRANT ALL PRIVILEGES
+ON ALL TABLES IN SCHEMA public
+TO leafy_ai_admin;
+
+GRANT ALL PRIVILEGES
+ON ALL SEQUENCES IN SCHEMA public
+TO leafy_ai_admin;
+
+GRANT USAGE, CREATE
+ON SCHEMA public
+TO leafy_ai_admin;
+
+-- Ensure future tables inherit the appropriate permissions
+ALTER DEFAULT PRIVILEGES IN SCHEMA public
+GRANT SELECT ON TABLES TO leafy_ai_readonly;
+
+ALTER DEFAULT PRIVILEGES IN SCHEMA public
+GRANT SELECT, INSERT, UPDATE, DELETE
+ON TABLES TO leafy_ai_app;
+
+ALTER DEFAULT PRIVILEGES IN SCHEMA public
+GRANT USAGE, SELECT
+ON SEQUENCES TO leafy_ai_app;
+
 
 COMMIT;
