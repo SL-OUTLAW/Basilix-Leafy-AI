@@ -1,20 +1,18 @@
 # Basilix AI Vision
 AI Vision module for basil health classification.
 
-## Main model
-`models/basil_health_yolo26s_final.pt`
+## Models
 
-Model architecture:
+Required model files:
 
-`YOLO26s-cls`
+- `models/basil_health_yolo26s_final.pt`
+- `models/basil_segmentation_yolo26s.pt`
 
-Current health classes:
+The health model uses YOLO26s classification.
 
-- downy_mildew
-- healthy
+The segmentation model detects individual basil plants and is used for plant counting and position information.
 
-The classifier is the primary model used by AI Core.
-
+Model files are not stored in Git and must be placed in the `models` folder locally.
 ## Current evaluation
 Clean validation:
 
@@ -51,7 +49,7 @@ pip install -r requirements.txt
 From the project root:
 
 ```bash
-python leafy-ai/ai/vision/detector.py "path/to/image.jpg"
+python leafy-ai/engine/context_manager/vision_context/detector.py "path/to/image.jpg"
 ```
 
 Example output:
@@ -68,7 +66,6 @@ Example output:
     "condition": "healthy",
     "confidence": 0.9991,
     "flagged": false,
-    "action": "none"
   }
 }
 ```
@@ -86,7 +83,6 @@ Possible downy mildew result:
     "condition": "downy_mildew",
     "confidence": 0.95,
     "flagged": true,
-    "action": "review_required"
   }
 }
 ```
@@ -118,10 +114,15 @@ It analyses the image once and returns the available plant information in a JSON
 Current output includes:
 
 - image dimensions
+- camera name when available
 - health classification
-- confidence
+- health confidence
 - health flag
-- review action
+- detected plant count
+- plant confidence
+- plant centre coordinates
+- plant bounding boxes
+- analysed image path
 
 Additional plant analysis such as size, crowding and other visual health indicators can be added later when suitable farm data and validated methods are available.
 
@@ -139,3 +140,7 @@ These conditions can be added later when suitable training data is available.
 Model confidence is not guaranteed diagnostic certainty.
 
 Vision results should be combined with sensor data and AI Core reasoning before operational decisions are made.
+
+The plant segmentation model is currently a prototype trained using a small set of real farm images. Plant counts may be incorrect on new images and should not be treated as exact production measurements.
+
+More labelled farm images and a separate validation/test dataset are required for reliable accuracy evaluation.
