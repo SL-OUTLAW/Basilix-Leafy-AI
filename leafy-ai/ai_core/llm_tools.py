@@ -6,7 +6,8 @@ TOOLS = [
             "description": (
                 "Retrieve historical data for a farm sensor. "
                 "Use this when investigating sensor trends, changes over time, "
-                "anomalies, stability, persistence, or past farm conditions. "
+                "anomalies, stability, persistence, past farm conditions or "
+                "analysing farm and health. "
                 "Use either time_range OR start_time and end_time, not both. "
                 "If no time range is specified, the default is the previous 1 hour. "
                 "Historical readings are automatically aggregated to an "
