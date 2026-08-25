@@ -3,93 +3,27 @@
   "properties": {
     "response_type": {
       "type": "string",
-      "enum": ["chat", "recommended_action", "farm_analysis", "tool_call"],
-      "description": "chat: general conversation or agricultural knowledge, no action needed. recommended_action: user wants to know what to DO about a situation. farm_analysis: interpreting provided farm/sensor/camera data without recommending an action. tool_call: an available tool must be executed."
+      "enum": ["chat", "farm_brain"],
+      "description": "Response destination. chat is used for every user-facing Leafy response, including answers that analyse actual farm data. farm_brain is used only for internal autonomous farm analysis requested by the application and is not a normal user-facing response."
     },
     "content": {
-      "type": ["string", "null"],
-      "description": "The main response for the user. Required (non-null, non-empty) for chat, recommended_action, and farm_analysis. Must be null ONLY for tool_call."
+      "type": "string",
+      "minLength": 1,
+      "description": "Main response content. For chat this is the user-facing answer. For farm_brain this is the internal farm analysis."
     },
     "summary": {
-      "type": ["string", "null"],
-      "description": "One-sentence summary of the key conclusion. Required (non-null, non-empty) for chat, recommended_action, and farm_analysis. Must be null ONLY for tool_call."
+      "type": "string",
+      "minLength": 1,
+      "description": "Short one-sentence summary of the main conclusion."
     },
     "sources_used": {
       "type": "array",
-      "items": { "type": "string" },
-      "description": "Only RAG sources explicitly provided. Never invented. Empty if none provided or response_type is tool_call."
-    },
-    "recommended_actions": {
-      "type": "array",
       "items": {
-        "type": "object",
-        "properties": {
-          "recommendation": { "type": "string" },
-          "reason": { "type": "string" },
-          "risk": {
-            "type": "string",
-            "enum": ["none", "low", "medium", "high"],
-            "description": "Risk level of THIS specific recommendation. Every recommendation must carry its own risk — never omit this field."
-          },
-          "risk_reason": {
-            "type": "string",
-            "description": "Evidence/reasoning behind this recommendation's risk level."
-          }
-        },
-        "required": ["recommendation", "reason", "risk", "risk_reason"]
+        "type": "string"
       },
-      "description": "Populated ONLY when response_type is recommended_action. Each item is a single recommendation bundled with its own risk and risk_reason — there is no separate risk list. Empty array for all other response types."
-    },
-    "tools": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "name": { "type": "string" },
-          "arguments": { "type": "object" }
-        },
-        "required": ["name", "arguments"]
-      },
-      "description": "Populated ONLY when response_type is tool_call. Empty array for all other response types. Never invent a tool name."
+      "description": "RAG sources explicitly provided and used. Empty when no RAG sources were provided."
     }
   },
-  "required": [
-    "response_type",
-    "content",
-    "summary",
-    "sources_used",
-    "recommended_actions",
-    "tools"
-  ],
-  "$comment": "Structural enforcement of the null/non-null content rule, so it does not depend solely on the model reading and obeying the prose instruction.",
-  "allOf": [
-    {
-      "if": {
-        "properties": { "response_type": { "const": "tool_call" } },
-        "required": ["response_type"]
-      },
-      "then": {
-        "properties": {
-          "content": { "type": "null" },
-          "summary": { "type": "null" }
-        }
-      }
-    },
-    {
-      "if": {
-        "properties": {
-          "response_type": {
-            "enum": ["chat", "recommended_action", "farm_analysis"]
-          }
-        },
-        "required": ["response_type"]
-      },
-      "then": {
-        "properties": {
-          "content": { "type": "string", "minLength": 1 },
-          "summary": { "type": "string", "minLength": 1 }
-        }
-      }
-    }
-  ]
+  "required": ["response_type", "content", "summary", "sources_used"],
+  "additionalProperties": false
 }
