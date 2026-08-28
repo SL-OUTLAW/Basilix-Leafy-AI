@@ -4,11 +4,7 @@ from fastapi import FastAPI, Header, HTTPException
 from pydantic import BaseModel
 import sys
 
-sec_path = Path(__file__).parents[1]/"security"
-
-sys.path.append(str(sec_path))
-
-from engine_auth import validate_token
+from security.engine_auth import validate_token
 
 
 class ToolCall(BaseModel):
