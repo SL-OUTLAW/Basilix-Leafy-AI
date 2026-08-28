@@ -2,7 +2,6 @@ from typing import Any
 from pathlib import Path
 from fastapi import FastAPI, Header, HTTPException
 from pydantic import BaseModel
-import sys
 
 from security.engine_auth import validate_token
 
