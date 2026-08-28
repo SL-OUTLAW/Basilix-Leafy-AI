@@ -1,6 +1,14 @@
 from typing import Any
-from fastapi import FastAPI
+from pathlib import Path
+from fastapi import FastAPI, Header, HTTPException
 from pydantic import BaseModel
+import sys
+
+sec_path = Path(__file__).parents[1]/"security"
+
+sys.path.append(str(sec_path))
+
+from engine_auth import validate_token
 
 
 class ToolCall(BaseModel):
@@ -22,5 +30,33 @@ app = FastAPI()
 
 
 @app.post("/tools/execute")
-async def _execute_tools(request: ToolCallRequest):
-    print(request.tool_calls)
+async def execute_tools(
+    request: ToolCallRequest,
+    authorization: str | None = Header(default=None),
+):
+    if authorization is None:
+        raise HTTPException(
+            status_code=401,
+            detail="Missing authorization token",
+        )
+
+    scheme, _, token = authorization.partition(" ")
+
+    if scheme.lower() != "bearer" or not token:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid authorization header",
+        )
+
+    if not validate_token(token):
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid or expired token",
+        )
+
+    print(authorization)
+
+    return {
+        "success": True,
+        "results": [],
+    }
