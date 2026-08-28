@@ -3,7 +3,6 @@ BEGIN;
 CREATE EXTENSION IF NOT EXISTS timescaledb;
 CREATE EXTENSION IF NOT EXISTS vector;
 
-
 CREATE TABLE IF NOT EXISTS users (
     user_id BIGSERIAL PRIMARY KEY,
     google_sub VARCHAR(255) NOT NULL UNIQUE,
@@ -212,7 +211,6 @@ CREATE TABLE IF NOT EXISTS ai_recommendations (
             risk_level IS NULL
             OR risk_level IN (
                 'LOW',
-                'MEDIUM',
                 'HIGH'
             )
         ),
@@ -221,14 +219,8 @@ CREATE TABLE IF NOT EXISTS ai_recommendations (
         CHECK (
             status IN (
                 'PENDING',
-                'VALIDATED',
-                'AWAITING_APPROVAL',
                 'APPROVED',
-                'REJECTED',
-                'EXECUTED',
-                'FAILED',
-                'ADVISORY',
-                'CANCELLED'
+                'REJECTED'
             )
         ),
 
@@ -240,6 +232,9 @@ CREATE TABLE IF NOT EXISTS ai_recommendations (
 
 CREATE INDEX IF NOT EXISTS idx_ai_recommendations_status
     ON ai_recommendations (status);
+
+CREATE INDEX IF NOT EXISTS idx_ai_recommendations_risk
+    ON ai_recommendations (risk_level);
 
 CREATE INDEX IF NOT EXISTS idx_ai_recommendations_level
     ON ai_recommendations (level_no);
@@ -282,8 +277,6 @@ CREATE TABLE IF NOT EXISTS farm_schedule (
         CHECK (
             status IN (
                 'ACTIVE',
-                'PAUSED',
-                'DISABLED',
                 'ERROR'
             )
         ),
@@ -309,6 +302,9 @@ CREATE INDEX IF NOT EXISTS idx_farm_schedule_next_run
 
 CREATE INDEX IF NOT EXISTS idx_farm_schedule_status
     ON farm_schedule (status);
+
+CREATE INDEX IF NOT EXISTS idx_farm_schedule_enabled
+    ON farm_schedule (enabled);
 
 
 CREATE TABLE IF NOT EXISTS task_executions (
@@ -367,7 +363,6 @@ CREATE TABLE IF NOT EXISTS approval_requests (
         CHECK (
             risk_level IN (
                 'LOW',
-                'MEDIUM',
                 'HIGH'
             )
         ),
@@ -377,9 +372,7 @@ CREATE TABLE IF NOT EXISTS approval_requests (
             status IN (
                 'PENDING',
                 'APPROVED',
-                'REJECTED',
-                'EXPIRED',
-                'CANCELLED'
+                'REJECTED'
             )
         ),
 
@@ -428,6 +421,7 @@ CREATE TABLE IF NOT EXISTS notifications (
             type IN (
                 'SENSOR_ALERT',
                 'SENSOR_OFFLINE',
+                'CAMERA_ALERT',
                 'CAMERA_OFFLINE',
                 'TASK_COMPLETED',
                 'TASK_FAILED',
@@ -464,7 +458,6 @@ CREATE TABLE IF NOT EXISTS user_notifications (
     user_id BIGINT NOT NULL,
     status VARCHAR(30) NOT NULL DEFAULT 'UNREAD',
     read_at TIMESTAMPTZ,
-    dismissed_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
     PRIMARY KEY (notification_id, user_id),
@@ -473,8 +466,7 @@ CREATE TABLE IF NOT EXISTS user_notifications (
         CHECK (
             status IN (
                 'UNREAD',
-                'READ',
-                'DISMISSED'
+                'READ'
             )
         ),
 
@@ -578,6 +570,5 @@ CREATE INDEX IF NOT EXISTS idx_rag_chunks_metadata
 CREATE INDEX IF NOT EXISTS idx_rag_chunks_embedding_hnsw
     ON rag_document_chunks
     USING hnsw (embedding vector_cosine_ops);
-
 
 COMMIT;
