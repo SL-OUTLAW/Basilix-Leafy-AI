@@ -6,6 +6,7 @@ import httpx
 import ollama
 
 from llm_tools import TOOLS
+from llm_api import execute_tool
 
 MODEL = "leafy-ai"
 MAX_TOOL_ROUNDS = 8
@@ -13,12 +14,12 @@ KEEP_ALIVE = -1
 
 ENGINE_URL = os.getenv(
     "ENGINE_URL",
-    "http://engine:8000",
+    "http://localhost:8000",
 )
 
 ENGINE_TOOL_TIMEOUT = 30.0
 
-VERBOSE = True
+VERBOSE = False
 
 ollama_client = ollama.AsyncClient()
 
@@ -97,36 +98,6 @@ SYSTEM_PROMPT = _load_system_prompt(PROMPT_PATH)
 
 SCHEMA = _load_schema(SCHEMA_PATH)
 
-print(
-    "SYSTEM PROMPT PATH:",
-    PROMPT_PATH.resolve(),
-)
-
-print(
-    "SYSTEM PROMPT EXISTS:",
-    PROMPT_PATH.exists(),
-)
-
-print(
-    "SYSTEM PROMPT LENGTH:",
-    len(SYSTEM_PROMPT),
-)
-
-print(
-    "HAS OUTPUT CONTRACT:",
-    "OUTPUT CONTRACT:" in SYSTEM_PROMPT,
-)
-
-print(
-    "HAS STYLE:",
-    "STYLE:" in SYSTEM_PROMPT,
-)
-
-print(
-    "HAS CONVERSATION CONTEXT:",
-    "CONVERSATION CONTEXT:" in SYSTEM_PROMPT,
-)
-
 
 def _validate(
     result: dict,
@@ -161,59 +132,6 @@ def _validate(
         list,
     ):
         raise ValueError("sources_used must be an array")
-
-
-async def _execute_tool(
-    tool_calls: list[dict[str, Any]],
-    user_context: dict[str, Any] | None = None,
-) -> Any:
-
-    request_body: dict[str, Any] = {"tool_calls": tool_calls}
-
-    if user_context is not None:
-        request_body["user_context"] = user_context
-
-    _debug_json(
-        "ENGINE REQUEST",
-        request_body,
-    )
-
-    try:
-        async with httpx.AsyncClient() as client:
-            response = await client.post(
-                (f"{ENGINE_URL}" "/tools/execute"),
-                json=request_body,
-                timeout=ENGINE_TOOL_TIMEOUT,
-            )
-
-            _debug(f"Engine HTTP status: " f"{response.status_code}")
-
-            response.raise_for_status()
-
-            result = response.json()
-
-            _debug_json(
-                "ENGINE RESPONSE",
-                result,
-            )
-
-            return result
-
-    except httpx.TimeoutException as error:
-        _debug(f"ENGINE TIMEOUT: {error}")
-
-        return {
-            "success": False,
-            "error": ("The requested capability timed out."),
-        }
-
-    except httpx.HTTPError as error:
-        _debug(f"ENGINE HTTP ERROR: " f"{type(error).__name__}: " f"{error}")
-
-        return {
-            "success": False,
-            "error": ("The requested capability could not be completed."),
-        }
 
 
 async def _run_llm_loop(
@@ -286,7 +204,7 @@ async def _run_llm_loop(
             tool_calls,
         )
 
-        engine_tool_response = await _execute_tool(
+        engine_tool_response = await execute_tool(
             tool_calls=tool_calls,
             user_context=user_context,
         )
@@ -512,9 +430,11 @@ async def test_conversation():
             "content": SYSTEM_PROMPT,
         },
         {
-            "role": "user",
+            "role": "system",
             "content": (
-                "add 20 mins more for light schedule both levels and then do a farm check up"
+                "this is a scheduled farm checkup call. "
+                "Use necessary tools to analyse the farm health and status and "
+                "make necessary recommendations, actions and updates"
             ),
         },
     ]
