@@ -4,15 +4,31 @@ import sys
 
 import cv2
 
-from features.canopy import analyse_canopy
-from features.health import classify_health
-from features.plants import detect_plants
+from features.plants import detect_plants, calculate_canopy_percent
+from features.growth import calculate_growth
+from features.measurements import (
+    add_plant_spacing,
+    calculate_crowding,
+    calculate_size_summary
+)
+from features.visualization import draw_analysis
+from features.multi_camera import build_camera_summary
 
 
 BASE_DIR = Path(__file__).resolve().parent
 OUTPUT_DIR = BASE_DIR / "analysed_images"
 OUTPUT_DIR.mkdir(exist_ok=True)
 
+def get_camera(image_path):
+    name = image_path.name.lower()
+
+    if "camera1" in name:
+        return "camera1"
+
+    if "camera2" in name:
+        return "camera2"
+
+    return "unknown"
 
 def analyse_plants(image_path):
     try:
@@ -28,29 +44,32 @@ def analyse_plants(image_path):
 
         height, width = image.shape[:2]
 
-        camera = "unknown"
+        camera = get_camera(image_path)
 
-        if "camera1" in image_path.name.lower():
-            camera = "camera1"
-        elif "camera2" in image_path.name.lower():
-            camera = "camera2"
+        result, plants = detect_plants(image)
 
-        health = classify_health(image)
-        result, plants = detect_plants(image, camera)
-        canopy = analyse_canopy(image_path)
-
-        annotated = result.plot(
-            labels=False,
-            boxes=False,
-            conf=False
+        health = {
+            "status": "not_available",
+            "reason": "The current single vision model does not classify plant health."
+        }
+        add_plant_spacing(plants)
+        canopy = round(
+            calculate_canopy_percent(
+                result,
+                height,
+                width
+            ),
+            2
         )
 
-        for plant in plants:
-            x = plant["center"]["x"]
-            y = plant["center"]["y"]
+        crowding = calculate_crowding(plants)
+        size = calculate_size_summary(plants)
 
-            cv2.putText(annotated, str(plant["id"]), (x, y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
-        cv2.putText(annotated, f"Plants: {len(plants)}", (15, height - 20), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
+        annotated = draw_analysis(
+            image,
+            result,
+            plants
+        )
         output_name = image_path.stem + "_analysed" + image_path.suffix
         output_path = OUTPUT_DIR / output_name
 
@@ -70,6 +89,8 @@ def analyse_plants(image_path):
                 "items": plants
             },
             "canopy": canopy,
+            "crowding": crowding,
+            "size": size,
             "analysed_image": {
                 "filename": output_name,
                 "relative_path": (
@@ -86,27 +107,78 @@ def analyse_plants(image_path):
             "error": str(error)
         }
 
+def compare_growth(previous_image_path, current_image_path):
+    previous = analyse_plants(previous_image_path)
+    current = analyse_plants(current_image_path)
 
-def detect_health(image_path):
-    try:
-        image = cv2.imread(str(image_path))
-
-        if image is None:
-            raise ValueError("Could not read image.")
-
-        return {
-            "source": "vision",
-            "status": "success",
-            "health": classify_health(image)
-        }
-
-    except Exception as error:
+    if previous["status"] != "success":
         return {
             "source": "vision",
             "status": "error",
-            "error": str(error)
+            "error": "Previous image analysis failed."
         }
 
+    if current["status"] != "success":
+        return {
+            "source": "vision",
+            "status": "error",
+            "error": "Current image analysis failed."
+        }
+    if previous["camera"] == "unknown" or current["camera"] == "unknown":
+        return {
+            "source": "vision",
+            "status": "error",
+            "error": "Could not identify camera from image name."
+        }
+    return calculate_growth(
+        previous,
+        current,
+        previous_image_path,
+        current_image_path
+    )
+
+def analyse_cameras(image_paths):
+    if not image_paths:
+        return {
+            "source": "vision",
+            "status": "error",
+            "error": "No camera images provided."
+        }
+
+    results = []
+
+    for image_path in image_paths:
+        result = analyse_plants(image_path)
+
+        if result["status"] != "success":
+            return {
+                "source": "vision",
+                "status": "error",
+                "error": f"Could not analyse {image_path}"
+            }
+
+        results.append(result)
+
+    cameras = [
+        result["camera"]
+        for result in results
+    ]
+
+    if "unknown" in cameras:
+        return {
+            "source": "vision",
+            "status": "error",
+            "error": "Could not identify camera from image name."
+        }
+
+    if len(cameras) != len(set(cameras)):
+        return {
+            "source": "vision",
+            "status": "error",
+            "error": "Only one image per camera can be summarised."
+        }
+
+    return build_camera_summary(results)
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
