@@ -1,4 +1,4 @@
-from pathlib import Path
+# Legacy health classifier - not used by the active vision pipeline.from pathlib import Path
 
 import torch
 from ultralytics import YOLO
@@ -26,6 +26,7 @@ def classify_health(image):
     condition = result.names[class_id]
 
     return {
+        "scope": "overall_image",
         "condition": condition,
         "confidence": round(float(result.probs.top1conf), 4),
         "flagged": condition != "healthy"

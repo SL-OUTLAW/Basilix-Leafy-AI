@@ -1,3 +1,4 @@
+# Legacy DeepLab canopy model - not used by the active vision pipeline.
 from pathlib import Path
 import sys
 import cv2
