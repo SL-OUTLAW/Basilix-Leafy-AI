@@ -68,5 +68,11 @@ __pycache__/
 *.pyc
 !leafy-ai/ai/vision/models/basil_health_yolo26s_final.pt
 
+# Current Vision models
+!leafy-ai/engine/context_manager/vision_context/models/basil_health_yolo26s_final.pt
+!leafy-ai/engine/context_manager/vision_context/models/basil_segmentation_yolo26s.pt
+!leafy-ai/engine/context_manager/vision_context/models/basil_canopy_deeplabv3.pt
+leafy-ai/engine/context_manager/vision_context/analysed_images/
+
 .env
 !.env.example

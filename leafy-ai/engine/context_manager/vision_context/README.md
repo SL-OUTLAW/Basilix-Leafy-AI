@@ -1,5 +1,5 @@
 # Basilix AI Vision
-AI Vision module for basil health classification.
+AI Vision module for basil health classification, plant detection and canopy analysis.
 
 ## Models
 
@@ -7,35 +7,52 @@ Required model files:
 
 - `models/basil_health_yolo26s_final.pt`
 - `models/basil_segmentation_yolo26s.pt`
+- `models/basil_canopy_deeplabv3.pt`
 
 The health model uses YOLO26s classification.
 
 The segmentation model detects individual basil plants and is used for plant counting and position information.
 
-Model files are not stored in Git and must be placed in the `models` folder locally.
-## Current evaluation
-Clean validation:
+The canopy model uses DeepLabV3 to measure basil canopy coverage in the camera frame.
 
-- Top-1 accuracy: 97.2%
+Vision model files are stored in the `models` folder.
+
+## Current evaluation
+
+Health model classes:
+
+- healthy
+- downy_mildew
+
+Training-time validation:
+
+- Top-1 accuracy: 97.22%
 - Top-5 accuracy: 100%
 
-Untouched test set:
+Current validation re-check:
 
-- Overall accuracy: 98.1%
-- 108 test images
-- Test images were not used during training
+- Overall accuracy: 98.31% (116/118)
+- healthy: 98.78% (81/82)
+- downy_mildew: 97.22% (35/36)
+
+Current test set:
+
+- Overall accuracy: 98.21% (110/112)
+- healthy: 98.78% (81/82)
+- downy_mildew: 96.67% (29/30)
+
+Dataset checks:
+
+- No exact duplicate images found across train, validation and test splits
+- No matching Roboflow source filenames found across splits
 
 Real greenhouse testing:
 
-- Tested on real farm images
-- Tested under strong pink grow-light conditions
-- Real farm screenshot tests were classified correctly as healthy
+- The health model runs successfully on real farm camera images
+- Current tested farm images were classified as healthy
+- Diseased plants have not yet been locally validated under the farm camera conditions
 
-Per-class test accuracy:
-
-- healthy: 98.78% (81/82)
-- downy_mildew: 96.15% (25/26)
-
+The accuracy results above apply only to the current two-class health dataset.
 ## Setup
 
 Create or activate a Python environment and install:
@@ -122,6 +139,7 @@ Current output includes:
 - plant confidence
 - plant centre coordinates
 - plant bounding boxes
+- frame canopy coverage percentage
 - analysed image path
 
 Additional plant analysis such as size, crowding and other visual health indicators can be added later when suitable farm data and validated methods are available.
@@ -141,6 +159,6 @@ Model confidence is not guaranteed diagnostic certainty.
 
 Vision results should be combined with sensor data and AI Core reasoning before operational decisions are made.
 
-The plant segmentation model is currently a prototype trained using a small set of real farm images. Plant counts may be incorrect on new images and should not be treated as exact production measurements.
+The plant segmentation model has been validated on labelled real farm images. Plant counting performs well on the current local dataset, but accuracy decreases when mature plants overlap heavily. Counts on new images should therefore be treated as estimates rather than exact measurements.
 
-More labelled farm images and a separate validation/test dataset are required for reliable accuracy evaluation.
+Canopy coverage is currently measured across the full camera frame. It does not yet represent calibrated growing-area coverage because a validated growing-area region has not been defined.

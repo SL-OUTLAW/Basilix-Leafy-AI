@@ -3,125 +3,32 @@ import json
 import sys
 
 import cv2
-import torch
-from ultralytics import YOLO
+
+from features.plants import detect_plants, calculate_canopy_percent
+from features.growth import calculate_growth
+from features.measurements import (
+    add_plant_spacing,
+    calculate_crowding,
+    calculate_size_summary
+)
+from features.visualization import draw_analysis
+from features.multi_camera import build_camera_summary
 
 
 BASE_DIR = Path(__file__).resolve().parent
-MODEL_DIR = BASE_DIR / "models"
 OUTPUT_DIR = BASE_DIR / "analysed_images"
 OUTPUT_DIR.mkdir(exist_ok=True)
 
-DEVICE = 0 if torch.cuda.is_available() else "cpu"
+def get_camera(image_path):
+    name = image_path.name.lower()
 
-health_model = YOLO(str(MODEL_DIR / "basil_health_yolo26s_final.pt"))
-plant_model = YOLO(str(MODEL_DIR / "basil_segmentation_yolo26s.pt"))
+    if "camera1" in name:
+        return "camera1"
 
+    if "camera2" in name:
+        return "camera2"
 
-def classify_health(image):
-    result = health_model.predict(
-        image,
-        imgsz=224,
-        device=DEVICE,
-        verbose=False
-    )[0]
-
-    class_id = int(result.probs.top1)
-    condition = result.names[class_id]
-
-    return {
-        "condition": condition,
-        "confidence": round(float(result.probs.top1conf), 4),
-        "flagged": condition != "healthy"
-    }
-
-
-def remove_mask_duplicates(result):
-    if result.masks is None or len(result.boxes) < 2:
-        return result
-
-    masks = result.masks.data > 0.5
-
-    order = sorted(
-        range(len(result.boxes)),
-        key=lambda i: float(result.boxes[i].conf[0]),
-        reverse=True
-    )
-
-    keep = []
-
-    for i in order:
-        area1 = masks[i].sum().item()
-        duplicate = False
-
-        for j in keep:
-            area2 = masks[j].sum().item()
-            intersection = (masks[i] & masks[j]).sum().item()
-
-            if intersection == 0:
-                continue
-
-            containment = intersection / min(area1, area2)
-            size_ratio = min(area1, area2) / max(area1, area2)
-
-            if containment >= 0.90 and size_ratio >= 0.75:
-                duplicate = True
-                break
-
-        if not duplicate:
-            keep.append(i)
-
-    keep.sort()
-
-    return result[keep]
-
-
-def detect_plants(image, camera):
-    conf = 0.25
-    iou = 0.3
-
-    if camera == "camera1":
-        conf = 0.18
-        iou = 0.3
-    elif camera == "camera2":
-        conf = 0.10
-        iou = 0.5
-
-    result = plant_model.predict(
-        image,
-        conf=conf,
-        iou=iou,
-        imgsz=1280,
-        device=DEVICE,
-        end2end=False,
-        verbose=False
-    )[0]
-    result = remove_mask_duplicates(result)
-    plants = []
-
-    for box in result.boxes:
-        x1, y1, x2, y2 = box.xyxy[0].tolist()
-
-        plants.append({
-            "confidence": round(float(box.conf[0]), 4),
-            "center": {
-                "x": round((x1 + x2) / 2),
-                "y": round((y1 + y2) / 2)
-            },
-            "box": {
-                "x1": round(x1),
-                "y1": round(y1),
-                "x2": round(x2),
-                "y2": round(y2)
-            }
-        })
-
-    plants.sort(key=lambda p: (-round(p["center"]["y"] / 35), p["center"]["x"]))
-    for i, plant in enumerate(plants):
-        plant["id"] = i + 1
-
-    return result, plants
-
+    return "unknown"
 
 def analyse_plants(image_path):
     try:
@@ -137,28 +44,32 @@ def analyse_plants(image_path):
 
         height, width = image.shape[:2]
 
-        camera = "unknown"
+        camera = get_camera(image_path)
 
-        if "camera1" in image_path.name.lower():
-            camera = "camera1"
-        elif "camera2" in image_path.name.lower():
-            camera = "camera2"
+        result, plants = detect_plants(image)
 
-        health = classify_health(image)
-        result, plants = detect_plants(image, camera)
-
-        annotated = result.plot(
-            labels=False,
-            boxes=False,
-            conf=False
+        health = {
+            "status": "not_available",
+            "reason": "The current single vision model does not classify plant health."
+        }
+        add_plant_spacing(plants)
+        canopy = round(
+            calculate_canopy_percent(
+                result,
+                height,
+                width
+            ),
+            2
         )
 
-        for plant in plants:
-            x = plant["center"]["x"]
-            y = plant["center"]["y"]
+        crowding = calculate_crowding(plants)
+        size = calculate_size_summary(plants)
 
-            cv2.putText(annotated, str(plant["id"]), (x, y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
-        cv2.putText(annotated, f"Plants: {len(plants)}", (15, height - 20), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
+        annotated = draw_analysis(
+            image,
+            result,
+            plants
+        )
         output_name = image_path.stem + "_analysed" + image_path.suffix
         output_path = OUTPUT_DIR / output_name
 
@@ -177,6 +88,9 @@ def analyse_plants(image_path):
                 "count": len(plants),
                 "items": plants
             },
+            "canopy": canopy,
+            "crowding": crowding,
+            "size": size,
             "analysed_image": {
                 "filename": output_name,
                 "relative_path": (
@@ -193,27 +107,78 @@ def analyse_plants(image_path):
             "error": str(error)
         }
 
+def compare_growth(previous_image_path, current_image_path):
+    previous = analyse_plants(previous_image_path)
+    current = analyse_plants(current_image_path)
 
-def detect_health(image_path):
-    try:
-        image = cv2.imread(str(image_path))
-
-        if image is None:
-            raise ValueError("Could not read image.")
-
-        return {
-            "source": "vision",
-            "status": "success",
-            "health": classify_health(image)
-        }
-
-    except Exception as error:
+    if previous["status"] != "success":
         return {
             "source": "vision",
             "status": "error",
-            "error": str(error)
+            "error": "Previous image analysis failed."
         }
 
+    if current["status"] != "success":
+        return {
+            "source": "vision",
+            "status": "error",
+            "error": "Current image analysis failed."
+        }
+    if previous["camera"] == "unknown" or current["camera"] == "unknown":
+        return {
+            "source": "vision",
+            "status": "error",
+            "error": "Could not identify camera from image name."
+        }
+    return calculate_growth(
+        previous,
+        current,
+        previous_image_path,
+        current_image_path
+    )
+
+def analyse_cameras(image_paths):
+    if not image_paths:
+        return {
+            "source": "vision",
+            "status": "error",
+            "error": "No camera images provided."
+        }
+
+    results = []
+
+    for image_path in image_paths:
+        result = analyse_plants(image_path)
+
+        if result["status"] != "success":
+            return {
+                "source": "vision",
+                "status": "error",
+                "error": f"Could not analyse {image_path}"
+            }
+
+        results.append(result)
+
+    cameras = [
+        result["camera"]
+        for result in results
+    ]
+
+    if "unknown" in cameras:
+        return {
+            "source": "vision",
+            "status": "error",
+            "error": "Could not identify camera from image name."
+        }
+
+    if len(cameras) != len(set(cameras)):
+        return {
+            "source": "vision",
+            "status": "error",
+            "error": "Only one image per camera can be summarised."
+        }
+
+    return build_camera_summary(results)
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
