@@ -1,7 +1,10 @@
 from datetime import datetime, timedelta, timezone
 from typing import Any
+import statistics
 
-from engine.managers.db_manager import run_query
+from engine.managers.db_manager import run_query, open_pool, close_pool
+
+import asyncio, selectors
 
 TIME_RANGES = {
     "15m": timedelta(minutes=15),
@@ -24,6 +27,7 @@ SENSOR_TYPES = {
 
 
 def parse_iso_time(value: str) -> datetime:
+
     parsed = datetime.fromisoformat(value)
 
     if parsed.tzinfo is None:
@@ -44,6 +48,7 @@ def resolve_time_range(
         raise ValueError("Use time_range or start_time/end_time, not both")
 
     if start_time is not None or end_time is not None:
+
         if start_time is None or end_time is None:
             raise ValueError("start_time and end_time must be provided together")
 
@@ -51,6 +56,7 @@ def resolve_time_range(
         end = parse_iso_time(end_time)
 
     else:
+
         selected_range = time_range or "1h"
 
         duration = TIME_RANGES.get(selected_range)
@@ -95,6 +101,118 @@ def choose_bucket(
     return "3 hours"
 
 
+def calculate_slope(
+    values: list[float],
+) -> float:
+
+    if len(values) < 2:
+        return 0.0
+
+    x = list(range(len(values)))
+
+    mean_x = statistics.mean(x)
+    mean_y = statistics.mean(values)
+
+    numerator = sum(
+        (x_value - mean_x) * (y_value - mean_y)
+        for x_value, y_value in zip(
+            x,
+            values,
+        )
+    )
+
+    denominator = sum((x_value - mean_x) ** 2 for x_value in x)
+
+    if denominator == 0:
+        return 0.0
+
+    return numerator / denominator
+
+
+def calculate_trend_direction(
+    slope: float,
+    values: list[float],
+) -> str:
+
+    if len(values) < 2:
+        return "INSUFFICIENT_DATA"
+
+    mean_value = statistics.mean(values)
+
+    if mean_value == 0:
+        scale = 1.0
+    else:
+        scale = abs(mean_value)
+
+    normalized_slope = abs(slope) / scale
+
+    threshold = 0.001
+
+    if normalized_slope <= threshold:
+        return "STABLE"
+
+    if slope > 0:
+        return "RISING"
+
+    return "FALLING"
+
+
+def calculate_persistence(
+    values: list[float],
+    slope: float,
+) -> bool:
+
+    if len(values) < 3:
+        return False
+
+    if slope == 0:
+        return False
+
+    if slope > 0:
+        increasing = sum(
+            1
+            for previous, current in zip(
+                values,
+                values[1:],
+            )
+            if current >= previous
+        )
+    else:
+        increasing = sum(
+            1
+            for previous, current in zip(
+                values,
+                values[1:],
+            )
+            if current <= previous
+        )
+
+    comparisons = len(values) - 1
+
+    return (increasing / comparisons) >= 0.7
+
+
+def calculate_spikes(
+    values: list[float],
+) -> int:
+
+    if len(values) < 5:
+        return 0
+
+    median = statistics.median(values)
+
+    deviations = [abs(value - median) for value in values]
+
+    mad = statistics.median(deviations)
+
+    if mad == 0:
+        return 0
+
+    threshold = 3 * mad
+
+    return sum(1 for value in values if abs(value - median) > threshold)
+
+
 async def sensor_history(
     arguments: dict[str, Any],
 ) -> dict[str, Any]:
@@ -111,7 +229,7 @@ async def sensor_history(
         end_time,
     )
 
-    query = """
+    bucket_query = """
         SELECT
             time_bucket(
                 %s::interval,
@@ -159,8 +277,59 @@ async def sensor_history(
         ORDER BY bucket_start ASC;
     """
 
+    summary_query = """
+        SELECT
+            AVG(sr.value) FILTER (
+                WHERE sr.quality_status = 'VALID'
+            ) AS average,
+
+            MIN(sr.value) FILTER (
+                WHERE sr.quality_status = 'VALID'
+            ) AS minimum,
+
+            MAX(sr.value) FILTER (
+                WHERE sr.quality_status = 'VALID'
+            ) AS maximum,
+
+            PERCENTILE_CONT(0.5)
+                WITHIN GROUP (
+                    ORDER BY sr.value
+                )
+                FILTER (
+                    WHERE sr.quality_status = 'VALID'
+                ) AS median,
+
+            STDDEV_POP(sr.value) FILTER (
+                WHERE sr.quality_status = 'VALID'
+            ) AS standard_deviation,
+
+            COUNT(*) AS sample_count,
+
+            COUNT(*) FILTER (
+                WHERE sr.quality_status = 'VALID'
+            ) AS valid_count,
+
+            COUNT(*) FILTER (
+                WHERE sr.quality_status = 'SUSPECT'
+            ) AS suspect_count,
+
+            COUNT(*) FILTER (
+                WHERE sr.quality_status = 'INVALID'
+            ) AS invalid_count
+
+        FROM sensor_readings sr
+
+        JOIN sensors s
+            ON s.sensor_id = sr.sensor_id
+
+        WHERE
+            s.sensor_type = %s
+            AND sr.recorded_at >= %s
+            AND sr.recorded_at <= %s;
+    """
+
     rows = await run_query(
-        query,
+        bucket_query,
         (
             bucket,
             sensor_type,
@@ -169,39 +338,92 @@ async def sensor_history(
         ),
     )
 
+    summary_rows = await run_query(
+        summary_query,
+        (
+            sensor_type,
+            start_time,
+            end_time,
+        ),
+    )
+
     buckets = [
         {
-            "start": row[0].isoformat(),
-            "average": (float(row[1]) if row[1] is not None else None),
-            "minimum": (float(row[2]) if row[2] is not None else None),
-            "maximum": (float(row[3]) if row[3] is not None else None),
-            "sample_count": row[4],
-            "valid_count": row[5],
-            "suspect_count": row[6],
-            "invalid_count": row[7],
+            "time": row[0].isoformat(),
+            "mean": (float(row[1]) if row[1] is not None else None),
+            "min": (float(row[2]) if row[2] is not None else None),
+            "max": (float(row[3]) if row[3] is not None else None),
+            "samples": row[4],
+            "valid": row[5],
+            "suspect": row[6],
+            "invalid": row[7],
         }
         for row in rows
     ]
 
-    valid_averages = [
-        item["average"] for item in buckets if item["average"] is not None
-    ]
+    summary_row = summary_rows[0] if summary_rows else None
 
-    if valid_averages:
-        start_value = valid_averages[0]
-        end_value = valid_averages[-1]
+    if summary_row is None:
+        raise RuntimeError("Failed to calculate sensor summary")
 
-        overall_average = sum(valid_averages) / len(valid_averages)
+    overall_average = float(summary_row[0]) if summary_row[0] is not None else None
 
-        minimum = min(valid_averages)
-        maximum = max(valid_averages)
+    overall_minimum = float(summary_row[1]) if summary_row[1] is not None else None
+
+    overall_maximum = float(summary_row[2]) if summary_row[2] is not None else None
+
+    overall_median = float(summary_row[3]) if summary_row[3] is not None else None
+
+    standard_deviation = float(summary_row[4]) if summary_row[4] is not None else None
+
+    sample_count = summary_row[5]
+    valid_count = summary_row[6]
+    suspect_count = summary_row[7]
+    invalid_count = summary_row[8]
+
+    valid_values = [bucket["mean"] for bucket in buckets if bucket["mean"] is not None]
+
+    if valid_values:
+
+        start_value = valid_values[0]
+        end_value = valid_values[-1]
+
+        change = end_value - start_value
+
+        slope = calculate_slope(valid_values)
+
+        trend_direction = calculate_trend_direction(
+            slope,
+            valid_values,
+        )
+
+        persistent = calculate_persistence(
+            valid_values,
+            slope,
+        )
+
+        spike_count = calculate_spikes(valid_values)
 
     else:
+
         start_value = None
         end_value = None
-        overall_average = None
-        minimum = None
-        maximum = None
+        change = None
+        slope = None
+        trend_direction = "INSUFFICIENT_DATA"
+        persistent = False
+        spike_count = 0
+
+    valid_percentage = (valid_count / sample_count * 100) if sample_count > 0 else 0
+
+    if valid_percentage >= 95:
+        quality_status = "GOOD"
+
+    elif valid_percentage >= 80:
+        quality_status = "DEGRADED"
+
+    else:
+        quality_status = "POOR"
 
     return {
         "sensor_type": sensor_type,
@@ -212,13 +434,53 @@ async def sensor_history(
             "start_value": start_value,
             "end_value": end_value,
             "average": overall_average,
-            "minimum": minimum,
-            "maximum": maximum,
-            "bucket_count": len(buckets),
-            "sample_count": sum(item["sample_count"] for item in buckets),
-            "valid_count": sum(item["valid_count"] for item in buckets),
-            "suspect_count": sum(item["suspect_count"] for item in buckets),
-            "invalid_count": sum(item["invalid_count"] for item in buckets),
+            "median": overall_median,
+            "minimum": overall_minimum,
+            "maximum": overall_maximum,
+            "standard_deviation": (standard_deviation),
+            "sample_count": sample_count,
+            "valid_count": valid_count,
+            "suspect_count": suspect_count,
+            "invalid_count": invalid_count,
+            "valid_percentage": (
+                round(
+                    valid_percentage,
+                    2,
+                )
+            ),
+        },
+        "trend": {
+            "direction": trend_direction,
+            "change": change,
+            "slope_per_bucket": slope,
+            "persistent": persistent,
+        },
+        "anomalies": {
+            "isolated_spike_count": (spike_count),
         },
         "timeline": buckets,
     }
+
+
+async def main():
+    await open_pool()
+
+    try:
+        result = await sensor_history(
+            {
+                "sensor_type": "ph",
+                "time_range": "1h",
+            }
+        )
+
+        print(result)
+
+    finally:
+        await close_pool()
+
+
+if __name__ == "__main__":
+    asyncio.run(
+        main(),
+        loop_factory=lambda: asyncio.SelectorEventLoop(selectors.SelectSelector()),
+    )
