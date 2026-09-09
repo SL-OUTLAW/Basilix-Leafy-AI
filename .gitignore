@@ -76,3 +76,10 @@ leafy-ai/engine/context_manager/vision_context/analysed_images/
 
 .env
 !.env.example
+
+### Node.js ###
+node_modules/
+npm-debug.log*
+
+### Frontend build ###
+webapp/frontend/dist/
