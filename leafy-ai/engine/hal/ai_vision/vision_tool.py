@@ -1,7 +1,9 @@
 from detector import analyse_plants, compare_growth, analyse_cameras
 
+
 def analyse_plants_tool(image_path):
     return analyse_plants(image_path)
+
 
 def compare_growth_tool(previous_image_path, current_image_path):
     return compare_growth(previous_image_path, current_image_path)
@@ -21,14 +23,11 @@ VISION_TOOL_SCHEMA = {
     "parameters": {
         "type": "object",
         "properties": {
-            "image_path": {
-                "type": "string",
-                "description": "Path to the basil image."
-            }
+            "image_path": {"type": "string", "description": "Path to the basil image."}
         },
         "required": ["image_path"],
-        "additionalProperties": False
-    }
+        "additionalProperties": False,
+    },
 }
 
 COMPARE_GROWTH_TOOL_SCHEMA = {
@@ -42,19 +41,16 @@ COMPARE_GROWTH_TOOL_SCHEMA = {
         "properties": {
             "previous_image_path": {
                 "type": "string",
-                "description": "Path to the older basil image."
+                "description": "Path to the older basil image.",
             },
             "current_image_path": {
                 "type": "string",
-                "description": "Path to the newer basil image."
-            }
+                "description": "Path to the newer basil image.",
+            },
         },
-        "required": [
-            "previous_image_path",
-            "current_image_path"
-        ],
-        "additionalProperties": False
-    }
+        "required": ["previous_image_path", "current_image_path"],
+        "additionalProperties": False,
+    },
 }
 
 ANALYSE_CAMERAS_TOOL_SCHEMA = {
@@ -68,14 +64,12 @@ ANALYSE_CAMERAS_TOOL_SCHEMA = {
         "properties": {
             "image_paths": {
                 "type": "array",
-                "items": {
-                    "type": "string"
-                },
+                "items": {"type": "string"},
                 "minItems": 1,
-                "description": "Paths to basil images from different cameras."
+                "description": "Paths to basil images from different cameras.",
             }
         },
         "required": ["image_paths"],
-        "additionalProperties": False
-    }
+        "additionalProperties": False,
+    },
 }

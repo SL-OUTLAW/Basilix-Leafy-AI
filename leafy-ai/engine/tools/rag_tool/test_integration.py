@@ -1,8 +1,8 @@
 import asyncio
 
 from managers.db_manager import open_pool, close_pool, run_query
-from context_manager.rag_context.embedding import embed_text
-from context_manager.rag_context.rag_tool import (
+from tools.rag_tool.embedding import embed_text
+from tools.rag_tool.rag_tool import (
     ingest_document,
     search_chunks,
 )

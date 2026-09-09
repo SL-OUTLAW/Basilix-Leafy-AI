@@ -1,6 +1,6 @@
 from managers.db_manager import run_query
 
-from context_manager.rag_context.embedding import embed_text
+from tools.rag_tool.embedding import embed_text
 
 
 def _vector_to_text(embedding: list[float]) -> str:

@@ -59,8 +59,7 @@ def build_rtsp_url(camera: Camera) -> str:
         path = "/" + path
 
     return (
-        f"rtsp://{encoded_user}:{encoded_password}"
-        f"@{camera.ip}:{camera.port}{path}"
+        f"rtsp://{encoded_user}:{encoded_password}" f"@{camera.ip}:{camera.port}{path}"
     )
 
 
@@ -69,8 +68,7 @@ def open_camera(camera: Camera) -> cv2.VideoCapture:
     # These options must be set before VideoCapture is created.
     # stimeout is expressed in microseconds in common FFmpeg builds.
     os.environ["OPENCV_FFMPEG_CAPTURE_OPTIONS"] = (
-        "rtsp_transport;tcp"
-        f"|stimeout;{int(OPEN_TIMEOUT_SECONDS * 1_000_000)}"
+        "rtsp_transport;tcp" f"|stimeout;{int(OPEN_TIMEOUT_SECONDS * 1_000_000)}"
     )
 
     url = build_rtsp_url(camera)

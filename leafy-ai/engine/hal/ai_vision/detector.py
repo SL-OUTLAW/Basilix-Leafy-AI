@@ -9,15 +9,15 @@ from features.growth import calculate_growth
 from features.measurements import (
     add_plant_spacing,
     calculate_crowding,
-    calculate_size_summary
+    calculate_size_summary,
 )
 from features.visualization import draw_analysis
 from features.multi_camera import build_camera_summary
 
-
 BASE_DIR = Path(__file__).resolve().parent
 OUTPUT_DIR = BASE_DIR / "analysed_images"
 OUTPUT_DIR.mkdir(exist_ok=True)
+
 
 def get_camera(image_path):
     name = image_path.name.lower()
@@ -29,6 +29,7 @@ def get_camera(image_path):
         return "camera2"
 
     return "unknown"
+
 
 def analyse_plants(image_path):
     try:
@@ -50,26 +51,15 @@ def analyse_plants(image_path):
 
         health = {
             "status": "not_available",
-            "reason": "The current single vision model does not classify plant health."
+            "reason": "The current single vision model does not classify plant health.",
         }
         add_plant_spacing(plants)
-        canopy = round(
-            calculate_canopy_percent(
-                result,
-                height,
-                width
-            ),
-            2
-        )
+        canopy = round(calculate_canopy_percent(result, height, width), 2)
 
         crowding = calculate_crowding(plants)
         size = calculate_size_summary(plants)
 
-        annotated = draw_analysis(
-            image,
-            result,
-            plants
-        )
+        annotated = draw_analysis(image, result, plants)
         output_name = image_path.stem + "_analysed" + image_path.suffix
         output_path = OUTPUT_DIR / output_name
 
@@ -79,15 +69,9 @@ def analyse_plants(image_path):
             "source": "vision",
             "status": "success",
             "camera": camera,
-            "image": {
-                "width": width,
-                "height": height
-            },
+            "image": {"width": width, "height": height},
             "health": health,
-            "plants": {
-                "count": len(plants),
-                "items": plants
-            },
+            "plants": {"count": len(plants), "items": plants},
             "canopy": canopy,
             "crowding": crowding,
             "size": size,
@@ -96,16 +80,13 @@ def analyse_plants(image_path):
                 "relative_path": (
                     "engine/context_manager/vision_context/"
                     "analysed_images/" + output_name
-                )
-            }
+                ),
+            },
         }
 
     except Exception as error:
-        return {
-            "source": "vision",
-            "status": "error",
-            "error": str(error)
-        }
+        return {"source": "vision", "status": "error", "error": str(error)}
+
 
 def compare_growth(previous_image_path, current_image_path):
     previous = analyse_plants(previous_image_path)
@@ -115,34 +96,30 @@ def compare_growth(previous_image_path, current_image_path):
         return {
             "source": "vision",
             "status": "error",
-            "error": "Previous image analysis failed."
+            "error": "Previous image analysis failed.",
         }
 
     if current["status"] != "success":
         return {
             "source": "vision",
             "status": "error",
-            "error": "Current image analysis failed."
+            "error": "Current image analysis failed.",
         }
     if previous["camera"] == "unknown" or current["camera"] == "unknown":
         return {
             "source": "vision",
             "status": "error",
-            "error": "Could not identify camera from image name."
+            "error": "Could not identify camera from image name.",
         }
-    return calculate_growth(
-        previous,
-        current,
-        previous_image_path,
-        current_image_path
-    )
+    return calculate_growth(previous, current, previous_image_path, current_image_path)
+
 
 def analyse_cameras(image_paths):
     if not image_paths:
         return {
             "source": "vision",
             "status": "error",
-            "error": "No camera images provided."
+            "error": "No camera images provided.",
         }
 
     results = []
@@ -154,31 +131,29 @@ def analyse_cameras(image_paths):
             return {
                 "source": "vision",
                 "status": "error",
-                "error": f"Could not analyse {image_path}"
+                "error": f"Could not analyse {image_path}",
             }
 
         results.append(result)
 
-    cameras = [
-        result["camera"]
-        for result in results
-    ]
+    cameras = [result["camera"] for result in results]
 
     if "unknown" in cameras:
         return {
             "source": "vision",
             "status": "error",
-            "error": "Could not identify camera from image name."
+            "error": "Could not identify camera from image name.",
         }
 
     if len(cameras) != len(set(cameras)):
         return {
             "source": "vision",
             "status": "error",
-            "error": "Only one image per camera can be summarised."
+            "error": "Only one image per camera can be summarised.",
         }
 
     return build_camera_summary(results)
+
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:

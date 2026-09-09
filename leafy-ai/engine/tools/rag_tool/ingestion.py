@@ -1,7 +1,7 @@
 import json
 
 from managers.db_manager import get_connection
-from context_manager.rag_context.embedding import embed_text
+from tools.rag_tool.embedding import embed_text
 
 
 def _vector_to_text(embedding: list[float]) -> str:
@@ -68,9 +68,7 @@ async def ingest_document(
 
             chunk_ids = []
 
-            for chunk_index, (content, vector_text) in enumerate(
-                embedded_chunks
-            ):
+            for chunk_index, (content, vector_text) in enumerate(embedded_chunks):
                 await cur.execute(
                     """
                     INSERT INTO rag_document_chunks (
