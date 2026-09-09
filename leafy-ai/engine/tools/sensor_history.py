@@ -121,7 +121,6 @@ def choose_bucket(
 
 async def sensor_history(
     arguments: dict[str, Any],
-    user_context: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
 
     sensor_type = arguments.get(

@@ -1,13 +1,15 @@
 from typing import Any
 import asyncio
 
-TOOL_LIST = {}
+from tools.sensor_history import sensor_history
+from tools.rag_tool.rag_tool import search_chunks
+
+TOOL_LIST = {"sensor_history_tool": sensor_history, "rag_tool": search_chunks}
 
 
 async def execute_tool(
     tool_name: str,
     arguments: dict[str, Any],
-    user_context: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
 
     tool = TOOL_LIST.get(tool_name)
@@ -22,7 +24,6 @@ async def execute_tool(
     try:
         result = await tool(
             arguments=arguments,
-            user_context=user_context,
         )
 
         return {
@@ -41,7 +42,6 @@ async def execute_tool(
 
 async def execute_tools(
     tool_calls: list[dict[str, Any]],
-    user_context: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
 
     tasks = [
@@ -52,7 +52,6 @@ async def execute_tools(
                     "arguments",
                     {},
                 ),
-                user_context=user_context,
             )
         )
         for tool_call in tool_calls
