@@ -84,6 +84,50 @@ CREATE INDEX IF NOT EXISTS idx_sensors_level_no
     ON sensors (level_no);
 
 
+INSERT INTO sensors (
+    sensor_name,
+    sensor_type,
+    level_no,
+    sensor_no,
+    unit,
+    status
+)
+VALUES
+    (
+        'WaterSensors pH',
+        'ph',
+        0,
+        1,
+        'pH',
+        'ACTIVE'
+    ),
+    (
+        'WaterSensors EC',
+        'ec',
+        0,
+        1,
+        'uS/cm',
+        'ACTIVE'
+    ),
+    (
+        'WaterSensors Water Temperature',
+        'water_temperature',
+        0,
+        1,
+        'degC',
+        'ACTIVE'
+    )
+ON CONFLICT (
+    sensor_type,
+    level_no,
+    sensor_no
+)
+DO UPDATE SET
+    sensor_name = EXCLUDED.sensor_name,
+    unit = EXCLUDED.unit,
+    status = EXCLUDED.status;
+
+
 CREATE TABLE IF NOT EXISTS cameras (
     camera_id BIGSERIAL PRIMARY KEY,
     camera_name VARCHAR(100) NOT NULL,
