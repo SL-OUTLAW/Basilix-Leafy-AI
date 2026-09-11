@@ -3,6 +3,7 @@ BEGIN;
 CREATE EXTENSION IF NOT EXISTS timescaledb;
 CREATE EXTENSION IF NOT EXISTS vector;
 
+
 CREATE TABLE IF NOT EXISTS users (
     user_id BIGSERIAL PRIMARY KEY,
     google_sub VARCHAR(255) NOT NULL UNIQUE,
@@ -115,6 +116,38 @@ VALUES
         0,
         1,
         'degC',
+        'ACTIVE'
+    ),
+    (
+        'Ambient Temperature Sensor',
+        'ambient_temperature',
+        0,
+        1,
+        'degC',
+        'ACTIVE'
+    ),
+    (
+        'Humidity Sensor',
+        'humidity',
+        0,
+        1,
+        '%',
+        'ACTIVE'
+    ),
+    (
+        'Dew Point Sensor',
+        'dew_point',
+        0,
+        1,
+        'degC',
+        'ACTIVE'
+    ),
+    (
+        'Water Level Sensor',
+        'water_level',
+        0,
+        1,
+        'cm',
         'ACTIVE'
     )
 ON CONFLICT (
