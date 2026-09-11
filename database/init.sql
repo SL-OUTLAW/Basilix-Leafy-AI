@@ -648,4 +648,9 @@ CREATE INDEX IF NOT EXISTS idx_rag_chunks_embedding_hnsw
     ON rag_document_chunks
     USING hnsw (embedding vector_cosine_ops);
 
+CREATE TABLE IF NOT EXISTS system_settings (
+    setting_key VARCHAR(100) PRIMARY KEY,
+    setting_value JSONB NOT NULL
+);
+
 COMMIT;
