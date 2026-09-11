@@ -1,16 +1,10 @@
 # Electrical Conductivity and pH Guide for Hydroponics
 
-Source ID: Source 6
 
-Source: Oklahoma State University Cooperative Extension Service
 
-Priority: HIGH
 
-URL: https://extension.okstate.edu/fact-sheets/print-publications/hla/electrical-conductivity-and-ph-guide-for-hydroponics-hla-6722.pdf
 
-Topic: Hydroponics, electrical conductivity, pH, nutrient management, basil production
 
-Publication date: October 2016
 
 ## Hydroponics
 

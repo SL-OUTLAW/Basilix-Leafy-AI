@@ -1,14 +1,9 @@
 # Hydroponics Systems and Principles of Plant Nutrition: Essential Nutrients, Function, Deficiency, and Excess
 
-Source ID: Source 2
 
-Source: Penn State Extension
 
-Priority: HIGH
 
-URL: https://extension.psu.edu/hydroponics-systems-and-principles-of-plant-nutrition-essential-nutrients-function-deficiency-and-excess
 
-Topic: Hydroponic plant nutrition, essential nutrients, pH, alkalinity, nutrient interactions, nutrient deficiencies and toxicity
 
 Updated: February 2, 2026
 

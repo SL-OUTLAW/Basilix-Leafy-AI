@@ -1,10 +1,5 @@
 # Research, innovation boosting food production
 
-Source ID: A9
-Source: La Trobe University
-Priority: VERY HIGH
-URL: https://www.latrobe.edu.au/news/articles/2026/release/research%2C-innovation-boosting-food-production
-Topic: Project context, protected cropping, hydroponics, basil production
 
 The innovative hydroponic system was originally engineered with the help of researchers from La Trobe’s School of Computing, Engineering and Mathematical Sciences (SCEMS) and the School of Agriculture, Biomedicine and Environment (SABE) for the NASA deep space food program.
 

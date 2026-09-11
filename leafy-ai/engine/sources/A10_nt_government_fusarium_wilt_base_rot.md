@@ -1,16 +1,10 @@
 # Fusarium Wilt and Base Rot of Basil
 
-Source ID: A10
 
-Source: Northern Territory Government, Department of Primary Industry and Fisheries
 
-Priority: HIGH
 
-URL: https://daf.nt.gov.au/publications/publications-search/publications-database/primary-industry/plant_pest/vegfieldguide-sml.pdf
 
-Topic: Basil Fusarium wilt, base rot, disease identification, hydroponic sanitation, disease prevention
 
-Publication date: November 2014
 
 ## Cause
 

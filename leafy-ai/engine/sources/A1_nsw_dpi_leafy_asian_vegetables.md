@@ -1,14 +1,9 @@
 # Leafy Asian vegetables and their nutrition in hydroponics
 
-Source ID: A1
 
-Source: NSW Department of Primary Industries
 
-Priority: HIGH
 
-URL: https://www.dpi.nsw.gov.au/__data/assets/pdf_file/0007/385576/Leafy-Asian-veg-final-Low-Res.pdf
 
-Topic: Hydroponic systems, nutrient management, EC, pH, nutrient disorders, basil production
 
 Source publication date: April 2011
 

@@ -1,14 +1,9 @@
 # Hydroponics Systems: Nutrient Solution Programs and Recipes
 
-Source ID: Source 3
 
-Source: Penn State Extension
 
-Priority: HIGH
 
-URL: https://extension.psu.edu/hydroponics-systems-nutrient-solution-programs-and-recipes
 
-Topic: Hydroponic nutrient solutions, fertilizer programs, nutrient recipes, fertilizer selection, solubility, compatibility
 
 Updated: March 18, 2024
 

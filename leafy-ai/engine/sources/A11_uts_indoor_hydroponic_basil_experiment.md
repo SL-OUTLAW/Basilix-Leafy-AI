@@ -1,22 +1,13 @@
 # Indoor Hydroponic Basil Experiment - UTS
 
-Source ID: A11
 
-Source: University of Technology Sydney research repository
 
-Priority: HIGH
 
-URL: https://opus.lib.uts.edu.au/rest/bitstreams/82d2d262-31ef-4d70-871f-c6bde5050fd3/retrieve
 
-Topic: Indoor hydroponic basil, deep-water culture, LED lighting, nutrient solutions, plant growth, nutrient effects
 
-Publication date: 2024
 
-Article title: Anthroponics: Application and effects on growth of parsley, rhipsalis, coriander, and basil fed with urine fertiliser
 
-Journal: Desalination and Water Treatment, volume 320, article 100682
 
-DOI: https://doi.org/10.1016/j.dwt.2024.100682
 
 ## Study context
 

@@ -1,16 +1,10 @@
 # Symptoms of Common Nutrient Deficiencies in Hydroponic Basil
 
-Source ID: Source 24
 
-Source: e-GRO / Cornell University research update
 
-Priority: HIGH
 
-URL: https://e-gro.org/pdf/2016-4.pdf
 
-Topic: Hydroponic basil, nutrient deficiencies, visual diagnosis, nutrient management
 
-Publication date: January 2016
 
 ## Overview
 

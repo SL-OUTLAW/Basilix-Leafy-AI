@@ -1,16 +1,10 @@
 # Protected Cropping in Action - Australian Basil and Soft Herbs
 
-Source ID: A8
 
-Source: AUSVEG
 
-Priority: VERY HIGH
 
-URL: https://ausveg.com.au/knowledge-hub/protected-cropping-in-action/
 
-Topic: Australian protected cropping, commercial basil production, soft herbs, production density, labour efficiency, YieldX growing system
 
-Publication date: 18 May 2026
 
 ## Protected cropping in Australian horticulture
 

@@ -1,14 +1,9 @@
 # Basil Downy Mildew
 
-Source ID: Source 10
 
-Source: Cornell University Vegetable Program
 
-Priority: HIGH
 
-URL: https://www.vegetables.cornell.edu/pest-management/disease-factsheets/basil-downy-mildew/
 
-Topic: Basil downy mildew, disease identification, greenhouse management, monitoring, resistant varieties
 
 Updated: March 2023
 

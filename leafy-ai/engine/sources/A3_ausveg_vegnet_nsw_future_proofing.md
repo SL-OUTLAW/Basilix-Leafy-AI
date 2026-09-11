@@ -1,14 +1,9 @@
 # VegNET NSW: Future-proofing vegetable production by upskilling growers
 
-Source ID: A3
 
-Source: AUSVEG
 
-Priority: HIGH
 
-URL: https://ausveg.com.au/knowledge-hub/vegnet-nsw-future-proofing-vegetable-production-by-upskilling-growers/
 
-Topic: Hydroponics, NFT systems, protected cropping, basil production, modular hydroponic infrastructure, grower practices
 
 Project Code: VG21000
 

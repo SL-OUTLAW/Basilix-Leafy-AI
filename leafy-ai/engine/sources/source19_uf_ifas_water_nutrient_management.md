@@ -1,14 +1,9 @@
 # Water and Nutrient Management Guidelines for Greenhouse Hydroponic Vegetable Production
 
-Source ID: Source 19
 
-Source: UF/IFAS Extension, University of Florida
 
-Priority: HIGH
 
-URL: https://ask.ifas.ufl.edu/publication/HS1274
 
-Topic: Hydroponic water management, irrigation scheduling, nutrient concentration, EC, leachate, automation, soilless media
 
 Original publication date: December 2015
 
