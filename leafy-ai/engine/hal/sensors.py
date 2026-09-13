@@ -6,6 +6,7 @@ from typing import Any
 import httpx
 
 from engine.logger.logger import audit_log
+from engine.managers.settings_manager import settings
 from engine.managers.db_manager import (
     get_connection,
     run_query,
@@ -446,7 +447,7 @@ class Sensors:
         while self.loop:
             await self.read_sensors()
 
-            await asyncio.sleep(10.0)
+            await asyncio.sleep(settings.get("sensor_polling_rate"))
 
     async def stop(
         self,

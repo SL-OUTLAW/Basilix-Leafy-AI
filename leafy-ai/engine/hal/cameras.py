@@ -8,6 +8,7 @@ from pathlib import Path
 
 import cv2
 
+from engine.managers.settings_manager import settings
 from engine.logger.logger import audit_log
 from engine.managers.db_manager import (
     get_connection,
@@ -283,7 +284,7 @@ class Cameras:
         while self.loop:
             await self.capture_all()
 
-            await asyncio.sleep(10.0)
+            await asyncio.sleep(settings.get("camera_polling_rate"))
 
     async def stop(
         self,
