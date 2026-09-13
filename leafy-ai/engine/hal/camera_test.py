@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Capture still images from the farm RTSP cameras.
 
 Normal use captures one image and exits. The camera connection is released after
@@ -30,6 +29,7 @@ class Camera:
 CAMERAS: dict[str, Camera] = {
     "level1_camera1": Camera("level1_camera1", "192.168.1.106"),
     "level1_camera2": Camera("level1_camera2", "192.168.1.108"),
+    109 112
     # Add future cameras here, for example:
     # "level2_camera1": Camera("level2_camera1", "192.168.1.xxx"),
 }
@@ -42,25 +42,14 @@ JPEG_QUALITY = 90
 
 def build_rtsp_url(camera: Camera) -> str:
     """Build the RTSP URL without logging or displaying the password."""
-    username = os.getenv("FARM_CAMERA_USER", "")
-    password = os.getenv("FARM_CAMERA_PASSWORD", "")
     path = os.getenv("FARM_CAMERA_RTSP_PATH", "")
 
-    if not username or not password:
-        raise RuntimeError(
-            "Set FARM_CAMERA_USER and FARM_CAMERA_PASSWORD before running."
-        )
-
-    # Encode credentials so characters such as @, : and / do not break the URL.
-    encoded_user = quote(username, safe="")
-    encoded_password = quote(password, safe="")
 
     if path and not path.startswith("/"):
         path = "/" + path
 
     return (
-        f"rtsp://{encoded_user}:{encoded_password}"
-        f"@{camera.ip}:{camera.port}{path}"
+        f"rtsp://{encoded_user}:{encoded_password}" f"@{camera.ip}:{camera.port}{path}"
     )
 
 
@@ -69,8 +58,7 @@ def open_camera(camera: Camera) -> cv2.VideoCapture:
     # These options must be set before VideoCapture is created.
     # stimeout is expressed in microseconds in common FFmpeg builds.
     os.environ["OPENCV_FFMPEG_CAPTURE_OPTIONS"] = (
-        "rtsp_transport;tcp"
-        f"|stimeout;{int(OPEN_TIMEOUT_SECONDS * 1_000_000)}"
+        "rtsp_transport;tcp" f"|stimeout;{int(OPEN_TIMEOUT_SECONDS * 1_000_000)}"
     )
 
     url = build_rtsp_url(camera)

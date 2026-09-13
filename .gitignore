@@ -74,6 +74,8 @@ __pycache__/
 !leafy-ai/engine/context_manager/vision_context/models/basil_canopy_deeplabv3.pt
 leafy-ai/engine/context_manager/vision_context/analysed_images/
 
+leafy-ai/engine/hal/camera_images/
+
 .env
 !.env.example
 
