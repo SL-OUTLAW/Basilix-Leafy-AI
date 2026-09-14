@@ -1,10 +1,10 @@
 import asyncio
-import os
 import selectors
 import time
 
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 import cv2
 
@@ -44,11 +44,15 @@ class Cameras:
         output_directory: Path = Path("camera_images"),
     ):
         self.cameras: list[Camera] = []
+
         self.output_directory = output_directory
 
         self.loop = False
 
-        self.latest_images: list[Path] = []
+        self.latest_images: dict[
+            int,
+            dict[str, Any],
+        ] = {}
 
     async def load_cameras(
         self,
@@ -84,7 +88,7 @@ class Cameras:
         camera: Camera,
     ) -> cv2.VideoCapture:
 
-        url = f"rtsp://" f"{camera.ip}:" f"{RTSP_PORT}/"
+        url = f"rtsp://{camera.ip}:{RTSP_PORT}/"
 
         capture = cv2.VideoCapture(
             url,
@@ -106,7 +110,11 @@ class Cameras:
             capture.release()
 
             raise ConnectionError(
-                f"Could not open {camera.name} " f"at {camera.ip}:{RTSP_PORT}."
+                f"Could not open "
+                f"{camera.name} "
+                f"at "
+                f"{camera.ip}:"
+                f"{RTSP_PORT}."
             )
 
         return capture
@@ -119,6 +127,7 @@ class Cameras:
         deadline = time.monotonic() + READ_TIMEOUT_SECONDS
 
         latest_frame = None
+
         successful_frames = 0
 
         while time.monotonic() < deadline:
@@ -128,6 +137,7 @@ class Cameras:
             if ok and frame is not None:
 
                 latest_frame = frame
+
                 successful_frames += 1
 
                 if successful_frames >= WARMUP_FRAMES:
@@ -160,7 +170,7 @@ class Cameras:
 
             timestamp = datetime.now().astimezone().strftime("%Y%m%d_%H%M%S_%f")
 
-            output_path = self.output_directory / (f"{camera.name}_" f"{timestamp}.jpg")
+            output_path = self.output_directory / (f"{camera.name}_{timestamp}.jpg")
 
             parameters = [
                 cv2.IMWRITE_JPEG_QUALITY,
@@ -187,10 +197,40 @@ class Cameras:
         camera: Camera,
     ) -> Path:
 
-        return await asyncio.to_thread(
+        output_path = await asyncio.to_thread(
             self.capture_one,
             camera,
         )
+
+        self.latest_images[camera.camera_id] = {
+            "camera_id": camera.camera_id,
+            "camera_name": camera.name,
+            "level_no": camera.level,
+            "image_path": str(output_path),
+            "captured_at": (datetime.now().astimezone().isoformat()),
+        }
+
+        return output_path
+
+    def get_latest_images(
+        self,
+    ) -> dict[int, dict[str, Any]]:
+
+        return {
+            camera_id: image.copy() for camera_id, image in self.latest_images.items()
+        }
+
+    def get_latest_image(
+        self,
+        camera_id: int,
+    ) -> dict[str, Any] | None:
+
+        image = self.latest_images.get(camera_id)
+
+        if image is None:
+            return None
+
+        return image.copy()
 
     async def log_camera_error(
         self,
@@ -198,19 +238,28 @@ class Cameras:
         error: Exception,
     ) -> None:
 
-        if isinstance(error, ConnectionError):
+        if isinstance(
+            error,
+            ConnectionError,
+        ):
             action_type = "CAMERA_CONNECTION_ERROR"
 
             description = f"System could not connect to {camera.name}."
 
-        elif isinstance(error, TimeoutError):
+        elif isinstance(
+            error,
+            TimeoutError,
+        ):
             action_type = "CAMERA_READ_TIMEOUT"
 
             description = (
                 f"{camera.name} connected but a camera frame could not be read."
             )
 
-        elif isinstance(error, OSError):
+        elif isinstance(
+            error,
+            OSError,
+        ):
             action_type = "CAMERA_IMAGE_SAVE_ERROR"
 
             description = f"System could not save an image captured from {camera.name}."
@@ -221,15 +270,16 @@ class Cameras:
             description = f"An unexpected camera error occurred for {camera.name}."
 
         async with get_connection() as conn:
+
             await audit_log(
                 conn=conn,
                 action_type=action_type,
                 entity_type="camera",
-                entity_id=camera.camera_id,
+                entity_id=(camera.camera_id),
                 description=description,
                 metadata={
-                    "camera_name": camera.name,
-                    "level_no": camera.level,
+                    "camera_name": (camera.name),
+                    "level_no": (camera.level),
                     "ip": camera.ip,
                     "error_type": (type(error).__name__),
                     "error": str(error),
@@ -260,7 +310,10 @@ class Cameras:
             )
         )
 
-        for camera, result in camera_results:
+        for (
+            camera,
+            result,
+        ) in camera_results:
 
             if isinstance(
                 result,
@@ -282,6 +335,7 @@ class Cameras:
         await self.load_cameras()
 
         while self.loop:
+
             await self.capture_all()
 
             await asyncio.sleep(settings.get("camera_polling_rate"))
@@ -301,10 +355,17 @@ async def test():
     try:
         await cameras.load_cameras()
 
-        print(f"Loaded {len(cameras.cameras)} camera(s)")
+        print(f"Loaded " f"{len(cameras.cameras)} " f"camera(s)")
 
         for camera in cameras.cameras:
-            print(f"Camera {camera.name} (Level {camera.level}) {camera.ip}")
+
+            print(
+                f"Camera "
+                f"{camera.name} "
+                f"(Level "
+                f"{camera.level}) "
+                f"{camera.ip}"
+            )
 
         results = await cameras.capture_all()
 
@@ -318,6 +379,11 @@ async def test():
 
             else:
                 print(f"SUCCESS: " f"{camera.name}: " f"{result}")
+
+        print(
+            "Latest images:",
+            cameras.get_latest_images(),
+        )
 
     finally:
         await close_pool()
