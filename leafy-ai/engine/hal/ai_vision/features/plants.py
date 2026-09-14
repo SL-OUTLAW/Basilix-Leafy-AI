@@ -72,7 +72,7 @@ def calculate_canopy_percent(result, height, width):
 
     return float(canopy_percent)
 
-def detect_plants(image):
+def analyse_canopy(image):
     result = plant_model.predict(
         image,
         conf=0.20,
@@ -84,78 +84,17 @@ def detect_plants(image):
         verbose=False
     )[0]
 
-    plants = []
-
     height, width = image.shape[:2]
-    polygons = result.masks.xy if result.masks is not None else []
 
-    for index, box in enumerate(result.boxes):
-        x1, y1, x2, y2 = box.xyxy[0].tolist()
-
-        area_pixels = None
-        image_area_percent = None
-
-        label_x = round((x1 + x2) / 2)
-        label_y = round((y1 + y2) / 2)
-
-        if index < len(polygons):
-            poly = np.asarray(
-                np.round(polygons[index]),
-                dtype=np.int32
-            )
-
-            mask = make_mask(
-                poly,
-                height,
-                width
-            )
-
-            area_pixels = int(mask.sum())
-
-            moments = cv2.moments(mask)
-
-            if moments["m00"] != 0:
-                label_x = round(moments["m10"] / moments["m00"])
-                label_y = round(moments["m01"] / moments["m00"])
-            else:
-                label_x = round((x1 + x2) / 2)
-                label_y = round((y1 + y2) / 2)
-
-            image_area_percent = round(
-                area_pixels / (height * width) * 100.0,
-                4
-            )
-
-        plants.append({
-            "confidence": round(float(box.conf[0]), 4),
-            "area_pixels": area_pixels,
-            "image_area_percent": image_area_percent,
-            "center": {
-                "x": round((x1 + x2) / 2),
-                "y": round((y1 + y2) / 2)
-            },
-            "label_center": {
-                "x": label_x,
-                "y": label_y
-            },
-            "width_pixels": round(x2 - x1),
-            "height_pixels": round(y2 - y1),
-            "box": {
-                "x1": round(x1),
-                "y1": round(y1),
-                "x2": round(x2),
-                "y2": round(y2)
-            }
-        })
-
-    plants.sort(
-        key=lambda p: (
-            -round(p["center"]["y"] / 35),
-            p["center"]["x"]
-        )
+    canopy_percent = calculate_canopy_percent(
+        result,
+        height,
+        width
     )
 
-    for i, plant in enumerate(plants):
-        plant["id"] = i + 1
-
-    return result, plants
+    return {
+        "coverage_percent": round(
+            canopy_percent,
+            2
+        )
+    }

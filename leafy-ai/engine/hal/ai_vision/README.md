@@ -1,5 +1,5 @@
 # Basilix AI Vision
-AI Vision module for basil plant detection, segmentation, canopy analysis, size and spacing analysis.
+AI Vision module for whole-camera basil canopy analysis.
 
 ## Models
 
@@ -7,36 +7,41 @@ The current active Vision pipeline uses one model:
 
 - `models/basil_segmentation_yolo26s_final.pt`
 
-The model performs basil instance segmentation.
+The model performs basil instance segmentation internally.
 
-The segmentation results are used with deterministic Python/OpenCV processing to calculate:
+For the active Vision pipeline, the detected basil masks are combined into one overall canopy mask for the camera image.
 
-- visible plant count
-- plant positions
-- canopy coverage
-- apparent plant size
-- nearest plant spacing
-- relative spacing / crowding
-- analysed image overlays
+Individual detections are not treated as physical plant counts.
 
-Older health and canopy models may still exist in the repository as legacy files, but they are not part of the current active Vision pipeline.
+## Current Vision Output
 
-## Current evaluation
+Vision currently provides:
 
-The current segmentation model has been tested on labelled real farm camera images.
+- camera identifier
+- image width and height
+- whole-frame basil canopy coverage percentage
+- health availability status
 
-A 10-image farm regression audit produced:
+Example detector output:
 
-- 543 ground-truth plant instances
-- 546 predicted plant instances
-- mean absolute count error: 0.5 plants per image
-- exact plant count on 6 of 10 images
-- plant count within ±1 on 9 of 10 images
-- largest count error: 2 plants
-
-This audit includes development and validation images, so it should not be treated as a new independent accuracy benchmark.
-
-Segmentation performance is generally strong on the current fixed-camera farm images, but dense mature canopy and heavy leaf overlap remain more difficult.
+```json
+{
+  "source": "vision",
+  "status": "success",
+  "camera": "camera1",
+  "image": {
+    "width": 704,
+    "height": 576
+  },
+  "canopy": {
+    "coverage_percent": 74.3
+  },
+  "health": {
+    "status": "not_available",
+    "reason": "The current single vision model does not classify plant health."
+  }
+}
+```
 
 ## Setup
 
@@ -54,39 +59,6 @@ From the `leafy-ai` directory:
 python -m engine.hal.ai_vision.detector "path/to/image.jpg"
 ```
 
-Example output:
-
-```json
-{
-  "source": "vision",
-  "status": "success",
-  "camera": "level1_camera1",
-  "farm_level": 1,
-  "stage": "growing",
-  "image": {
-    "width": 704,
-    "height": 576
-  },
-  "health": {
-    "status": "not_available",
-    "reason": "The current single vision model does not classify plant health."
-  },
-  "plants": {
-    "count": 57,
-    "items": []
-  },
-  "canopy": 59.19,
-  "crowding": {
-    "average_nearest_distance_pixels": 58.36,
-    "average_relative_spacing": 0.996
-  },
-  "size": {
-    "average_image_area_percent": 1.0896,
-    "median_image_area_percent": 0.3867
-  }
-}
-```
-
 ## Hardware
 
 The Vision code uses GPU acceleration when CUDA is available and can fall back to CPU execution.
@@ -97,26 +69,98 @@ Actual inference performance on the final farm deployment computer has not yet b
 
 ## AI Core Integration
 
-Vision exposes one public analysis function:
+Vision exposes one public batch analysis function:
 
 `analyse_camera_images(image_paths)`
 
 Input format:
 
-`{image_id: image_path}`
+```python
+{
+    image_id: image_path,
+    ...
+}
+```
 
-The camera/HAL layer provides the image IDs and paths from `plant_images`.
+The camera/HAL layer is responsible for creating the corresponding plant_images records and supplying Vision with the image IDs and image paths.
 
 Vision then:
 
-- analyses each image
-- stores successful results in `plant_image_analysis`
+- analyses each supplied image
+- creates a compact whole-camera analysis
+- stores successful results in plant_image_analysis
+- associates each analysis with its supplied image_id
 - returns the results as a JSON-compatible dictionary
-- keeps the latest successful result in memory
+- keeps the latest fully successful batch in memory
 
-The latest result can be retrieved with:
+The latest fully successful batch can be retrieved with:
 
 `get_latest_analysis()`
+
+Example stored analysis:
+
+```json
+{
+  "source": "vision",
+  "status": "success",
+  "image_id": 101,
+  "camera": "camera1",
+  "image": {
+    "width": 704,
+    "height": 576
+  },
+  "health": {
+    "status": "not_available",
+    "reason": "The current single vision model does not classify plant health."
+  },
+  "canopy": {
+    "coverage_percent": 74.3
+  }
+}
+```
+
+## Current Testing
+
+The current Vision pipeline has been tested successfully with real basil camera images.
+
+Verified tests include:
+
+- single-image integration test: passed
+- two-image real PostgreSQL batch test: passed
+- PostgreSQL analysis read-back: passed
+- database cleanup verification: passed
+- failure-case test suite: passed
+- 20-image repeated batch stress test: passed
+- 58 newer farm-camera images processed successfully
+- Camera 1: 29/29 images passed
+- Camera 2: 29/29 images passed
+
+For the 58-image farm-camera robustness test:
+
+- Camera 1 canopy range: 39.46% to 45.14%
+- Camera 1 average canopy coverage: 41.71%
+- Camera 2 canopy range: 32.73% to 34.60%
+- Camera 2 average canopy coverage: 33.90%
+
+These canopy percentages measure predicted basil coverage across the full image frame. They are not model-confidence or accuracy percentages.
+
+These tests demonstrate pipeline robustness on the tested images but should not be treated as independent segmentation-accuracy benchmarks.
+
+## Database Integration
+
+Vision is implemented to store successful analysis results in:
+
+plant_image_analysis
+
+using the supplied plant_images.image_id.
+
+The database connection has been verified.
+
+Real Vision-to-plant_image_analysis inserts have been verified successfully using temporary test camera and plant_images records.
+
+In normal operation, the camera/HAL pipeline is responsible for creating the real plant_images records before Vision analyses them.
+
+Vision does not create camera or plant_images records itself.
 
 ## Important limitations
 
@@ -128,23 +172,28 @@ The current active Vision model does not classify:
 - nutrient deficiency
 - other plant health conditions
 
-These should not be inferred without validated model or sensor evidence.
+Health therefore returns `not_available`.
 
-Current plant size, height, width and spacing measurements are image-space measurements.
+These should not be inferred without validated model or sensor evidence.
 
 The system does not currently provide:
 
+- physical plant count
 - physical centimetre measurements
+- individual plant size
+- individual plant spacing
+- crowding measurements
 - persistent plant tracking across dates
 - confirmed channel or row identification
 - exact plant age
 - harvest readiness
 - expansion readiness
+- yield prediction
 
 Physical measurements would require camera calibration or another known physical reference.
 
-Plant IDs are spatial labels for a single analysed image. The same ID number across different images must not be assumed to represent the same physical plant.
-
 Canopy coverage is measured across the full camera frame because a validated growing-area region has not yet been defined.
 
-Dense mature plants and overlapping leaves can reduce individual segmentation accuracy.
+Dense mature canopy and overlapping leaves may affect segmentation performance.
+
+The camera identifier is currently inferred from the image filename. If the filename does not identify a recognised camera, the detector returns `"camera": "unknown"`.

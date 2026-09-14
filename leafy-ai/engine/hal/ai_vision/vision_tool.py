@@ -2,7 +2,7 @@ import asyncio
 import json
 from copy import deepcopy
 
-from engine.hal.ai_vision.detector import analyse_plants
+from engine.hal.ai_vision.detector import analyse_image
 from engine.managers.db_manager import run_query
 
 
@@ -10,6 +10,16 @@ MODEL_NAME = "basil_segmentation_yolo26s_final.pt"
 
 _latest_analysis = None
 
+def _build_public_analysis(analysis, image_id):
+    return {
+        "source": "vision",
+        "status": "success",
+        "image_id": image_id,
+        "camera": analysis.get("camera"),
+        "image": analysis.get("image"),
+        "health": analysis.get("health"),
+        "canopy": analysis.get("canopy"),
+    }
 
 async def analyse_camera_images(image_paths):
     """
@@ -21,7 +31,7 @@ async def analyse_camera_images(image_paths):
     }
 
     Successful analyses are stored in plant_image_analysis.
-    The full result is returned as a JSON-compatible dictionary.
+    A compact whole-camera analysis is returned as a JSON-compatible dictionary.
     """
 
     global _latest_analysis
@@ -58,7 +68,7 @@ async def analyse_camera_images(image_paths):
             continue
 
         analysis = await asyncio.to_thread(
-            analyse_plants,
+            analyse_image,
             image_path,
         )
 
@@ -66,7 +76,10 @@ async def analyse_camera_images(image_paths):
             results[str(image_id)] = analysis
             continue
 
-        analysis["image_id"] = image_id
+        analysis = _build_public_analysis(
+            analysis,
+            image_id,
+        )
 
         try:
             rows = await run_query(
@@ -111,7 +124,7 @@ async def analyse_camera_images(image_paths):
 
     if successful == len(image_paths):
         status = "success"
-    elif status == "success":
+    elif successful > 0:
         status = "partial_success"
     else:
         status = "error"

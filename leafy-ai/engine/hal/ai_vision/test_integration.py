@@ -48,9 +48,13 @@ async def main():
 
     assert analysis["status"] == "success"
     assert analysis["image_id"] == 101
-    assert analysis["plants"]["count"] >= 0
-    assert 0 <= analysis["canopy"] <= 100
+    assert 0 <= analysis["canopy"]["coverage_percent"] <= 100
     assert analysis["health"]["status"] == "not_available"
+
+    assert "plants" not in analysis
+    assert "crowding" not in analysis
+    assert "size" not in analysis
+    assert "analysed_image" not in analysis
 
     latest = vision_tool.get_latest_analysis()
 

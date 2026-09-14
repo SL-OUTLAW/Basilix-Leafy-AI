@@ -85,6 +85,3 @@ npm-debug.log*
 
 ### Frontend build ###
 webapp/frontend/dist/
-
-# Vision generated analysis images
-leafy-ai/engine/hal/ai_vision/analysed_images/
