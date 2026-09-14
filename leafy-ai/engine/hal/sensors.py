@@ -18,6 +18,8 @@ class Sensors:
         self.ws_fallback_ip = "192.168.1.100"
         self.as_base_url = "Leafy-AI.local:8080"
 
+        self.latest: dict[str, Any] = {}
+
         self.loop = False
 
         try:
@@ -118,6 +120,26 @@ class Sensors:
 
         await self.save_water_readings(data)
 
+        self.latest.update(
+            {
+                "ph": {
+                    "value": data["ph"],
+                    "unit": data.get("ph_units"),
+                    "valid": data["ph_valid"],
+                },
+                "ec": {
+                    "value": data["ec"],
+                    "unit": data.get("ec_units"),
+                    "valid": data["ec_valid"],
+                },
+                "water_temperature": {
+                    "value": data["water_temperature_c"],
+                    "unit": data.get("water_temperature_units"),
+                    "valid": data["water_temperature_valid"],
+                },
+            }
+        )
+
     async def handle_ambient_sensors(
         self,
         result: httpx.Response | BaseException,
@@ -176,6 +198,31 @@ class Sensors:
             return
 
         await self.save_ambient_readings(data)
+
+        self.latest.update(
+            {
+                "ambient_temperature": {
+                    "value": data["ambient_temperature_c"],
+                    "unit": "degC",
+                    "valid": data["ambient_valid"],
+                },
+                "humidity": {
+                    "value": data["humidity_percent"],
+                    "unit": "%",
+                    "valid": data["ambient_valid"],
+                },
+                "dew_point": {
+                    "value": data["dew_point_c"],
+                    "unit": "degC",
+                    "valid": data["ambient_valid"],
+                },
+                "water_level": {
+                    "value": data["water_level"],
+                    "unit": data.get("water_level_units"),
+                    "valid": data["water_level_valid"],
+                },
+            }
+        )
 
     async def save_water_readings(
         self,
@@ -437,6 +484,9 @@ class Sensors:
                     "error": str(error),
                 },
             )
+
+    async def get_latest(self) -> dict[str, Any]:
+        return await self.latest.copy()
 
     async def start(
         self,
