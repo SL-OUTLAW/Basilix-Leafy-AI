@@ -29,7 +29,7 @@ async def lifespan(app: FastAPI):
 
     hal = Hal()
 
-    scheduler_task = asyncio.create_task(scheduler.scheduler_loop())
+    scheduler_task = asyncio.create_task(scheduler.start())
 
     await hal.start_hal()
 
@@ -43,7 +43,15 @@ async def lifespan(app: FastAPI):
 
         # engine shutdown
 
+        await scheduler.stop()
         await hal.stop_hal()
+
+        scheduler_task.cancel()
+
+        await asyncio.gather(
+            scheduler_task,
+            return_exceptions=True,
+        )
 
         await close_pool()
 
