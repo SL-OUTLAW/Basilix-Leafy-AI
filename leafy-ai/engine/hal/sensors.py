@@ -497,7 +497,7 @@ class Sensors:
         while self.loop:
             await self.read_sensors()
 
-            await asyncio.sleep(settings.get("sensor_polling_rate"))
+            await asyncio.sleep(settings.get("sensors").get("polling_rate"))
 
     async def stop(
         self,
