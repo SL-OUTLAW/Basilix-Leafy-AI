@@ -338,7 +338,7 @@ class Cameras:
 
             await self.capture_all()
 
-            await asyncio.sleep(settings.get("camera_polling_rate"))
+            await asyncio.sleep(settings.get("cameras").get("polling_rate"))
 
     async def stop(
         self,
