@@ -16,6 +16,11 @@ AI_CORE_PUBLIC_KEY_PATH = os.getenv(
     "/run/secrets/ai_core_public_key",
 )
 
+WEBAPP_BACKEND_PUBLIC_KEY_PATH = os.getenv(
+    "WEBAPP_BACKEND_PUBLIC_KEY_PATH",
+    "/run/secrets/webapp_backend_public_key",
+)
+
 SECURITY_PRIVATE_KEY_PATH = os.getenv(
     "SECURITY_PRIVATE_KEY_PATH",
     "/run/secrets/security_private_key",
@@ -23,6 +28,8 @@ SECURITY_PRIVATE_KEY_PATH = os.getenv(
 
 
 ai_core_public_key = Path(AI_CORE_PUBLIC_KEY_PATH).read_bytes()
+
+webapp_backend_public_key = Path(WEBAPP_BACKEND_PUBLIC_KEY_PATH).read_bytes()
 
 security_private_key = Path(SECURITY_PRIVATE_KEY_PATH).read_bytes()
 
@@ -47,7 +54,7 @@ def create_token() -> str:
     )
 
 
-def validate_token(
+def validate_ai_token(
     token: str,
 ) -> dict[str, Any] | None:
 
@@ -59,6 +66,27 @@ def validate_token(
             issuer="ai_core",
             audience="security",
             subject="ai_core",
+        )
+
+        return claims
+
+    except jwt.InvalidTokenError as error:
+        print(error)
+        return None
+
+
+def validate_webapp_token(
+    token: str,
+) -> dict[str, Any] | None:
+
+    try:
+        claims = jwt.decode(
+            token,
+            key=webapp_backend_public_key,
+            algorithms=["EdDSA"],
+            issuer="webapp_backend",
+            audience="security",
+            subject="webapp_backend",
         )
 
         return claims

@@ -1,6 +1,6 @@
 import json
 
-from managers.db_manager import run_query
+from engine.managers.db_manager import run_query
 
 settings = {}
 
