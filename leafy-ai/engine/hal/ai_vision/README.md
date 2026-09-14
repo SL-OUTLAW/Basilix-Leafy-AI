@@ -1,58 +1,43 @@
 # Basilix AI Vision
-AI Vision module for basil health classification, plant detection and canopy analysis.
+AI Vision module for basil plant detection, segmentation, canopy analysis, size and spacing analysis.
 
 ## Models
 
-Required model files:
+The current active Vision pipeline uses one model:
 
-- `models/basil_health_yolo26s_final.pt`
-- `models/basil_segmentation_yolo26s.pt`
-- `models/basil_canopy_deeplabv3.pt`
+- `models/basil_segmentation_yolo26s_final.pt`
 
-The health model uses YOLO26s classification.
+The model performs basil instance segmentation.
 
-The segmentation model detects individual basil plants and is used for plant counting and position information.
+The segmentation results are used with deterministic Python/OpenCV processing to calculate:
 
-The canopy model uses DeepLabV3 to measure basil canopy coverage in the camera frame.
+- visible plant count
+- plant positions
+- canopy coverage
+- apparent plant size
+- nearest plant spacing
+- relative spacing / crowding
+- analysed image overlays
 
-Vision model files are stored in the `models` folder.
+Older health and canopy models may still exist in the repository as legacy files, but they are not part of the current active Vision pipeline.
 
 ## Current evaluation
 
-Health model classes:
+The current segmentation model has been tested on labelled real farm camera images.
 
-- healthy
-- downy_mildew
+A 10-image farm regression audit produced:
 
-Training-time validation:
+- 543 ground-truth plant instances
+- 546 predicted plant instances
+- mean absolute count error: 0.5 plants per image
+- exact plant count on 6 of 10 images
+- plant count within ±1 on 9 of 10 images
+- largest count error: 2 plants
 
-- Top-1 accuracy: 97.22%
-- Top-5 accuracy: 100%
+This audit includes development and validation images, so it should not be treated as a new independent accuracy benchmark.
 
-Current validation re-check:
+Segmentation performance is generally strong on the current fixed-camera farm images, but dense mature canopy and heavy leaf overlap remain more difficult.
 
-- Overall accuracy: 98.31% (116/118)
-- healthy: 98.78% (81/82)
-- downy_mildew: 97.22% (35/36)
-
-Current test set:
-
-- Overall accuracy: 98.21% (110/112)
-- healthy: 98.78% (81/82)
-- downy_mildew: 96.67% (29/30)
-
-Dataset checks:
-
-- No exact duplicate images found across train, validation and test splits
-- No matching Roboflow source filenames found across splits
-
-Real greenhouse testing:
-
-- The health model runs successfully on real farm camera images
-- Current tested farm images were classified as healthy
-- Diseased plants have not yet been locally validated under the farm camera conditions
-
-The accuracy results above apply only to the current two-class health dataset.
 ## Setup
 
 Create or activate a Python environment and install:
@@ -63,10 +48,10 @@ pip install -r requirements.txt
 
 ## Run
 
-From the project root:
+From the `leafy-ai` directory:
 
 ```bash
-python leafy-ai/engine/context_manager/vision_context/detector.py "path/to/image.jpg"
+python -m engine.hal.ai_vision.detector "path/to/image.jpg"
 ```
 
 Example output:
@@ -75,90 +60,91 @@ Example output:
 {
   "source": "vision",
   "status": "success",
+  "camera": "level1_camera1",
+  "farm_level": 1,
+  "stage": "growing",
   "image": {
-    "width": 1707,
-    "height": 985
+    "width": 704,
+    "height": 576
   },
   "health": {
-    "condition": "healthy",
-    "confidence": 0.9991,
-    "flagged": false,
-  }
-}
-```
-Possible downy mildew result:
-
-```json
-{
-  "source": "vision",
-  "status": "success",
-  "image": {
-    "width": 1707,
-    "height": 985
+    "status": "not_available",
+    "reason": "The current single vision model does not classify plant health."
   },
-  "health": {
-    "condition": "downy_mildew",
-    "confidence": 0.95,
-    "flagged": true,
+  "plants": {
+    "count": 57,
+    "items": []
+  },
+  "canopy": 59.19,
+  "crowding": {
+    "average_nearest_distance_pixels": 58.36,
+    "average_relative_spacing": 0.996
+  },
+  "size": {
+    "average_image_area_percent": 1.0896,
+    "median_image_area_percent": 0.3867
   }
 }
 ```
 
 ## Hardware
 
-The same model works on:
+The Vision code uses GPU acceleration when CUDA is available and can fall back to CPU execution.
 
-- NVIDIA GPU systems
-- CPU-only laptops
-- university computers without CUDA
+Development and testing have been performed with the current Leafy AI development environment.
 
-The code automatically uses GPU when available and falls back to CPU.
+Actual inference performance on the final farm deployment computer has not yet been validated.
 
 ## AI Core Integration
 
-```python
-from detector import analyse_plants
+Vision exposes one public analysis function:
 
-result = analyse_plants("image.jpg")
-```
+`analyse_camera_images(image_paths)`
 
-The function returns a JSON-compatible Python dictionary.
+Input format:
 
-`analyse_plants()` is the main Vision entry point.
+`{image_id: image_path}`
 
-It analyses the image once and returns the available plant information in a JSON-compatible Python dictionary.
+The camera/HAL layer provides the image IDs and paths from `plant_images`.
 
-Current output includes:
+Vision then:
 
-- image dimensions
-- camera name when available
-- health classification
-- health confidence
-- health flag
-- detected plant count
-- plant confidence
-- plant centre coordinates
-- plant bounding boxes
-- frame canopy coverage percentage
-- analysed image path
+- analyses each image
+- stores successful results in `plant_image_analysis`
+- returns the results as a JSON-compatible dictionary
+- keeps the latest successful result in memory
 
-Additional plant analysis such as size, crowding and other visual health indicators can be added later when suitable farm data and validated methods are available.
+The latest result can be retrieved with:
 
-## Important limitation
+`get_latest_analysis()`
 
-The current model only classifies:
+## Important limitations
 
-- healthy
-- downy_mildew
+The current active Vision model does not classify:
 
-Other basil health conditions such as bacterial leaf spot, nutrient deficiency, overwatering, dryness and other plant stress are not currently classified by this model.
+- disease
+- dryness
+- overwatering
+- nutrient deficiency
+- other plant health conditions
 
-These conditions can be added later when suitable training data is available.
+These should not be inferred without validated model or sensor evidence.
 
-Model confidence is not guaranteed diagnostic certainty.
+Current plant size, height, width and spacing measurements are image-space measurements.
 
-Vision results should be combined with sensor data and AI Core reasoning before operational decisions are made.
+The system does not currently provide:
 
-The plant segmentation model has been validated on labelled real farm images. Plant counting performs well on the current local dataset, but accuracy decreases when mature plants overlap heavily. Counts on new images should therefore be treated as estimates rather than exact measurements.
+- physical centimetre measurements
+- persistent plant tracking across dates
+- confirmed channel or row identification
+- exact plant age
+- harvest readiness
+- expansion readiness
 
-Canopy coverage is currently measured across the full camera frame. It does not yet represent calibrated growing-area coverage because a validated growing-area region has not been defined.
+Physical measurements would require camera calibration or another known physical reference.
+
+Plant IDs are spatial labels for a single analysed image. The same ID number across different images must not be assumed to represent the same physical plant.
+
+Canopy coverage is measured across the full camera frame because a validated growing-area region has not yet been defined.
+
+Dense mature plants and overlapping leaves can reduce individual segmentation accuracy.

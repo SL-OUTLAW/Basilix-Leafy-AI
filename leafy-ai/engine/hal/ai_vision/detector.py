@@ -4,15 +4,15 @@ import sys
 
 import cv2
 
-from features.plants import detect_plants, calculate_canopy_percent
-from features.growth import calculate_growth
-from features.measurements import (
+from engine.hal.ai_vision.features.plants import detect_plants, calculate_canopy_percent
+from engine.hal.ai_vision.features.growth import calculate_growth
+from engine.hal.ai_vision.features.measurements import (
     add_plant_spacing,
     calculate_crowding,
     calculate_size_summary,
 )
-from features.visualization import draw_analysis
-from features.multi_camera import build_camera_summary
+from engine.hal.ai_vision.features.visualization import draw_analysis
+from engine.hal.ai_vision.features.multi_camera import build_camera_summary
 
 BASE_DIR = Path(__file__).resolve().parent
 OUTPUT_DIR = BASE_DIR / "analysed_images"
@@ -78,7 +78,7 @@ def analyse_plants(image_path):
             "analysed_image": {
                 "filename": output_name,
                 "relative_path": (
-                    "engine/context_manager/vision_context/"
+                    "engine/hal/ai_vision/"
                     "analysed_images/" + output_name
                 ),
             },
