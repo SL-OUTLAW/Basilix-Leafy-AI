@@ -1,0 +1,317 @@
+[
+  {
+    "source_id": "1",
+    "source": "Penn State Extension",
+    "url": "https://extension.psu.edu/basil-a-summer-favorite",
+    "priority": "MEDIUM",
+    "topic": "General basil growth, care and plant health",
+    "document_name": "Basil, A Summer Favorite",
+    "source_file": "source1_penn_state_basil_summer_favorite.md"
+  },
+  {
+    "source_id": "2",
+    "source": "Penn State Extension",
+    "url": "https://extension.psu.edu/hydroponics-systems-and-principles-of-plant-nutrition-essential-nutrients-function-deficiency-and-excess",
+    "priority": "HIGH",
+    "topic": "Plant nutrition, nutrient deficiency and excess",
+    "document_name": "Hydroponics Systems and Principles of Plant Nutrition: Essential Nutrients, Function, Deficiency, and Excess",
+    "source_file": "source2_penn_state_plant_nutrition.md"
+  },
+  {
+    "source_id": "3",
+    "source": "Penn State Extension",
+    "url": "https://extension.psu.edu/hydroponics-systems-nutrient-solution-programs-and-recipes",
+    "priority": "HIGH",
+    "topic": "Hydroponic nutrient solutions and fertiliser management",
+    "document_name": "Hydroponics Systems: Nutrient Solution Programs and Recipes",
+    "source_file": "source3_penn_state_nutrient_solution_programs.md"
+  },
+  {
+    "source_id": "4",
+    "source": "Penn State Extension",
+    "url": "https://extension.psu.edu/hydroponics-systems-calculating-nutrient-solution-concentrations-using-the-two-basic-equations",
+    "priority": "MEDIUM",
+    "topic": "Nutrient concentration and fertiliser calculations",
+    "document_name": "Hydroponics Systems: Calculating Nutrient Solution Concentrations Using the Two Basic Equations",
+    "source_file": "source4_penn_state_calculating_nutrient_solution_concentrations.md"
+  },
+  {
+    "source_id": "5",
+    "source": "Penn State Extension",
+    "url": "https://extension.psu.edu/hydroponics-systems-using-the-two-basic-equations-to-calculate-a-nutrient-solution-recipe",
+    "priority": "MEDIUM",
+    "topic": "Worked nutrient-solution recipe calculations",
+    "document_name": "Hydroponics Systems: Using the Two Basic Equations to Calculate a Nutrient Solution Recipe",
+    "source_file": "source5_penn_state_nutrient_solution_recipe_calculations.md"
+  },
+  {
+    "source_id": "6",
+    "source": "Oklahoma State University Extension",
+    "url": "https://extension.okstate.edu/fact-sheets/print-publications/hla/electrical-conductivity-and-ph-guide-for-hydroponics-hla-6722.pdf",
+    "priority": "HIGH",
+    "topic": "EC, pH and water-quality monitoring",
+    "document_name": "Electrical Conductivity and pH Guide for Hydroponics",
+    "source_file": "source6_oklahoma_state_ec_ph_hydroponics.md"
+  },
+  {
+    "source_id": "7",
+    "source": "Cornell Controlled Environment Agriculture",
+    "url": "https://cea.cals.cornell.edu/files/2019/06/Cornell-CEA-Lettuce-Handbook-.pdf",
+    "priority": "MEDIUM",
+    "topic": "Controlled-environment hydroponics and environmental management",
+    "document_name": "Hydroponic Lettuce Handbook",
+    "source_file": "source7_cornell_hydroponic_lettuce_handbook.md"
+  },
+  {
+    "source_id": "8",
+    "source": "Cornell University",
+    "url": "https://cea.cals.cornell.edu/crops/greens/",
+    "priority": "MEDIUM",
+    "topic": "Controlled-environment greens and hydroponic crop resources",
+    "document_name": "Controlled Environment Agriculture - Greens Resources",
+    "source_file": "source8_cornell_cea_greens_resources.md"
+  },
+  {
+    "source_id": "9",
+    "source": "Cornell Vegetables",
+    "url": "https://www.vegetables.cornell.edu/pest-management/disease-factsheets/basil-downy-mildew/",
+    "priority": "MEDIUM",
+    "topic": "Basil downy mildew symptoms and management",
+    "document_name": "Basil Downy Mildew",
+    "source_file": "source10_cornell_basil_downy_mildew.md"
+  },
+  {
+    "source_id": "10",
+    "source": "Cornell Vegetables",
+    "url": "https://www.vegetables.cornell.edu/pest-management/disease-factsheets/basil-downy-mildew/managing-basil-downy-mildew-in-the-greenhouse/",
+    "priority": "HIGH",
+    "topic": "Basil disease, humidity, airflow and lighting",
+    "document_name": "Managing Basil Downy Mildew in the Greenhouse",
+    "source_file": "source10_cornell_managing_basil_downy_mildew_greenhouse.md"
+  },
+  {
+    "source_id": "11",
+    "source": "University of Minnesota Extension",
+    "url": "https://extension.umn.edu/garden-and-home/yard-and-garden/gardening-in-minnesota/yard-and-garden-problems/growing-basil",
+    "priority": "MEDIUM",
+    "topic": "General basil growth, watering, pests and diseases",
+    "document_name": "Growing Basil",
+    "source_file": "source11_university_minnesota_growing_basil.md"
+  },
+  {
+    "source_id": "12",
+    "source": "University of Minnesota Extension",
+    "url": "https://extension.umn.edu/agriculture/specialty-crops/vegetable-farming/disease-management/basil-downy-mildew",
+    "priority": "LOW",
+    "topic": "Basil downy mildew symptoms and disease management",
+    "document_name": "Basil Downy Mildew",
+    "source_file": "source12_university_minnesota_basil_downy_mildew.md"
+  },
+  {
+    "source_id": "13",
+    "source": "University of Florida IFAS Extension",
+    "url": "https://edis.ifas.ufl.edu/publication/CV255/pdf",
+    "priority": "MEDIUM",
+    "topic": "Hydroponic production systems, irrigation and nutrient delivery",
+    "document_name": "Hydroponic Production Systems",
+    "source_file": "source13_uf_ifas_hydroponic_production_systems.md"
+  },
+  {
+    "source_id": "14",
+    "source": "University of Florida IFAS Extension",
+    "url": "https://edis.ifas.ufl.edu/publication/CV216/pdf",
+    "priority": "MEDIUM",
+    "topic": "Nutrient-solution formulation and hydroponic nutrient management",
+    "document_name": "Nutrient Solution Formulation for Hydroponic Production",
+    "source_file": "source14_uf_ifas_nutrient_solution_formulation.md"
+  },
+  {
+    "source_id": "15",
+    "source": "University of Florida IFAS Extension",
+    "url": "https://edis.ifas.ufl.edu/publication/AE610/pdf",
+    "priority": "MEDIUM",
+    "topic": "Hydroponic monitoring, sensors and nutrient management",
+    "document_name": "Sensor-Based Nutrient Management",
+    "source_file": "source15_uf_ifas_sensor_nutrient_management.md"
+  },
+  {
+    "source_id": "17",
+    "source": "Oklahoma State University Extension",
+    "url": "https://extension.okstate.edu/fact-sheets/print-publications/hla/hydroponics-hla-6442-a.pdf",
+    "priority": "MEDIUM",
+    "topic": "Hydroponic systems and nutrient-solution fundamentals",
+    "document_name": "Hydroponics",
+    "source_file": "source17_oklahoma_state_hydroponics.md"
+  },
+  {
+    "source_id": "19",
+    "source": "University of Florida IFAS Extension",
+    "url": "https://edis.ifas.ufl.edu/publication/HS1274/pdf",
+    "priority": "HIGH",
+    "topic": "Water, irrigation and nutrient management",
+    "document_name": "Water and Nutrient Management Guidelines for Greenhouse Hydroponic Vegetable Production",
+    "source_file": "source19_uf_ifas_water_nutrient_management.md"
+  },
+  {
+    "source_id": "22",
+    "source": "Oklahoma State University Extension",
+    "url": "https://extension.okstate.edu/fact-sheets/print-publications/e/water-quality-handbook-for-nurseries-e-951.pdf",
+    "priority": "LOW",
+    "topic": "Water quality, pH, EC and irrigation considerations",
+    "document_name": "Water Quality Handbook for Nurseries",
+    "source_file": "source22_oklahoma_state_water_quality_handbook.md"
+  },
+  {
+    "source_id": "23",
+    "source": "Cornell University",
+    "url": "https://cea.cals.cornell.edu/crops/",
+    "priority": "LOW",
+    "topic": "Controlled-environment agriculture and crop resources",
+    "document_name": "Controlled Environment Agriculture - Crop Resources",
+    "source_file": "source23_cornell_cea_crop_resources.md"
+  },
+  {
+    "source_id": "24",
+    "source": "e-GRO",
+    "url": "https://e-gro.org/pdf/2016-4.pdf",
+    "priority": "HIGH",
+    "topic": "Hydroponic basil nutrient-deficiency symptoms",
+    "document_name": "Symptoms of Common Nutrient Deficiencies in Hydroponic Basil",
+    "source_file": "source24_egro_nutrient_deficiencies_hydroponic_basil.md"
+  },
+  {
+    "source_id": "25",
+    "source": "e-GRO",
+    "url": "https://www.e-gro.org/pdf/E102.pdf",
+    "priority": "MEDIUM",
+    "topic": "Basil Fusarium wilt symptoms and prevention",
+    "document_name": "Basil Fusarium Wilt",
+    "source_file": "source25_egro_basil_fusarium_wilt.md"
+  },
+  {
+    "source_id": "A1",
+    "source": "NSW Department of Primary Industries",
+    "url": "https://www.dpi.nsw.gov.au/__data/assets/pdf_file/0007/385576/Leafy-Asian-veg-final-Low-Res.pdf",
+    "priority": "HIGH",
+    "topic": "Australian NFT, EC, pH, nutrition and water quality",
+    "document_name": "Leafy Asian vegetables and their nutrition in hydroponics",
+    "source_file": "A1_nsw_dpi_leafy_asian_vegetables.md"
+  },
+  {
+    "source_id": "A2",
+    "source": "AUSVEG",
+    "url": "https://ausveg.com.au/knowledge-hub/veg-grower-kim-ngov-in-focus/",
+    "priority": "MEDIUM",
+    "topic": "Australian commercial greenhouse basil production",
+    "document_name": "Veg Grower Kim Ngov in-focus - Greenhouse Basil",
+    "source_file": "A2_ausveg_kim_ngov_greenhouse_basil.md"
+  },
+  {
+    "source_id": "A3",
+    "source": "AUSVEG",
+    "url": "https://ausveg.com.au/knowledge-hub/vegnet-nsw-future-proofing-vegetable-production-by-upskilling-growers/",
+    "priority": "HIGH",
+    "topic": "Australian basil NFT, recirculation and practical system design",
+    "document_name": "VegNET NSW: Future-proofing vegetable production by upskilling growers",
+    "source_file": "A3_ausveg_vegnet_nsw_future_proofing.md"
+  },
+  {
+    "source_id": "A4",
+    "source": "Hort Innovation",
+    "url": "https://www.horticulture.com.au/information-hub/our-projects/historical-reports/vg09073",
+    "priority": "MEDIUM",
+    "topic": "Greenhouse wastewater recycling and nutrient rebalancing",
+    "document_name": "National Greenhouse Waste-Water Recycling Project",
+    "source_file": "A4_hort_innovation_greenhouse_wastewater_recycling.md"
+  },
+  {
+    "source_id": "A5",
+    "source": "Hort Innovation",
+    "url": "https://www.horticulture.com.au/information-hub/our-projects/project-reports/vg13052",
+    "priority": "MEDIUM",
+    "topic": "Hydroponic nutrient-solution recycling and pathogen control",
+    "document_name": "Ultra-Filtration for Hydroponic Nutrient Solution Recycling",
+    "source_file": "A5_hort_innovation_ultrafiltration_nutrient_recycling.md"
+  },
+  {
+    "source_id": "A6",
+    "source": "AUSVEG / SARDI",
+    "url": "https://ausveg.com.au/project/improving-greenhouse-systems-and-production-practices-greenhouse-production-practices-component-parent-vg07096/",
+    "priority": "MEDIUM",
+    "topic": "Australian protected cropping and hydroponic system management",
+    "document_name": "Improving Greenhouse Systems and Production Practices",
+    "source_file": "A6_ausveg_sardi_improving_greenhouse_systems.md"
+  },
+  {
+    "source_id": "A7",
+    "source": "AUSVEG",
+    "url": "https://ausveg.com.au/knowledge-hub/enviroveg-manual-new-sections-hydroponic-greenhouse-and-organic-production/",
+    "priority": "LOW",
+    "topic": "Australian hydroponic, greenhouse and environmental management",
+    "document_name": "EnviroVeg - Hydroponic, Greenhouse and Organic Production",
+    "source_file": "A7_ausveg_enviroveg_hydroponic_greenhouse_organic.md"
+  },
+  {
+    "source_id": "A8",
+    "source": "AUSVEG",
+    "url": "https://ausveg.com.au/knowledge-hub/protected-cropping-in-action/",
+    "priority": "HIGH",
+    "topic": "Australian basil and protected-cropping production",
+    "document_name": "Protected Cropping in Action - Australian Basil and Soft Herbs",
+    "source_file": "A8_ausveg_protected_cropping_in_action.md"
+  },
+  {
+    "source_id": "A9",
+    "source": "La Trobe University",
+    "url": "https://www.latrobe.edu.au/news/articles/2026/release/research%2C-innovation-boosting-food-production",
+    "priority": "HIGH",
+    "topic": "Leafy AI project context, basil production, spacing and protected cropping",
+    "document_name": "Research, innovation boosting food production",
+    "source_file": "A9_latrobe_research_innovation_food_production.md"
+  },
+  {
+    "source_id": "A10",
+    "source": "Northern Territory Government, Department of Agriculture and Fisheries",
+    "url": "https://daf.nt.gov.au/publications/publications-search/publications-database/primary-industry/plant_pest/vegfieldguide-sml.pdf",
+    "priority": "HIGH",
+    "topic": "Australian basil disease, Fusarium wilt and plant health",
+    "document_name": "Fusarium Wilt and Base Rot of Basil",
+    "source_file": "A10_nt_government_fusarium_wilt_base_rot.md"
+  },
+  {
+    "source_id": "A11",
+    "source": "University of Technology Sydney research repository",
+    "url": "https://opus.lib.uts.edu.au/rest/bitstreams/82d2d262-31ef-4d70-871f-c6bde5050fd3/retrieve",
+    "priority": "HIGH",
+    "topic": "Indoor hydroponic basil, LEDs and nutrient solutions",
+    "document_name": "Indoor Hydroponic Basil Experiment - UTS",
+    "source_file": "A11_uts_indoor_hydroponic_basil_experiment.md"
+  },
+  {
+    "source_id": "A12",
+    "source": "University of Southern Queensland research repository",
+    "url": "https://sear.unisq.edu.au/43019/13/Whittering_M_Baillie_Redacted.pdf",
+    "priority": "MEDIUM",
+    "topic": "NFT design, flow, channel grade and filtration",
+    "document_name": "Aquaponic System Design Report - NFT Technical Guidance",
+    "source_file": "A12_unisq_nft_technical_guidance.md"
+  },
+  {
+    "source_id": "A13",
+    "source": "Aquaponics WA / Hydroponic Xpress",
+    "url": "https://www.aquaponicswa.com.au/wp-content/uploads/2023/05/Brochure-EC-pH.pdf",
+    "priority": "LOW",
+    "topic": "Basil EC and pH practical reference",
+    "document_name": "EC and pH Guide for Hydroponics",
+    "source_file": "A13_aquaponics_wa_ec_ph_guide.md"
+  },
+  {
+    "source_id": "A14",
+    "source": "AusAquaTec",
+    "url": "https://www.ausaquatec.com.au/commercial-hydroponics/",
+    "priority": "LOW",
+    "topic": "Commercial sweet basil, NFT, greenhouse climate and spacing",
+    "document_name": "Commercial Hydroponics - Basil Production",
+    "source_file": "A14_ausaquaTEC_commercial_basil_production.md"
+  }
+]
