@@ -63,7 +63,7 @@ async def main():
 
         results = await search_chunks(
             query=TEST_CHUNKS[1],
-            limit=1,
+            top_k=1,
         )
 
         if not results:
