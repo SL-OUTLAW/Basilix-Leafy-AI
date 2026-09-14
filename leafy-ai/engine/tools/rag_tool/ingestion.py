@@ -5,6 +5,10 @@ from pathlib import Path
 
 from managers.db_manager import get_connection
 from tools.rag_tool.embedding import embed_text
+from tools.rag_tool.source_metadata import (
+    load_source_metadata,
+    prepare_source_metadata,
+)
 
 CHUNK_WORDS = 500
 OVERLAP_WORDS = 75
@@ -103,8 +107,10 @@ def chunk_text(
 
     return chunks
 
-
-async def ingest_cleaned_file(file_path: str | Path) -> dict:
+async def ingest_cleaned_file(
+    file_path: str | Path,
+    source_metadata: dict | None = None,
+) -> dict:
     path = Path(file_path)
 
     if not path.exists():
@@ -114,7 +120,7 @@ async def ingest_cleaned_file(file_path: str | Path) -> dict:
 
     raw_text = path.read_text(encoding="utf-8")
 
-    title, metadata, content = parse_cleaned_markdown(
+    title, parsed_metadata, content = parse_cleaned_markdown(
         raw_text,
         path.stem,
     )
@@ -135,8 +141,12 @@ async def ingest_cleaned_file(file_path: str | Path) -> dict:
         raw_text.encode("utf-8")
     ).hexdigest()
 
-    metadata["document_name"] = title
-    metadata["file_name"] = path.name
+    metadata, chunk_metadata = prepare_source_metadata(
+        path,
+        title,
+        parsed_metadata,
+        source_metadata,
+)
 
     async with get_connection() as conn:
         async with conn.cursor() as cur:
@@ -153,6 +163,39 @@ async def ingest_cleaned_file(file_path: str | Path) -> dict:
 
             if existing:
                 document_id = existing[0]
+
+                if source_metadata is not None:
+                    await cur.execute(
+                        """
+                        UPDATE rag_documents
+                        SET
+                            title = %s,
+                            source = %s,
+                            document_type = %s,
+                            metadata = %s::jsonb,
+                            updated_at = NOW()
+                        WHERE document_id = %s;
+                        """,
+                        (
+                            title,
+                            metadata["source"],
+                            "external_web_source",
+                            json.dumps(metadata),
+                            document_id,
+                        ),
+                    )
+
+                    await cur.execute(
+                        """
+                        UPDATE rag_document_chunks
+                        SET metadata = %s::jsonb
+                        WHERE document_id = %s;
+                        """,
+                        (
+                            json.dumps(chunk_metadata),
+                            document_id,
+                        ),
+                    )
 
                 await cur.execute(
                     """
@@ -181,6 +224,7 @@ async def ingest_cleaned_file(file_path: str | Path) -> dict:
         document_type="external_web_source",
         content_hash=content_hash,
         metadata=metadata,
+        chunk_metadata=chunk_metadata,
     )
 
 
@@ -195,16 +239,34 @@ async def ingest_cleaned_folder(
         )
 
     files = sorted(folder.glob("*.md"))
-
     if not files:
         raise ValueError(
             f"No Markdown files found in {folder}"
-        )
+    )
+    metadata_by_file = load_source_metadata(folder)
+
+    if metadata_by_file:
+        file_names = {path.name for path in files}
+        metadata_files = set(metadata_by_file)
+
+        if file_names != metadata_files:
+            raise ValueError(
+                "Source metadata does not match Markdown source files"
+            )
 
     results = []
 
     for path in files:
-        result = await ingest_cleaned_file(path)
+        source_metadata = (
+            metadata_by_file.get(path.name)
+            if metadata_by_file
+            else None
+        )
+
+        result = await ingest_cleaned_file(
+            path,
+            source_metadata=source_metadata,
+        )
 
         results.append(
             {
@@ -222,6 +284,7 @@ async def ingest_document(
     document_type: str | None = None,
     content_hash: str | None = None,
     metadata: dict | None = None,
+    chunk_metadata: dict | None = None,
 ) -> dict:
     if not isinstance(title, str) or not title.strip():
         raise ValueError("title must be a non-empty string")
@@ -234,6 +297,8 @@ async def ingest_document(
             raise ValueError("every chunk must be a non-empty string")
 
     metadata = metadata or {}
+    if chunk_metadata is None:
+        chunk_metadata = metadata
 
     embedded_chunks = []
 
@@ -309,7 +374,9 @@ async def ingest_document(
 
             chunk_ids = []
 
-            for chunk_index, (content, vector_text) in enumerate(embedded_chunks):
+            for chunk_index, (content, vector_text) in enumerate(
+                embedded_chunks
+            ):
                 await cur.execute(
                     """
                     INSERT INTO rag_document_chunks (
@@ -326,7 +393,7 @@ async def ingest_document(
                         document_id,
                         chunk_index,
                         content,
-                        json.dumps(metadata),
+                        json.dumps(chunk_metadata),
                         vector_text,
                     ),
                 )

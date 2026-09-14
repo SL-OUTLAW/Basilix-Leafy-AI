@@ -7,12 +7,12 @@ def _vector_to_text(embedding: list[float]) -> str:
     return "[" + ",".join(str(value) for value in embedding) + "]"
 
 
-async def search_chunks(query: str, limit: int):
+async def search_chunks(query: str, top_k: int):
     if not isinstance(query, str) or not query.strip():
         raise ValueError("query must be a non-empty string")
 
-    if not isinstance(limit, int) or limit < 1:
-        raise ValueError("limit must be greater than 0")
+    if not isinstance(top_k, int) or top_k < 1:
+        raise ValueError("top_k must be greater than 0")
 
     embedding = await embed_text(query)
     vector_text = _vector_to_text(embedding)
@@ -39,6 +39,6 @@ async def search_chunks(query: str, limit: int):
         (
             vector_text,
             vector_text,
-            limit,
+            top_k,
         ),
     )
