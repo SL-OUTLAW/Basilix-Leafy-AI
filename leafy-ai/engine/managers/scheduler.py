@@ -1,10 +1,9 @@
 import asyncio
 
-from managers.db_manager import run_query
+from engine.managers.db_manager import run_query
+from engine.managers.settings_manager import settings
 
-
-POLL_INTERVAL = 5
-
+loop = False
 
 async def get_due_tasks():
     return await run_query(
@@ -40,16 +39,30 @@ async def run_scheduled_task(task):
     print(f"Running scheduled task: {task[1]}")
 
 
-async def scheduler_loop():
-    while True:
+async def start():
+    global loop
+
+    loop = True
+
+    while loop:
         try:
             tasks = await get_due_tasks()
         except Exception as error:
             print(f"Scheduler query failed: {error}")
-            await asyncio.sleep(POLL_INTERVAL)
+            await asyncio.sleep(
+                settings.get("scheduler").get("polling_rate")
+            )
             continue
 
         for task in tasks:
             asyncio.create_task(run_scheduled_task(task))
 
-        await asyncio.sleep(POLL_INTERVAL)
+        await asyncio.sleep(
+            settings.get("scheduler").get("polling_rate")
+        )
+
+
+async def stop():
+    global loop
+
+    loop = False
