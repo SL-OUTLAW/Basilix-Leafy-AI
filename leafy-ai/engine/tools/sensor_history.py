@@ -219,6 +219,7 @@ async def sensor_history(
 
     sensor_type = arguments.get("sensor_type")
 
+
     if sensor_type not in SENSOR_TYPES:
         raise ValueError("Unsupported sensor type")
 
@@ -460,27 +461,3 @@ async def sensor_history(
         },
         "timeline": buckets,
     }
-
-
-async def main():
-    await open_pool()
-
-    try:
-        result = await sensor_history(
-            {
-                "sensor_type": "ph",
-                "time_range": "1h",
-            }
-        )
-
-        print(result)
-
-    finally:
-        await close_pool()
-
-
-if __name__ == "__main__":
-    asyncio.run(
-        main(),
-        loop_factory=lambda: asyncio.SelectorEventLoop(selectors.SelectSelector()),
-    )

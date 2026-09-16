@@ -17,6 +17,8 @@ from engine.managers.settings_manager import (
     manage_settings,
 )
 
+from engine.managers.tool_manager import execute_tools as run_tools
+
 router = APIRouter()
 
 
@@ -67,11 +69,15 @@ async def execute_tools(
             detail="Invalid or expired token",
         )
 
-    # TODO : tool manager
+    print("hereeeeeeeeeeeeee 11111111", request)
+
+    results = await run_tools(request.tool_calls)
+
+    print("hereeeeeeeeeeeeee 22222222", results)
 
     return {
         "success": True,
-        "results": [],
+        "results": results,
     }
 
 

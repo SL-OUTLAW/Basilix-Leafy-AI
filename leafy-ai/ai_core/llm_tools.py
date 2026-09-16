@@ -122,6 +122,49 @@ TOOLS = [
     {
         "type": "function",
         "function": {
+            "name": "rag_tool",
+            "description": (
+                "Search the Leafy AI farm knowledge base for relevant reference "
+                "information. Use this when farm analysis or a user question requires "
+                "knowledge contained in indexed documentation, such as crop guidance, "
+                "nutrient management, pH and EC guidance, environmental requirements, "
+                "plant health, irrigation, lighting, disease, deficiencies, or other "
+                "supported farm reference material. "
+                "Provide a concise semantic search query describing the information "
+                "needed. Do not use this tool for live or historical sensor readings, "
+                "camera observations, farm schedules, pending recommendations, or "
+                "pending approvals when a dedicated tool exists for that information."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": (
+                            "Semantic search query describing the farm knowledge or "
+                            "reference information needed."
+                        ),
+                    },
+                    "limit": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 10,
+                        "description": (
+                            "Maximum number of relevant knowledge chunks to return. "
+                            "Defaults to 5 when omitted."
+                        ),
+                    },
+                },
+                "required": [
+                    "query",
+                ],
+                "additionalProperties": False,
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "daily_farm_schedule",
             "description": (
                 "Retrieve the complete daily farm schedule. "
@@ -142,13 +185,87 @@ TOOLS = [
     {
         "type": "function",
         "function": {
+            "name": "pending_recommendations",
+            "description": (
+                "Retrieve currently pending farm recommendations. "
+                "Use this before creating a new recommendation to determine "
+                "whether an equivalent or substantially similar recommendation "
+                "already exists. Do not create a duplicate recommendation when "
+                "an existing pending recommendation addresses the same issue, "
+                "farm level, and intended action."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "level_no": {
+                        "type": "integer",
+                        "enum": [
+                            0,
+                            1,
+                            2,
+                        ],
+                        "description": (
+                            "Optional farm scope to filter recommendations. "
+                            "0 = global farm, 1 = Level 1, 2 = Level 2."
+                        ),
+                    },
+                    "recommendation_type": {
+                        "type": "string",
+                        "enum": [
+                            "PH",
+                            "EC",
+                            "TEMPERATURE",
+                            "LIGHTING",
+                            "IRRIGATION",
+                            "PLANT_HEALTH",
+                            "PLANT_SPACING",
+                            "HARVEST",
+                            "MONITORING",
+                            "SCHEDULE",
+                            "OTHER",
+                        ],
+                        "description": (
+                            "Optional recommendation category to filter by."
+                        ),
+                    },
+                },
+                "required": [],
+                "additionalProperties": False,
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "pending_approvals",
+            "description": (
+                "Retrieve all currently pending farm approval requests. "
+                "Use this before creating a recommendation or proposing an action "
+                "that may require approval to determine whether a related action "
+                "is already awaiting human approval. "
+                "This tool returns all pending approvals and does not accept filters."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {},
+                "required": [],
+                "additionalProperties": False,
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "create_recommendations",
             "description": (
                 "Record one or more evidence-based farm recommendations. "
                 "Use this when analysis identifies a meaningful farm action or "
-                "change that should be recommended. Recommendations may optionally "
-                "contain a supported proposed_action describing the desired farm "
-                "action. Schedule changes must be proposed/recommended through this capability. "
+                "change that should be recommended. Before creating recommendations, "
+                "check pending recommendations and pending approvals when relevant "
+                "so equivalent actions are not duplicated. "
+                "Recommendations may optionally contain a supported proposed_action "
+                "describing the desired farm action. Schedule changes must be "
+                "proposed/recommended through this capability. "
                 "The application determines action validity, risk, approval "
                 "requirements, automatic execution eligibility, and execution. "
                 "Do not assign risk or approval requirements. "
@@ -256,13 +373,15 @@ TOOLS = [
                                                 "task_name": {
                                                     "type": "string",
                                                     "description": (
-                                                        "Simple human-readable schedule task name."
+                                                        "Simple human-readable schedule "
+                                                        "task name."
                                                     ),
                                                 },
                                                 "task_description": {
                                                     "type": "string",
                                                     "description": (
-                                                        "Optional description of a scheduled task."
+                                                        "Optional description of a "
+                                                        "scheduled task."
                                                     ),
                                                 },
                                                 "task_action": {
@@ -304,8 +423,8 @@ TOOLS = [
                                                     "type": "integer",
                                                     "minimum": 1,
                                                     "description": (
-                                                        "Optional duration in seconds for "
-                                                        "time-based actions."
+                                                        "Optional duration in seconds "
+                                                        "for time-based actions."
                                                     ),
                                                 },
                                                 "target_value": {

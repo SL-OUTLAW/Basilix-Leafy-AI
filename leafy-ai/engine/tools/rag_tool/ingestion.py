@@ -3,9 +3,9 @@ import json
 import re
 from pathlib import Path
 
-from managers.db_manager import get_connection
-from tools.rag_tool.embedding import embed_text
-from tools.rag_tool.source_metadata import (
+from engine.managers.db_manager import get_connection
+from engine.tools.rag_tool.embedding import embed_text
+from engine.tools.rag_tool.source_metadata import (
     load_source_metadata,
     prepare_source_metadata,
 )
