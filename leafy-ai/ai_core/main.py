@@ -9,7 +9,7 @@ from llm_tools import TOOLS
 from llm_api import execute_tool
 
 MODEL = "leafy-ai"
-MAX_TOOL_ROUNDS = 8
+MAX_TOOL_ROUNDS = 10
 KEEP_ALIVE = -1
 
 ENGINE_URL = os.getenv(
@@ -19,7 +19,7 @@ ENGINE_URL = os.getenv(
 
 ENGINE_TOOL_TIMEOUT = 30.0
 
-VERBOSE = False
+VERBOSE = True
 
 ollama_client = ollama.AsyncClient()
 
@@ -104,7 +104,7 @@ def _validate(
 ) -> None:
     if not isinstance(result, dict):
         raise ValueError(
-            "Expected response to be a dict, " f"got {type(result).__name__}"
+            f"Expected response to be a dict, got {type(result).__name__}"
         )
 
     response_type = result.get("response_type")
@@ -150,7 +150,7 @@ async def _run_llm_loop(
         1,
         MAX_TOOL_ROUNDS + 1,
     ):
-        _debug(f"MODEL LOOP " f"{round_number}/" f"{MAX_TOOL_ROUNDS}")
+        _debug(f"MODEL LOOP {round_number}/{MAX_TOOL_ROUNDS}")
 
         # initial LLM inference if round_number = 1
         response = await ollama_client.chat(
@@ -200,7 +200,7 @@ async def _run_llm_loop(
         ]
 
         _debug_json(
-            f"Model requested " f"{len(tool_calls)} tool(s)",
+            f"Model requested {len(tool_calls)} tool(s)",
             tool_calls,
         )
 
@@ -214,15 +214,8 @@ async def _run_llm_loop(
             engine_tool_response,
         )
 
-        if not isinstance(
-            engine_tool_response,
-            dict,
-        ):
-            _debug("Invalid Engine response")
-            return conversation
-
         if engine_tool_response.get("success") is False:
-            _debug("Tool execution failed. " "Stopping tool loop.")
+            _debug("Tool execution failed. Stopping tool loop.")
             for tool_call in tool_calls:
                 conversation.append(
                     {
@@ -432,9 +425,7 @@ async def test_conversation():
         {
             "role": "system",
             "content": (
-                "this is a scheduled farm checkup call. "
-                "Use necessary tools to analyse the farm health and status and "
-                "make necessary recommendations, actions and updates"
+                "this is a test. try using the tools to see the pending recommendations"
             ),
         },
     ]

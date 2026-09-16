@@ -45,10 +45,20 @@ async def close_pool():
     await pool.close()
 
 
-async def run_query(query, params=None):
+async def run_query(
+    query,
+    params=None,
+):
     async with get_connection() as conn:
         async with conn.cursor() as cur:
-            await cur.execute(query, params)
+
+            if params is None:
+                await cur.execute(query)
+            else:
+                await cur.execute(
+                    query,
+                    params,
+                )
 
             if cur.description:
                 return await cur.fetchall()
