@@ -23,6 +23,10 @@ SENSOR_TYPES = {
     "ph",
     "ec",
     "water_temperature",
+    "ambient_temperature",
+    "humidity",
+    "dew_point",
+    "water_level",
 }
 
 
@@ -218,7 +222,6 @@ async def sensor_history(
 ) -> dict[str, Any]:
 
     sensor_type = arguments.get("sensor_type")
-
 
     if sensor_type not in SENSOR_TYPES:
         raise ValueError("Unsupported sensor type")

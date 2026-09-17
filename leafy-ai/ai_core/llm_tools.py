@@ -7,7 +7,9 @@ TOOLS = [
                 "Retrieve historical data for a farm sensor. "
                 "Use this when investigating sensor trends, changes over time, "
                 "anomalies, stability, persistence, past farm conditions or "
-                "analysing farm and health. "
+                "analysing farm and plant health. "
+                "Supported sensor types are ph, ec, water_temperature, "
+                "ambient_temperature, humidity, dew_point, and water_level. "
                 "Use either time_range OR start_time and end_time, not both. "
                 "If no time range is specified, the default is the previous 1 hour. "
                 "Historical readings are automatically aggregated to an "
@@ -24,8 +26,15 @@ TOOLS = [
                             "ph",
                             "ec",
                             "water_temperature",
+                            "ambient_temperature",
+                            "humidity",
+                            "dew_point",
+                            "water_level",
                         ],
-                        "description": ("Sensor measurement to retrieve."),
+                        "description": (
+                            "Sensor measurement to retrieve. "
+                            "Use the exact supported sensor type."
+                        ),
                     },
                     "time_range": {
                         "type": "string",
