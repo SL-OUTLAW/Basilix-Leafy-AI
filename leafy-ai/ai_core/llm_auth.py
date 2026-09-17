@@ -35,7 +35,6 @@ def create_token() -> str:
         "jti": str(uuid.uuid4()),
     }
     token = jwt.encode(payload=payload, key=ai_core_key, algorithm="EdDSA")
-    print("[CREATED TOKEN]\n",token)
     return token
 
 

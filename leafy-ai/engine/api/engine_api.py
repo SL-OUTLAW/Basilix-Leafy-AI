@@ -34,7 +34,6 @@ class UserContext(BaseModel):
 
 class ToolCallRequest(BaseModel):
     tool_calls: list[ToolCall]
-    user_context: UserContext
 
 
 class SettingsUpdate(BaseModel):
@@ -69,11 +68,8 @@ async def execute_tools(
             detail="Invalid or expired token",
         )
 
-    print("hereeeeeeeeeeeeee 11111111", request)
-
     results = await run_tools(request.tool_calls)
 
-    print("hereeeeeeeeeeeeee 22222222", results)
 
     return {
         "success": True,

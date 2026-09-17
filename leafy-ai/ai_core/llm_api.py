@@ -2,7 +2,7 @@ from typing import Any
 import httpx
 import os
 
-from llm_auth import create_token
+from ai_core.llm_auth import create_token
 
 ENGINE_URL = os.getenv(
     "ENGINE_URL",
@@ -14,13 +14,9 @@ ENGINE_TOOL_TIMEOUT = 30.0
 
 async def execute_tool(
     tool_calls: list[dict[str, Any]],
-    user_context: dict[str, Any] | None = None,
 ) -> Any:
 
     request_body: dict[str, Any] = {"tool_calls": tool_calls}
-
-    if user_context is not None:
-        request_body["user_context"] = user_context
 
     try:
         async with httpx.AsyncClient() as client:

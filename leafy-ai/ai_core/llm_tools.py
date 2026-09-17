@@ -187,7 +187,7 @@ TOOLS = [
         "function": {
             "name": "pending_recommendations",
             "description": (
-                "Retrieve currently pending farm recommendations. "
+                "Retrieve all currently pending farm recommendations. "
                 "Use this before creating a new recommendation to determine "
                 "whether an equivalent or substantially similar recommendation "
                 "already exists. Do not create a duplicate recommendation when "
@@ -196,39 +196,7 @@ TOOLS = [
             ),
             "parameters": {
                 "type": "object",
-                "properties": {
-                    "level_no": {
-                        "type": "integer",
-                        "enum": [
-                            0,
-                            1,
-                            2,
-                        ],
-                        "description": (
-                            "Optional farm scope to filter recommendations. "
-                            "0 = global farm, 1 = Level 1, 2 = Level 2."
-                        ),
-                    },
-                    "recommendation_type": {
-                        "type": "string",
-                        "enum": [
-                            "PH",
-                            "EC",
-                            "TEMPERATURE",
-                            "LIGHTING",
-                            "IRRIGATION",
-                            "PLANT_HEALTH",
-                            "PLANT_SPACING",
-                            "HARVEST",
-                            "MONITORING",
-                            "SCHEDULE",
-                            "OTHER",
-                        ],
-                        "description": (
-                            "Optional recommendation category to filter by."
-                        ),
-                    },
-                },
+                "properties": {},
                 "required": [],
                 "additionalProperties": False,
             },
@@ -259,13 +227,22 @@ TOOLS = [
             "name": "create_recommendations",
             "description": (
                 "Record one or more evidence-based farm recommendations. "
-                "Use this when analysis identifies a meaningful farm action or "
-                "change that should be recommended. Before creating recommendations, "
-                "check pending recommendations and pending approvals when relevant "
-                "so equivalent actions are not duplicated. "
-                "Recommendations may optionally contain a supported proposed_action "
-                "describing the desired farm action. Schedule changes must be "
-                "proposed/recommended through this capability. "
+                "Before creating recommendations, check pending recommendations "
+                "and pending approvals when relevant so equivalent actions are "
+                "not duplicated. "
+                "When recommending a concrete schedule creation, update, enable, "
+                "or disable operation, action_required must be true and "
+                "proposed_action MUST be included. "
+                "Never describe a concrete executable schedule change only in "
+                "recommendation text. "
+                "For CREATE_SCHEDULE provide task_name, task_action, level_no, "
+                "start_time, and every parameter required by task_action. "
+                "SET_LIGHTING, RUN_IRRIGATION, and SET_FAN schedules MUST include "
+                "duration_seconds as a positive integer number of seconds. "
+                "For example, 8 hours is 28800 seconds and 14 hours is 50400 seconds. "
+                "For a schedule update retrieve the current daily schedule first "
+                "and use UPDATE_SCHEDULE with schedule_id and the changed fields. "
+                "ENABLE_SCHEDULE and DISABLE_SCHEDULE require schedule_id. "
                 "The application determines action validity, risk, approval "
                 "requirements, automatic execution eligibility, and execution. "
                 "Do not assign risk or approval requirements. "
@@ -295,7 +272,6 @@ TOOLS = [
                                         "SCHEDULE",
                                         "OTHER",
                                     ],
-                                    "description": ("Category of the recommendation."),
                                 },
                                 "level_no": {
                                     "type": "integer",
@@ -304,85 +280,45 @@ TOOLS = [
                                         1,
                                         2,
                                     ],
-                                    "description": (
-                                        "Area affected by the recommendation. "
-                                        "0 = global farm or shared environment, "
-                                        "1 = Level 1, 2 = Level 2."
-                                    ),
                                 },
                                 "recommendation_message": {
                                     "type": "string",
-                                    "description": (
-                                        "Clear human-readable statement describing "
-                                        "what is recommended. Avoid text formatting, "
-                                        "Unicode decoration, and emojis."
-                                    ),
                                 },
                                 "recommendation_reason": {
                                     "type": "string",
+                                },
+                                "action_required": {
+                                    "type": "boolean",
                                     "description": (
-                                        "Evidence-based explanation of why the "
-                                        "recommendation is being made."
+                                        "True when this recommendation represents "
+                                        "a concrete supported schedule change. "
+                                        "When true, proposed_action is required."
                                     ),
                                 },
                                 "proposed_action": {
                                     "type": "object",
-                                    "description": (
-                                        "Optional structured desired farm action. "
-                                        "Include only when the recommendation maps "
-                                        "to a supported action. This proposes intent "
-                                        "and does not determine risk, approval, or "
-                                        "execution."
-                                    ),
                                     "properties": {
                                         "action_type": {
                                             "type": "string",
                                             "enum": [
-                                                "RUN_IRRIGATION",
-                                                "SET_LIGHTING",
-                                                "SET_FAN",
-                                                "DOSE_PH",
-                                                "DOSE_EC",
                                                 "CREATE_SCHEDULE",
                                                 "UPDATE_SCHEDULE",
                                                 "ENABLE_SCHEDULE",
                                                 "DISABLE_SCHEDULE",
                                             ],
-                                            "description": (
-                                                "Supported farm action being proposed."
-                                            ),
                                         },
                                         "action_data": {
                                             "type": "object",
-                                            "description": (
-                                                "Structured parameters required for "
-                                                "the proposed action. Only include "
-                                                "parameters relevant to the selected "
-                                                "action_type."
-                                            ),
                                             "properties": {
                                                 "schedule_id": {
                                                     "type": "integer",
                                                     "minimum": 1,
-                                                    "description": (
-                                                        "Existing schedule task identifier. "
-                                                        "Used when updating, enabling, or "
-                                                        "disabling an existing schedule."
-                                                    ),
                                                 },
                                                 "task_name": {
                                                     "type": "string",
-                                                    "description": (
-                                                        "Simple human-readable schedule "
-                                                        "task name."
-                                                    ),
                                                 },
                                                 "task_description": {
                                                     "type": "string",
-                                                    "description": (
-                                                        "Optional description of a "
-                                                        "scheduled task."
-                                                    ),
                                                 },
                                                 "task_action": {
                                                     "type": "string",
@@ -394,10 +330,6 @@ TOOLS = [
                                                         "DOSE_EC",
                                                         "ANALYSE_FARM",
                                                     ],
-                                                    "description": (
-                                                        "Action performed by a proposed "
-                                                        "daily schedule task."
-                                                    ),
                                                 },
                                                 "level_no": {
                                                     "type": "integer",
@@ -406,40 +338,30 @@ TOOLS = [
                                                         1,
                                                         2,
                                                     ],
-                                                    "description": (
-                                                        "Action or schedule scope. "
-                                                        "0 = global, 1 = Level 1, "
-                                                        "2 = Level 2."
-                                                    ),
                                                 },
                                                 "start_time": {
                                                     "type": "string",
+                                                    "pattern": "^([01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d$",
                                                     "description": (
-                                                        "Daily schedule start time using "
-                                                        "24-hour HH:MM:SS format."
+                                                        "Daily recurring start time in "
+                                                        "24-hour HH:MM:SS format. "
+                                                        "Do not include a date or timezone."
                                                     ),
                                                 },
                                                 "duration_seconds": {
                                                     "type": "integer",
                                                     "minimum": 1,
                                                     "description": (
-                                                        "Optional duration in seconds "
-                                                        "for time-based actions."
+                                                        "Duration of timed actions in seconds. "
+                                                        "Required for SET_LIGHTING, "
+                                                        "RUN_IRRIGATION, and SET_FAN."
                                                     ),
                                                 },
                                                 "target_value": {
                                                     "type": "number",
-                                                    "description": (
-                                                        "Optional target value associated "
-                                                        "with the proposed action."
-                                                    ),
                                                 },
                                                 "unit": {
                                                     "type": "string",
-                                                    "description": (
-                                                        "Optional unit associated with "
-                                                        "target_value."
-                                                    ),
                                                 },
                                             },
                                             "additionalProperties": False,
@@ -447,6 +369,7 @@ TOOLS = [
                                     },
                                     "required": [
                                         "action_type",
+                                        "action_data",
                                     ],
                                     "additionalProperties": False,
                                 },
@@ -456,6 +379,7 @@ TOOLS = [
                                 "level_no",
                                 "recommendation_message",
                                 "recommendation_reason",
+                                "action_required",
                             ],
                             "additionalProperties": False,
                         },
