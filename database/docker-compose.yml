@@ -10,7 +10,8 @@ services:
       - "5432:5432"
     volumes:
       - leafy_ai_data:/var/lib/postgresql
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./init.sql:/docker-entrypoint-initdb.d/01-init.sql
+      - ./backend-init.sql:/docker-entrypoint-initdb.d/02-backend-init.sql
 
 volumes:
   leafy_ai_data:

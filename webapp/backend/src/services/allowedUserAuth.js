@@ -1,7 +1,7 @@
-const { query } = require("./database");
+const { backendQuery } = require("./backendDatabase");
 
 async function authorizeAllowedUser(email) {
-  const result = await query(
+  const result = await backendQuery(
     `
     SELECT
       allowed_user_id,

@@ -2,6 +2,7 @@ const express = require("express");
 
 const { verifyGoogleCredential } = require("../services/googleAuth");
 const { authorizeAllowedUser } = require("../services/allowedUserAuth");
+const { syncUser } = require("../services/userSync");
 
 const router = express.Router();
 
@@ -9,6 +10,7 @@ router.post("/google", async (req, res) => {
   const { credential } = req.body || {};
 
   let googleUser;
+  let allowedUser;
 
   // Step 1: verify the Google identity
   try {
@@ -29,7 +31,7 @@ router.post("/google", async (req, res) => {
 
   // Step 2: check whether the verified Google user is allowed
   try {
-    const allowedUser = await authorizeAllowedUser(googleUser.email);
+    allowedUser = await authorizeAllowedUser(googleUser.email);
 
     if (!allowedUser) {
       return res.status(403).json({
@@ -37,14 +39,6 @@ router.post("/google", async (req, res) => {
         error: "User is not authorized"
       });
     }
-
-    return res.json({
-      authenticated: true,
-      user: {
-        ...googleUser,
-        role: allowedUser.role
-      }
-    });
   } catch (error) {
     console.error("Allowed user lookup failed:", error);
 
@@ -53,6 +47,26 @@ router.post("/google", async (req, res) => {
       error: "Authentication failed"
     });
   }
+
+  // Step 3: create or update the application user
+  try {
+    await syncUser(googleUser, allowedUser.role);
+  } catch (error) {
+    console.error("User synchronization failed:", error);
+
+    return res.status(500).json({
+      authenticated: false,
+      error: "Authentication failed"
+    });
+  }
+
+  return res.json({
+    authenticated: true,
+    user: {
+      ...googleUser,
+      role: allowedUser.role
+    }
+  });
 });
 
 module.exports = router;
