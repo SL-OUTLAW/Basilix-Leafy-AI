@@ -145,29 +145,3 @@ async def analyse_camera_images(image_paths):
 
 def get_latest_analysis():
     return deepcopy(_latest_analysis)
-
-
-VISION_TOOL_SCHEMA = {
-    "name": "analyse_camera_images",
-    "description": (
-        "Analyse basil camera image paths, save successful "
-        "analyses and return the Vision results."
-    ),
-    "parameters": {
-        "type": "object",
-        "properties": {
-            "image_paths": {
-                "type": "object",
-                "description": (
-                    "Dictionary mapping plant image IDs "
-                    "to camera image paths."
-                ),
-                "additionalProperties": {
-                    "type": "string"
-                },
-            }
-        },
-        "required": ["image_paths"],
-        "additionalProperties": False,
-    },
-}
