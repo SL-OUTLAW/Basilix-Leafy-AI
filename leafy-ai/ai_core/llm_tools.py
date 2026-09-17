@@ -233,20 +233,22 @@ TOOLS = [
                 "When recommending a concrete schedule creation, update, enable, "
                 "or disable operation, action_required must be true and "
                 "proposed_action MUST be included. "
-                "Never describe a concrete executable schedule change only in "
-                "recommendation text. "
                 "For CREATE_SCHEDULE provide task_name, task_action, level_no, "
                 "start_time, and every parameter required by task_action. "
+                "Use interval_seconds when a task must repeat more frequently "
+                "than once per day. "
+                "For example, interval_seconds=1800 means run every 30 minutes. "
+                "Omit interval_seconds for a once-daily task. "
+                "duration_seconds describes how long each individual operation "
+                "runs and is not the recurrence interval. "
                 "SET_LIGHTING, RUN_IRRIGATION, and SET_FAN schedules MUST include "
                 "duration_seconds as a positive integer number of seconds. "
-                "For example, 8 hours is 28800 seconds and 14 hours is 50400 seconds. "
-                "For a schedule update retrieve the current daily schedule first "
+                "For schedule updates retrieve the current daily schedule first "
                 "and use UPDATE_SCHEDULE with schedule_id and the changed fields. "
                 "ENABLE_SCHEDULE and DISABLE_SCHEDULE require schedule_id. "
                 "The application determines action validity, risk, approval "
                 "requirements, automatic execution eligibility, and execution. "
-                "Do not assign risk or approval requirements. "
-                "Do not invent action types or parameters."
+                "Do not assign risk or approval requirements."
             ),
             "parameters": {
                 "type": "object",
@@ -330,6 +332,17 @@ TOOLS = [
                                                         "DOSE_EC",
                                                         "ANALYSE_FARM",
                                                     ],
+                                                },
+                                                "interval_seconds": {
+                                                    "type": "integer",
+                                                    "minimum": 1,
+                                                    "description": (
+                                                        "Optional recurrence interval in seconds. "
+                                                        "When provided, the task repeats at this interval continuously. "
+                                                        "For example, 1800 means every 30 minutes, "
+                                                        "3600 means every hour, and 7200 means every 2 hours. "
+                                                        "Omit this field for a once-daily schedule."
+                                                    ),
                                                 },
                                                 "level_no": {
                                                     "type": "integer",
