@@ -466,7 +466,7 @@ async def test_conversation():
 
     response = await leafy_ai(
         task=(
-            "This is a extensive tool test. use all the tools at disposal and test them all for their functionality."
+            "this is a tool test. the plants at level 1 show that they are ready to be harvested but cameras are offline let the user know that plants are ready to be harvested by using a harvest recommendation"
         )
     )
 

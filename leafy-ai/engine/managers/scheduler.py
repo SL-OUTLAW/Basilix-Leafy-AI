@@ -60,6 +60,7 @@ async def get_due_tasks():
             task_action,
             level_no,
             start_time,
+            interval_seconds,
             duration_seconds,
             target_value,
             unit,
@@ -80,6 +81,8 @@ async def _create_schedule(
     action_data: dict[str, Any],
 ) -> int:
 
+    interval_seconds = action_data.get("interval_seconds")
+
     existing = await run_query(
         """
         SELECT
@@ -88,6 +91,13 @@ async def _create_schedule(
         WHERE task_action = %s
           AND level_no = %s
           AND start_time = %s::time
+          AND (
+              interval_seconds = %s
+              OR (
+                  interval_seconds IS NULL
+                  AND %s IS NULL
+              )
+          )
           AND enabled = TRUE
           AND status = 'ACTIVE'
         LIMIT 1;
@@ -96,6 +106,8 @@ async def _create_schedule(
             action_data.get("task_action"),
             action_data.get("level_no"),
             action_data.get("start_time"),
+            interval_seconds,
+            interval_seconds,
         ),
     )
 
@@ -110,6 +122,7 @@ async def _create_schedule(
             task_action,
             level_no,
             start_time,
+            interval_seconds,
             duration_seconds,
             target_value,
             unit,
@@ -123,6 +136,7 @@ async def _create_schedule(
             %s,
             %s,
             %s::time,
+            %s,
             %s,
             %s,
             %s,
@@ -142,6 +156,7 @@ async def _create_schedule(
             action_data.get("task_action"),
             action_data.get("level_no"),
             action_data.get("start_time"),
+            interval_seconds,
             action_data.get("duration_seconds"),
             action_data.get("target_value"),
             action_data.get("unit"),
@@ -172,17 +187,22 @@ async def _update_schedule(
             task_action = COALESCE(%s, task_action),
             level_no = COALESCE(%s, level_no),
             start_time = COALESCE(%s::time, start_time),
+            interval_seconds = COALESCE(%s, interval_seconds),
             duration_seconds = COALESCE(%s, duration_seconds),
             target_value = COALESCE(%s, target_value),
             unit = COALESCE(%s, unit),
+
             next_run_at =
                 CASE
                     WHEN CURRENT_DATE + COALESCE(%s::time, start_time) > NOW()
                     THEN CURRENT_DATE + COALESCE(%s::time, start_time)
                     ELSE CURRENT_DATE + COALESCE(%s::time, start_time) + INTERVAL '1 day'
                 END,
+
             updated_at = NOW()
+
         WHERE schedule_id = %s
+
         RETURNING schedule_id;
         """,
         (
@@ -191,6 +211,7 @@ async def _update_schedule(
             action_data.get("task_action"),
             action_data.get("level_no"),
             action_data.get("start_time"),
+            action_data.get("interval_seconds"),
             action_data.get("duration_seconds"),
             action_data.get("target_value"),
             action_data.get("unit"),
@@ -219,14 +240,18 @@ async def _enable_schedule(
         SET
             enabled = TRUE,
             status = 'ACTIVE',
+
             next_run_at =
                 CASE
                     WHEN CURRENT_DATE + start_time > NOW()
                     THEN CURRENT_DATE + start_time
                     ELSE CURRENT_DATE + start_time + INTERVAL '1 day'
                 END,
+
             updated_at = NOW()
+
         WHERE schedule_id = %s
+
         RETURNING schedule_id;
         """,
         (schedule_id,),
@@ -274,15 +299,19 @@ async def _run_scheduler_action(
     )
 
     if action_type == "CREATE_SCHEDULE":
+
         return await _create_schedule(action_data)
 
     if action_type == "UPDATE_SCHEDULE":
+
         return await _update_schedule(action_data)
 
     if action_type == "ENABLE_SCHEDULE":
+
         return await _enable_schedule(action_data)
 
     if action_type == "DISABLE_SCHEDULE":
+
         return await _disable_schedule(action_data)
 
     raise ValueError(f"Unsupported scheduler action: {action_type}")
@@ -332,12 +361,17 @@ async def _update_task_execution(
             status = %s,
             result = %s,
             error_message = %s,
+
             started_at =
                 CASE
                     WHEN %s = 'RUNNING'
-                    THEN COALESCE(started_at, NOW())
+                    THEN COALESCE(
+                        started_at,
+                        NOW()
+                    )
                     ELSE started_at
                 END,
+
             completed_at =
                 CASE
                     WHEN %s IN (
@@ -349,6 +383,7 @@ async def _update_task_execution(
                     THEN NOW()
                     ELSE completed_at
                 END
+
         WHERE execution_id = %s;
         """,
         (
@@ -381,6 +416,7 @@ async def run_scheduled_task(
 ) -> Any:
 
     if task.get("action_type"):
+
         return await _run_scheduler_action(task)
 
     if not task.get("task_action"):
@@ -427,20 +463,35 @@ async def _prepare_due_task(
 ) -> dict[str, Any]:
 
     schedule_id = row[0]
-    scheduled_for = row[9]
+    interval_seconds = row[5]
+    scheduled_for = row[10]
 
     await run_query(
         """
         UPDATE farm_schedule
         SET
             last_run_at = NOW(),
+
             next_run_at =
                 CASE
-                    WHEN CURRENT_DATE + start_time + INTERVAL '1 day' > NOW()
-                    THEN CURRENT_DATE + start_time + INTERVAL '1 day'
-                    ELSE CURRENT_DATE + start_time + INTERVAL '2 days'
+                    WHEN interval_seconds IS NOT NULL
+                    THEN
+                        next_run_at
+                        + (
+                            interval_seconds
+                            * INTERVAL '1 second'
+                        )
+
+                    ELSE
+                        CASE
+                            WHEN CURRENT_DATE + start_time > NOW()
+                            THEN CURRENT_DATE + start_time
+                            ELSE CURRENT_DATE + start_time + INTERVAL '1 day'
+                        END
                 END,
+
             updated_at = NOW()
+
         WHERE schedule_id = %s;
         """,
         (schedule_id,),
@@ -452,13 +503,14 @@ async def _prepare_due_task(
         "task_action": row[2],
         "level_no": row[3],
         "start_time": row[4],
-        "duration_seconds": row[5],
-        "target_value": row[6],
-        "unit": row[7],
-        "last_run_at": row[8],
+        "interval_seconds": interval_seconds,
+        "duration_seconds": row[6],
+        "target_value": row[7],
+        "unit": row[8],
+        "last_run_at": row[9],
         "next_run_at": scheduled_for,
-        "enabled": row[10],
-        "status": row[11],
+        "enabled": row[11],
+        "status": row[12],
     }
 
 
@@ -469,12 +521,14 @@ async def _action_worker() -> None:
         task = await action_queue.get()
 
         try:
+
             await run_scheduled_task(task)
 
         except Exception:
             pass
 
         finally:
+
             action_queue.task_done()
 
 
@@ -494,6 +548,7 @@ async def start():
         while loop:
 
             try:
+
                 tasks = await get_due_tasks()
 
             except Exception:

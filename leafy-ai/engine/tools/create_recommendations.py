@@ -109,6 +109,29 @@ def _validate_duration(
         raise ValueError("duration_seconds must be a positive integer")
 
 
+def _validate_interval(
+    action_data: dict[str, Any],
+) -> None:
+
+    interval_seconds = action_data.get("interval_seconds")
+
+    if interval_seconds is None:
+        return
+
+    if (
+        not isinstance(
+            interval_seconds,
+            int,
+        )
+        or isinstance(
+            interval_seconds,
+            bool,
+        )
+        or interval_seconds <= 0
+    ):
+        raise ValueError("interval_seconds must be a positive integer")
+
+
 def _validate_create_schedule(
     action_data: dict[str, Any],
 ) -> None:
@@ -165,6 +188,8 @@ def _validate_create_schedule(
     ):
         raise ValueError("start_time must be a non-empty string")
 
+    _validate_interval(action_data)
+
     _validate_duration(
         task_action,
         action_data,
@@ -196,6 +221,7 @@ def _validate_update_schedule(
         "task_action",
         "level_no",
         "start_time",
+        "interval_seconds",
         "duration_seconds",
         "target_value",
         "unit",
@@ -212,13 +238,19 @@ def _validate_update_schedule(
             raise ValueError(f"Unsupported task_action: {task_action}")
 
     if "level_no" in action_data:
+
         _validate_level(action_data.get("level_no"))
 
     if "task_action" in action_data and "level_no" in action_data:
+
         _validate_task_scope(
             action_data.get("task_action"),
             action_data.get("level_no"),
         )
+
+    if "interval_seconds" in action_data:
+
+        _validate_interval(action_data)
 
     if "duration_seconds" in action_data:
 
@@ -274,11 +306,13 @@ def _validate_action(
         raise ValueError(f"Unsupported scheduler action: {action_type}")
 
     if action_type == "CREATE_SCHEDULE":
+
         _validate_create_schedule(action_data)
 
         return
 
     if action_type == "UPDATE_SCHEDULE":
+
         _validate_update_schedule(action_data)
 
         return
@@ -287,6 +321,7 @@ def _validate_action(
         "ENABLE_SCHEDULE",
         "DISABLE_SCHEDULE",
     }:
+
         _validate_schedule_state_action(
             action_type,
             action_data,
@@ -407,6 +442,7 @@ async def create_recommendations(
             action_data = dict(action_data)
 
             if action_type == "CREATE_SCHEDULE" and action_data.get("level_no") is None:
+
                 action_data["level_no"] = level_no
 
             if (
