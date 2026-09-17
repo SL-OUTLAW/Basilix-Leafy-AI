@@ -194,7 +194,10 @@ ACTIONABLE RECOMMENDATIONS:
 - When action_required is false, proposed_action must not be included.
 - Never describe a concrete executable schedule change only in recommendation_message.
 
+- When action_required is false, do not include proposed_action.
+
 - When creating a new schedule use CREATE_SCHEDULE.
+
 - CREATE_SCHEDULE must include:
   - task_name
   - task_action
@@ -368,6 +371,8 @@ Each RAG source should appear only once.
 If no RAG source was successfully retrieved, sources_used must be an empty array.
 
 Never invent RAG sources.
+
+Do not invent sources.
 
 Do not add summary.
 
