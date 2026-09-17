@@ -22,12 +22,12 @@ TOOL_LIST = {
 # TODO : RAG TOOL NOT SETTING SOURCE RIGHT
 # TODO : CREATE RECOMMENDATION NOT POPULATING THE DB CORRECTLY
 
+
 async def execute_tool(
     tool_name: str,
     arguments: dict[str, Any],
 ) -> dict[str, Any]:
 
-    print("hererererer 22222")
     tool = TOOL_LIST.get(tool_name)
 
     if tool is None:
@@ -59,8 +59,6 @@ async def execute_tool(
 async def execute_tools(
     tool_calls: list[dict[str, Any]],
 ) -> dict[str, Any]:
-
-    print("herereereree 111")
 
     tasks = [
         asyncio.create_task(

@@ -7,21 +7,19 @@ import asyncio
 from engine.api.engine_api import router
 from engine.hal.main import Hal
 from engine.managers import scheduler
-
 from engine.managers.db_manager import (
     open_pool,
     close_pool,
 )
-
 from engine.managers.settings_manager import (
     manage_settings,
 )
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
-
-    # engine startup
+async def lifespan(
+    app: FastAPI,
+):
 
     await open_pool()
 
@@ -29,9 +27,12 @@ async def lifespan(app: FastAPI):
 
     hal = Hal()
 
-    scheduler_task = asyncio.create_task(scheduler.start())
-
     await hal.start_hal()
+
+    scheduler_task = asyncio.create_task(
+        scheduler.start(),
+        name="scheduler-worker",
+    )
 
     app.state.hal = hal
     app.state.scheduler_task = scheduler_task
@@ -41,10 +42,7 @@ async def lifespan(app: FastAPI):
 
     finally:
 
-        # engine shutdown
-
         await scheduler.stop()
-        await hal.stop_hal()
 
         scheduler_task.cancel()
 
@@ -52,6 +50,8 @@ async def lifespan(app: FastAPI):
             scheduler_task,
             return_exceptions=True,
         )
+
+        await hal.stop_hal()
 
         await close_pool()
 

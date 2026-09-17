@@ -1,25 +1,15 @@
-import json, os, dotenv
+import json
 from pathlib import Path
 from typing import Any
 
-import httpx
 import ollama
 
-from llm_tools import TOOLS
-from llm_api import execute_tool
+from ai_core.llm_tools import TOOLS
+from ai_core.llm_api import execute_tool
 
 MODEL = "leafy-ai"
 MAX_TOOL_ROUNDS = 10
 KEEP_ALIVE = -1
-
-ENGINE_URL = os.getenv(
-    "ENGINE_URL",
-    "http://localhost:8000",
-)
-
-ENGINE_TOOL_TIMEOUT = 30.0
-
-VERBOSE = True
 
 ollama_client = ollama.AsyncClient()
 
@@ -28,55 +18,48 @@ PROMPT_PATH = DIR / "system_prompt.md"
 SCHEMA_PATH = DIR / "schema.json"
 
 
-def _debug(message: str) -> None:
-    if VERBOSE:
-        print(
-            f"\n[Leafy] {message}",
-            flush=True,
-        )
+class LeafyAIError(Exception):
+    pass
 
 
-def _debug_json(
-    label: str,
-    data: Any,
-) -> None:
-    if not VERBOSE:
-        return
+class LeafyAIConfigurationError(LeafyAIError):
+    pass
 
-    print(
-        f"\n[Leafy] {label}",
-        flush=True,
-    )
 
-    try:
-        print(
-            json.dumps(
-                data,
-                indent=2,
-                ensure_ascii=False,
-                default=str,
-            ),
-            flush=True,
-        )
-    except Exception:
-        print(
-            repr(data),
-            flush=True,
-        )
+class LeafyAIToolError(LeafyAIError):
+    pass
+
+
+class LeafyAIResponseError(LeafyAIError):
+    pass
+
+
+class LeafyAIExecutionError(LeafyAIError):
+    pass
 
 
 def _load_system_prompt(
     path: Path,
 ) -> str:
+
     try:
         return path.read_text(encoding="utf-8")
+
     except FileNotFoundError as error:
-        raise RuntimeError(f"System prompt file not found at {path}") from error
+        raise LeafyAIConfigurationError(
+            f"System prompt file not found at {path}"
+        ) from error
+
+    except OSError as error:
+        raise LeafyAIConfigurationError(
+            f"Could not read system prompt at {path}"
+        ) from error
 
 
 def _load_schema(
     path: Path,
 ) -> dict:
+
     try:
         with open(
             path,
@@ -86,12 +69,15 @@ def _load_schema(
             return json.load(file)
 
     except FileNotFoundError as error:
-        raise RuntimeError(f"Schema file not found at {path}") from error
+        raise LeafyAIConfigurationError(f"Schema file not found at {path}") from error
 
     except json.JSONDecodeError as error:
-        raise RuntimeError(
-            f"Schema file at {path} " f"is not valid JSON: {error}"
+        raise LeafyAIConfigurationError(
+            f"Schema file at {path} is not valid JSON: {error}"
         ) from error
+
+    except OSError as error:
+        raise LeafyAIConfigurationError(f"Could not read schema at {path}") from error
 
 
 SYSTEM_PROMPT = _load_system_prompt(PROMPT_PATH)
@@ -102,28 +88,30 @@ SCHEMA = _load_schema(SCHEMA_PATH)
 def _validate(
     result: dict,
 ) -> None:
-    if not isinstance(result, dict):
-        raise ValueError(
+
+    if not isinstance(
+        result,
+        dict,
+    ):
+        raise LeafyAIResponseError(
             f"Expected response to be a dict, got {type(result).__name__}"
         )
 
     response_type = result.get("response_type")
 
-    if response_type not in {
-        "chat",
-        "farm_analysis",
-    }:
-        raise ValueError(f"Invalid response_type=" f"{response_type!r}")
+    if response_type != "leafy_ai":
+        raise LeafyAIResponseError(f"Invalid response_type={response_type!r}")
 
     content = result.get("content")
 
-    if not isinstance(content, str) or not content.strip():
-        raise ValueError("content must be a non-empty string")
-
-    summary = result.get("summary")
-
-    if not isinstance(summary, str) or not summary.strip():
-        raise ValueError("summary must be a non-empty string")
+    if (
+        not isinstance(
+            content,
+            str,
+        )
+        or not content.strip()
+    ):
+        raise LeafyAIResponseError("content must be a non-empty string")
 
     sources_used = result.get("sources_used")
 
@@ -131,104 +119,159 @@ def _validate(
         sources_used,
         list,
     ):
-        raise ValueError("sources_used must be an array")
+        raise LeafyAIResponseError("sources_used must be an array")
+
+    for source in sources_used:
+
+        if (
+            not isinstance(
+                source,
+                str,
+            )
+            or not source.strip()
+        ):
+            raise LeafyAIResponseError("sources_used must contain non-empty strings")
+
+
+def _normalize_tool_arguments(
+    tool_name: str,
+    arguments: Any,
+) -> dict[str, Any]:
+
+    if arguments is None:
+        return {}
+
+    if isinstance(
+        arguments,
+        str,
+    ):
+
+        try:
+            arguments = json.loads(arguments)
+
+        except json.JSONDecodeError as error:
+            raise LeafyAIToolError(
+                f"Invalid tool arguments for {tool_name}: {error}"
+            ) from error
+
+    if not isinstance(
+        arguments,
+        dict,
+    ):
+        raise LeafyAIToolError(f"Tool arguments for {tool_name} must be an object")
+
+    return arguments
 
 
 async def _run_llm_loop(
-    messages: list[dict[str, Any]],
-    user_context: dict[str, Any] | None = None,
+    task: str,
+    context: dict[str, Any] | None = None,
     think: bool = True,
-) -> list[Any]:
+) -> tuple[
+    list[Any],
+    list[str],
+]:
 
-    conversation: list[Any] = list(messages)
+    conversation: list[Any] = [
+        {
+            "role": "system",
+            "content": SYSTEM_PROMPT,
+        },
+        {
+            "role": "system",
+            "content": (
+                "The main Leafy system has assigned "
+                "the following task:\n\n"
+                f"{task}"
+            ),
+        },
+    ]
+
+    if context is not None:
+        conversation.append(
+            {
+                "role": "system",
+                "content": (
+                    "Additional task context:\n\n"
+                    f"{json.dumps(context, ensure_ascii=False, default=str)}"
+                ),
+            }
+        )
+
+    rag_sources: list[str] = []
 
     if not TOOLS:
-        _debug("No tools available")
-        return conversation
+        return (
+            conversation,
+            rag_sources,
+        )
 
     for round_number in range(
         1,
         MAX_TOOL_ROUNDS + 1,
     ):
-        _debug(f"MODEL LOOP {round_number}/{MAX_TOOL_ROUNDS}")
 
-        # initial LLM inference if round_number = 1
-        response = await ollama_client.chat(
-            model=MODEL,
-            messages=conversation,
-            tools=TOOLS,
-            think=think,
-            keep_alive=KEEP_ALIVE,
-        )
+        try:
+            response = await ollama_client.chat(
+                model=MODEL,
+                messages=conversation,
+                tools=TOOLS,
+                think=think,
+                keep_alive=KEEP_ALIVE,
+            )
+
+        except Exception as error:
+            raise LeafyAIExecutionError(f"LLM inference failed: {error}") from error
 
         conversation.append(response.message)
-
-        if response.message.content:
-            _debug("MODEL CONTENT")
-
-            print(
-                response.message.content,
-                flush=True,
-            )
-
-        thinking = getattr(
-            response.message,
-            "thinking",
-            None,
-        )
-
-        if thinking:
-            _debug("MODEL THINKING")
-
-            print(
-                thinking,
-                flush=True,
-            )
 
         raw_tool_calls = response.message.tool_calls or []
 
         if not raw_tool_calls:
-            _debug("No Tool requested")
-            return conversation
+            return (
+                conversation,
+                rag_sources,
+            )
 
-        tool_calls: list[dict[str, Any]] = [
-            {
-                "tool_name": (tool_call.function.name),
-                "arguments": (tool_call.function.arguments or {}),
-            }
-            for tool_call in raw_tool_calls
-        ]
+        tool_calls = []
 
-        _debug_json(
-            f"Model requested {len(tool_calls)} tool(s)",
-            tool_calls,
-        )
+        for tool_call in raw_tool_calls:
 
-        engine_tool_response = await execute_tool(
-            tool_calls=tool_calls,
-            user_context=user_context,
-        )
+            tool_name = tool_call.function.name
 
-        _debug_json(
-            "TOOL RESULT",
+            arguments = _normalize_tool_arguments(
+                tool_name=tool_name,
+                arguments=tool_call.function.arguments,
+            )
+
+            tool_calls.append(
+                {
+                    "tool_name": tool_name,
+                    "arguments": arguments,
+                }
+            )
+
+        try:
+            engine_tool_response = await execute_tool(
+                tool_calls=tool_calls,
+            )
+
+        except Exception as error:
+            raise LeafyAIToolError(f"Engine tool request failed: {error}") from error
+
+        if not isinstance(
             engine_tool_response,
-        )
+            dict,
+        ):
+            raise LeafyAIToolError("Engine returned an invalid tool response.")
 
         if engine_tool_response.get("success") is False:
-            _debug("Tool execution failed. Stopping tool loop.")
-            for tool_call in tool_calls:
-                conversation.append(
-                    {
-                        "role": "tool",
-                        "tool_name": tool_call["tool_name"],
-                        "content": json.dumps(
-                            engine_tool_response,
-                            ensure_ascii=False,
-                            default=str,
-                        ),
-                    }
+            raise LeafyAIToolError(
+                engine_tool_response.get(
+                    "error",
+                    "Engine tool execution failed",
                 )
-            return conversation
+            )
 
         tool_results = engine_tool_response.get(
             "results",
@@ -239,12 +282,58 @@ async def _run_llm_loop(
             tool_results,
             list,
         ):
-            _debug("Invalid Engine tool results")
-            return conversation
+            raise LeafyAIToolError("Invalid Engine tool results")
 
         if len(tool_results) != len(tool_calls):
-            _debug("Tool result count does not " "match tool call count")
-            return conversation
+            raise LeafyAIToolError("Tool result count does not match tool call count")
+
+        for tool_result in tool_results:
+
+            if tool_result.get("tool_name") != "rag_tool":
+                continue
+
+            if not tool_result.get("success"):
+                continue
+
+            result = tool_result.get("result")
+
+            if not isinstance(
+                result,
+                dict,
+            ):
+                continue
+
+            rag_results = result.get(
+                "results",
+                [],
+            )
+
+            if not isinstance(
+                rag_results,
+                list,
+            ):
+                continue
+
+            for source in rag_results:
+
+                if not isinstance(
+                    source,
+                    dict,
+                ):
+                    continue
+
+                source_value = source.get("source") or source.get("title")
+
+                if not isinstance(
+                    source_value,
+                    str,
+                ):
+                    continue
+
+                source_value = source_value.strip()
+
+                if source_value and source_value not in rag_sources:
+                    rag_sources.append(source_value)
 
         for tool_call, tool_result in zip(
             tool_calls,
@@ -262,182 +351,123 @@ async def _run_llm_loop(
                 }
             )
 
-    raise RuntimeError("Maximum tool rounds exceeded: " f"{MAX_TOOL_ROUNDS}")
+    raise LeafyAIExecutionError(f"Maximum tool rounds exceeded: {MAX_TOOL_ROUNDS}")
 
 
 async def _finalize(
     messages: list[Any],
+    rag_sources: list[str],
     think: bool = True,
 ) -> dict:
-    _debug(f"FINALIZING RESPONSE " f"(think={think})")
 
     final_messages = list(messages)
 
     final_messages.append(
         {
-            "role": "user",
+            "role": "system",
             "content": (
-                "Return the final response now. "
-                "Be concise and answer only what is relevant to the request. "
-                "For chat, normally use no more than 120 words. "
-                "Do not narrate your reasoning or internal steps. "
-                "Do not explain internal workflows, capabilities, services, APIs, "
-                "routing, databases, execution mechanisms, or implementation details. "
-                "If farm information could not be retrieved, state what information "
-                "was unavailable and how that prevented the requested task in no more "
-                "than two sentences. "
-                "Do not repeat any fact, limitation, reason, or conclusion. "
-                "For a straightforward failure, use one short paragraph. "
-                "State unavailable information and its effect on the request once, then stop. "
-                "Do not speculate about the cause of unavailable information. "
-                "Do not list internal requirements or processing steps. "
-                "Return only valid JSON matching the response schema."
+                "Return the final Leafy AI system-brain result now. "
+                "This is an internal result for the main Leafy system. "
+                "Return relevant farm findings, conclusions, limitations, "
+                "and confirmed recommendation outcomes. "
+                "Do not narrate internal reasoning or tool execution. "
+                "Do not mention APIs, databases, services, routing, or "
+                "implementation details. "
+                "Return only valid JSON matching the response schema. "
+                'response_type must be exactly "leafy_ai". '
+                "Do not include summary or any additional fields. "
+                f"RAG sources retrieved during this run: "
+                f"{json.dumps(rag_sources, ensure_ascii=False)}. "
+                "Only use those values for sources_used. "
+                "Do not invent sources. "
+                "If the list is empty, return sources_used as []."
             ),
-        },
+        }
     )
 
-    response = await ollama_client.chat(
-        model=MODEL,
-        messages=final_messages,
-        think=think,
-        format=SCHEMA,
-        keep_alive=KEEP_ALIVE,
-    )
+    try:
+        response = await ollama_client.chat(
+            model=MODEL,
+            messages=final_messages,
+            think=think,
+            format=SCHEMA,
+            keep_alive=KEEP_ALIVE,
+        )
+
+    except Exception as error:
+        raise LeafyAIResponseError(f"Final LLM inference failed: {error}") from error
 
     content = response.message.content
 
     if not content:
-        thinking = getattr(
-            response.message,
-            "thinking",
-            None,
-        )
-
-        raise RuntimeError(
-            "Ollama returned empty "
-            "message.content "
-            f"(think={think}). "
-            f"Thinking trace: "
-            f"{thinking!r}"
-        )
-
-    _debug("FINAL RAW RESPONSE")
-
-    if VERBOSE:
-        print(
-            content,
-            flush=True,
-        )
+        raise LeafyAIResponseError("Ollama returned empty message.content")
 
     try:
         result = json.loads(content)
 
-        _debug_json(
-            "FINAL PARSED RESPONSE",
-            result,
-        )
+        result["sources_used"] = list(dict.fromkeys(rag_sources))
 
         return result
 
     except json.JSONDecodeError as error:
-        raise RuntimeError(
-            "Ollama returned invalid JSON: " f"{error}\n" f"Raw response:\n{content}"
-        ) from error
+        raise LeafyAIResponseError(f"Ollama returned invalid JSON: {error}") from error
 
 
 async def leafy_ai(
-    messages: list[dict[str, Any]],
-    user_context: dict[str, Any] | None = None,
+    task: str,
+    context: dict[str, Any] | None = None,
 ) -> dict:
-    """
-    Run the Leafy AI agent.
 
-    The AI may request capabilities through the
-    Engine API.
-    """
-
-    if not messages:
-        raise ValueError("messages cannot be empty")
-
-    _debug("Starting Leafy AI request")
-
-    _debug_json(
-        "INPUT MESSAGES",
-        messages,
-    )
-
-    if user_context is not None:
-        _debug_json(
-            "USER CONTEXT",
-            user_context,
+    if (
+        not isinstance(
+            task,
+            str,
         )
+        or not task.strip()
+    ):
+        raise LeafyAIExecutionError("task cannot be empty")
 
-    conversation = await _run_llm_loop(
-        messages=messages,
-        user_context=user_context,
+    conversation, rag_sources = await _run_llm_loop(
+        task=task,
+        context=context,
         think=True,
     )
 
-    _debug("Tool phase complete")
-
-    last_error = None
+    last_error: LeafyAIResponseError | None = None
 
     for attempt, think in enumerate(
-        [True, False],
+        [
+            True,
+            False,
+        ],
         start=1,
     ):
+
         try:
             result = await _finalize(
                 messages=conversation,
+                rag_sources=rag_sources,
                 think=think,
             )
 
             _validate(result)
 
-            _debug("Final response validated")
-
             return result
 
-        except (
-            RuntimeError,
-            ValueError,
-        ) as error:
+        except LeafyAIResponseError as error:
             last_error = error
 
-            _debug(
-                "Finalization attempt "
-                f"{attempt} "
-                f"(think={think}) failed: "
-                f"{error}"
-            )
-
-    raise RuntimeError(
-        "leafy_ai failed after retries: " f"{last_error}"
+    raise LeafyAIExecutionError(
+        f"Leafy AI failed to produce a valid final response after retries: {last_error}"
     ) from last_error
 
 
 async def test_conversation():
-    messages = [
-        {
-            "role": "system",
-            "content": SYSTEM_PROMPT,
-        },
-        {
-            "role": "system",
-            "content": (
-                "this is a test. try using the tools to see the pending recommendations"
-            ),
-        },
-    ]
-
-    user_context = {
-        "user_id": 1,
-        "role": "user",
-    }
 
     response = await leafy_ai(
-        messages=messages,
-        user_context=user_context,
+        task=(
+            "This is a extensive tool test. use all the tools at disposal and test them all for their functionality."
+        )
     )
 
     print("\nFINAL RESULT")

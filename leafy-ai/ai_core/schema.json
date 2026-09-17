@@ -3,27 +3,20 @@
   "properties": {
     "response_type": {
       "type": "string",
-      "enum": ["chat", "farm_brain"],
-      "description": "Response destination. chat is used for every user-facing Leafy response, including answers that analyse actual farm data. farm_brain is used only for internal autonomous farm analysis requested by the application and is not a normal user-facing response."
+      "enum": ["leafy_ai"]
     },
     "content": {
       "type": "string",
-      "minLength": 1,
-      "description": "Main response content. For chat this is the user-facing answer. For farm_brain this is the internal farm analysis."
-    },
-    "summary": {
-      "type": "string",
-      "minLength": 1,
-      "description": "Short one-sentence summary of the main conclusion."
+      "minLength": 1
     },
     "sources_used": {
       "type": "array",
       "items": {
-        "type": "string"
-      },
-      "description": "RAG sources explicitly provided and used. Empty when no RAG sources were provided."
+        "type": "string",
+        "minLength": 1
+      }
     }
   },
-  "required": ["response_type", "content", "summary", "sources_used"],
+  "required": ["response_type", "content", "sources_used"],
   "additionalProperties": false
 }
