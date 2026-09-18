@@ -15,6 +15,8 @@ const publicRoutes = require("./routes/public");
 
 const farmRoutes = require("./routes/farm");
 
+const adminRoutes = require("./routes/admin");
+
 const app = express();
 
 app.use(cors());
@@ -25,6 +27,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api/public", publicRoutes);
 
 app.use("/api/farm", farmRoutes);
+
+app.use("/api/admin", adminRoutes);
 
 app.get("/health", (req, res) => {
   res.json({
