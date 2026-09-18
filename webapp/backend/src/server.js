@@ -10,25 +10,19 @@ const {
 } = require("./services/backendDatabase");
 
 const authRoutes = require("./routes/auth");
-
 const publicRoutes = require("./routes/public");
-
 const farmRoutes = require("./routes/farm");
-
 const adminRoutes = require("./routes/admin");
-
+const notificationRoutes = require("./routes/notifications");
 const app = express();
 
 app.use(cors());
 app.use(express.json());
-
 app.use("/api/auth", authRoutes);
-
 app.use("/api/public", publicRoutes);
-
 app.use("/api/farm", farmRoutes);
-
 app.use("/api/admin", adminRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 app.get("/health", (req, res) => {
   res.json({
