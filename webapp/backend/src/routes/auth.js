@@ -3,6 +3,8 @@ const express = require("express");
 const { verifyGoogleCredential } = require("../services/googleAuth");
 const { authorizeAllowedUser } = require("../services/allowedUserAuth");
 const { syncUser } = require("../services/userSync");
+const { createToken } = require("../services/jwtAuth");
+const { authenticate } = require("../middleware/authenticate");
 
 const router = express.Router();
 
@@ -11,6 +13,7 @@ router.post("/google", async (req, res) => {
 
   let googleUser;
   let allowedUser;
+  let appUser;
 
   // Step 1: verify the Google identity
   try {
@@ -50,7 +53,7 @@ router.post("/google", async (req, res) => {
 
   // Step 3: create or update the application user
   try {
-    await syncUser(googleUser, allowedUser.role);
+    appUser = await syncUser(googleUser, allowedUser.role);
   } catch (error) {
     console.error("User synchronization failed:", error);
 
@@ -60,12 +63,33 @@ router.post("/google", async (req, res) => {
     });
   }
 
+  let token;
+
+  try {
+    token = createToken(appUser);
+  } catch (error) {
+    console.error("JWT creation failed:", error);
+
+    return res.status(500).json({
+      authenticated: false,
+      error: "Authentication failed"
+    });
+  }
+
   return res.json({
     authenticated: true,
+    token,
     user: {
       ...googleUser,
       role: allowedUser.role
     }
+  });
+});
+
+router.get("/me", authenticate, (req, res) => {
+  res.json({
+    authenticated: true,
+    user: req.user
   });
 });
 
