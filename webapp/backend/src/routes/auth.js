@@ -5,6 +5,7 @@ const { authorizeAllowedUser } = require("../services/allowedUserAuth");
 const { syncUser } = require("../services/userSync");
 const { createToken } = require("../services/jwtAuth");
 const { authenticate } = require("../middleware/authenticate");
+const { requireRole } = require("../middleware/authorizeRole");
 
 const router = express.Router();
 
@@ -86,7 +87,7 @@ router.post("/google", async (req, res) => {
   });
 });
 
-router.get("/me", authenticate, (req, res) => {
+router.get("/me", authenticate, requireRole("OPERATOR", "ADMIN"), (req, res) => {
   res.json({
     authenticated: true,
     user: req.user
