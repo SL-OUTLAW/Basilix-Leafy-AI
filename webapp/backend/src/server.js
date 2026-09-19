@@ -4,6 +4,10 @@ const express = require("express");
 const cors = require("cors");
 
 const { pool, query } = require("./services/database");
+const {
+  backendPool,
+  backendQuery
+} = require("./services/backendDatabase");
 
 const authRoutes = require("./routes/auth");
 
@@ -33,6 +37,9 @@ async function startServer() {
     await query("SELECT 1");
     console.log("Database connected");
 
+    await backendQuery("SELECT 1");
+    console.log("Backend database connected");
+
     const server = app.listen(PORT, () => {
       console.log(`Leafy AI backend running on port ${PORT}`);
     });
@@ -42,7 +49,9 @@ async function startServer() {
 
       server.close(async () => {
         await pool.end();
-        console.log("Database pool closed");
+        await backendPool.end();
+
+        console.log("Database pools closed");
         process.exit(0);
       });
     }
@@ -52,6 +61,7 @@ async function startServer() {
   } catch (error) {
     console.error("Failed to start backend:", error.message);
     await pool.end();
+    await backendPool.end();
     process.exit(1);
   }
 }
