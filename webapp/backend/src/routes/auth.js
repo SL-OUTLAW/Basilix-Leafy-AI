@@ -3,6 +3,10 @@ const express = require("express");
 const { verifyGoogleCredential } = require("../services/googleAuth");
 const { authorizeAllowedUser } = require("../services/allowedUserAuth");
 const { syncUser } = require("../services/userSync");
+const { createToken } = require("../services/jwtAuth");
+const { logAuditEvent } = require("../services/auditLogger");
+const { authenticate } = require("../middleware/authenticate");
+const { requireRole } = require("../middleware/authorizeRole");
 
 const router = express.Router();
 
@@ -11,6 +15,7 @@ router.post("/google", async (req, res) => {
 
   let googleUser;
   let allowedUser;
+  let appUser;
 
   // Step 1: verify the Google identity
   try {
@@ -21,6 +26,17 @@ router.post("/google", async (req, res) => {
         authenticated: false,
         error: "Google authentication is not configured"
       });
+    }
+
+    try {
+      await logAuditEvent(
+        "USER_LOGIN_DENIED",
+        "Google login was denied",
+        null,
+        { reason: "INVALID_GOOGLE_CREDENTIAL" }
+      );
+    } catch (auditError) {
+      console.error("Audit logging failed:", auditError);
     }
 
     return res.status(401).json({
@@ -34,6 +50,20 @@ router.post("/google", async (req, res) => {
     allowedUser = await authorizeAllowedUser(googleUser.email);
 
     if (!allowedUser) {
+      try {
+        await logAuditEvent(
+          "USER_LOGIN_DENIED",
+          "Verified Google user was not authorized",
+          null,
+          {
+            reason: "NOT_ALLOWED",
+            email: googleUser.email
+          }
+        );
+      } catch (auditError) {
+        console.error("Audit logging failed:", auditError);
+      }
+
       return res.status(403).json({
         authenticated: false,
         error: "User is not authorized"
@@ -50,7 +80,7 @@ router.post("/google", async (req, res) => {
 
   // Step 3: create or update the application user
   try {
-    await syncUser(googleUser, allowedUser.role);
+    appUser = await syncUser(googleUser, allowedUser.role);
   } catch (error) {
     console.error("User synchronization failed:", error);
 
@@ -60,12 +90,48 @@ router.post("/google", async (req, res) => {
     });
   }
 
+  let token;
+
+  try {
+    token = createToken(appUser);
+  } catch (error) {
+    console.error("JWT creation failed:", error);
+
+    return res.status(500).json({
+      authenticated: false,
+      error: "Authentication failed"
+    });
+  }
+
+  try {
+    await logAuditEvent(
+      "USER_LOGIN",
+      "User logged in successfully",
+      appUser.user_id,
+      {
+        role: allowedUser.role
+      },
+      "USER",
+      appUser.user_id
+    );
+  } catch (auditError) {
+    console.error("Audit logging failed:", auditError);
+  }
+
   return res.json({
     authenticated: true,
+    token,
     user: {
       ...googleUser,
       role: allowedUser.role
     }
+  });
+});
+
+router.get("/me", authenticate, requireRole("OPERATOR", "ADMIN"), (req, res) => {
+  res.json({
+    authenticated: true,
+    user: req.user
   });
 });
 
