@@ -1,20 +1,68 @@
+import asyncio
 import sys
-from vision_tool import analyse_plants_tool
+from datetime import datetime, timezone
 
-if len(sys.argv) != 2:
-    print("Usage: python test_integration.py <image_path>")
-    sys.exit(1)
+import engine.hal.ai_vision.vision_tool as vision_tool
 
-result = analyse_plants_tool(sys.argv[1])
 
-print(result)
+insert_calls = []
 
-assert result["status"] == "success"
-assert "image" in result
-assert "health" in result
-assert result["image"]["width"] > 0
-assert result["image"]["height"] > 0
-assert result["health"]["condition"] in ["healthy", "downy_mildew"]
-assert 0 <= result["health"]["confidence"] <= 1
 
-print("Vision tool integration test passed.")
+async def fake_run_query(query, params=None):
+    insert_calls.append(params)
+
+    return [
+        (
+            1,
+            datetime.now(timezone.utc),
+        )
+    ]
+
+
+async def main():
+
+    if len(sys.argv) != 2:
+        print(
+            "Usage: python -m "
+            "engine.hal.ai_vision.test_integration "
+            "<image_path>"
+        )
+        sys.exit(1)
+
+    vision_tool.run_query = fake_run_query
+
+    image_paths = {
+        101: sys.argv[1]
+    }
+
+    result = await vision_tool.analyse_camera_images(
+        image_paths
+    )
+
+    assert result["status"] == "success"
+    assert result["processed"] == 1
+    assert result["successful"] == 1
+    assert len(insert_calls) == 1
+
+    analysis = result["results"]["101"]["analysis"]
+
+    assert analysis["status"] == "success"
+    assert analysis["image_id"] == 101
+    assert 0 <= analysis["canopy"]["coverage_percent"] <= 100
+    assert analysis["health"]["status"] == "not_available"
+
+    assert "plants" not in analysis
+    assert "crowding" not in analysis
+    assert "size" not in analysis
+    assert "analysed_image" not in analysis
+
+    latest = vision_tool.get_latest_analysis()
+
+    assert latest is not None
+    assert latest["successful"] == 1
+
+    print("Vision integration test passed.")
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
