@@ -1,0 +1,101 @@
+.settings {
+  width: 100%;
+  max-width: 900px;
+}
+
+.section {
+  padding: 24px;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-large);
+}
+
+.sectionTitle h2 {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: 22px;
+}
+
+.sectionTitle p {
+  margin: 6px 0 24px;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+}
+
+.themeOptions {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.themeButton {
+  min-height: 100px;
+  padding: 16px;
+
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-medium);
+
+  background: var(--color-bg-card-inner);
+  color: var(--color-text-primary);
+
+  display: flex;
+  align-items: center;
+  gap: 16px;
+
+  text-align: left;
+}
+
+.themeButton:hover {
+  border-color: var(--color-green);
+}
+
+.selected {
+  border: 2px solid var(--color-green);
+}
+
+.themeButton div {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.themeButton strong {
+  font-size: 17px;
+}
+
+.themeButton div span {
+  color: var(--color-text-secondary);
+  font-size: 13px;
+}
+
+.previewDark,
+.previewLight {
+  width: 52px;
+  height: 52px;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.previewDark {
+  background: #151b1d;
+  border: 1px solid #3a4344;
+}
+
+.previewLight {
+  background: #ffffff;
+  border: 1px solid #d8d0c6;
+}
+
+@media (max-width: 767px) {
+  .section {
+    padding: 18px;
+  }
+
+  .themeOptions {
+    grid-template-columns: 1fr;
+  }
+
+  .themeButton {
+    min-height: 86px;
+  }
+}

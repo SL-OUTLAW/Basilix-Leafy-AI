@@ -1,0 +1,135 @@
+.overview {
+  width: 100%;
+}
+
+.statusSection {
+  width: 100%;
+  padding: 16px;
+
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 12px;
+
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-medium);
+}
+
+@media (max-width: 1599px) {
+  .statusSection {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+}
+
+@media (max-width: 900px) {
+  .statusSection {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.mainRow {
+  margin-top: 16px;
+
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 16px;
+}
+
+.panel {
+  min-height: 300px;
+  padding: 20px;
+
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-medium);
+}
+
+.panelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.panelHeader h2 {
+  margin: 0;
+
+  color: var(--color-text-primary);
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.panelHeader span {
+  color: var(--color-text-secondary);
+  font-size: 14px;
+}
+
+.emptyState {
+  min-height: 230px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  text-align: center;
+}
+
+.emptyState p {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+}
+
+.sensorSection {
+  margin-top: 16px;
+  padding: 16px;
+
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-medium);
+}
+
+@media (max-width: 1100px) {
+  .mainRow {
+    grid-template-columns: 1fr;
+  }
+
+  .sensorSection {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 767px) {
+  .mainRow {
+    margin-top: 16px;
+    gap: 16px;
+  }
+
+  .panel {
+    min-height: 220px;
+    padding: 16px;
+  }
+
+  .panelHeader h2 {
+    font-size: 18px;
+  }
+
+  .emptyState {
+    min-height: 160px;
+  }
+}
+
+@media (max-width: 520px) {
+  .statusSection {
+    grid-template-columns: 1fr;
+  }
+
+  .sensorSection {
+    grid-template-columns: 1fr;
+  }
+}
