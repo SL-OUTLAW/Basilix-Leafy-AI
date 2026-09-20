@@ -1,0 +1,58 @@
+:root {
+  /* background colours */
+  --color-bg-main: #0e1213;
+  --color-bg-sidebar: #151b1d;
+  --color-bg-header: #151b1d;
+  --color-bg-card: #1e2527;
+  --color-bg-card-inner: #293133;
+
+  /* borders */
+  --color-border: #3a4344;
+
+  /* text colours */
+  --color-text-primary: #f3efe8;
+  --color-text-secondary: #6b7280;
+
+  /* navigation */
+  --color-nav-text: #ffffff;
+  --color-nav-active-bg: #1e4a3a;
+  --color-nav-active-text: #34d399;
+
+  /* status colours */
+  --color-green: #34d399;
+  --color-green-dark: #1e4a3a;
+  --color-orange: #ff7b00;
+  --color-blue: #00a8d2;
+  --color-red: #ff3535;
+  --color-red-dark: #501111;
+
+  /* layout sizes */
+  --sidebar-width: 260px;
+  --header-height: 99px;
+
+  /* border radius */
+  --radius-small: 5px;
+  --radius-medium: 10px;
+  --radius-large: 12px;
+}
+
+/* light theme */
+[data-theme="light"] {
+  --color-bg-main: #eaeaea;
+  --color-bg-sidebar: #2f6b4f;
+  --color-bg-header: #ffffff;
+  --color-bg-card: #ffffff;
+  --color-bg-card-inner: #fcfcfa;
+
+  --color-border: #d8d0c6;
+
+  --color-text-primary: #202725;
+  --color-text-secondary: #6b7280;
+
+  --color-nav-text: #ffffff;
+  --color-nav-active-bg: #ffffff;
+  --color-nav-active-text: #202725;
+
+  --color-green: #2dd881;
+  --color-green-dark: #1e4a3a;
+}

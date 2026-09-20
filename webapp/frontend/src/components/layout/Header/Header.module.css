@@ -1,0 +1,184 @@
+.header {
+  width: 100%;
+  height: 99px;
+  padding: 18px 32px 18px 24px;
+
+  background: var(--color-bg-header);
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+
+  box-shadow: 5px 0 15px 5px rgba(0, 0, 0, 0.25);
+}
+
+.pageInfo {
+  min-width: 0;
+}
+
+.pageInfo h1 {
+  margin: 0;
+
+  color: var(--color-text-primary);
+
+  font-size: 32px;
+  font-weight: 500;
+
+  white-space: nowrap;
+}
+
+.pageInfo p {
+  margin: 2px 0 0;
+
+  color: var(--color-text-primary);
+  font-size: 16px;
+
+  white-space: nowrap;
+}
+
+.userArea {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+
+  flex-shrink: 0;
+}
+
+.dateTime {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  color: var(--color-text-primary);
+}
+
+.dateTime span:first-child {
+  font-size: 24px;
+}
+
+.dateTime span:last-child {
+  font-size: 18px;
+}
+
+.profileButton {
+  width: 64px;
+  height: 64px;
+
+  border: 2px solid var(--color-green);
+  border-radius: 50%;
+
+  background: var(--color-bg-card);
+  color: var(--color-text-primary);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 24px;
+  font-weight: 600;
+
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.profileButton img {
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+}
+
+/* Smaller desktop */
+@media (max-width: 1399px) and (min-width: 1000px) {
+  .header {
+    padding: 16px 24px;
+  }
+
+  .pageInfo h1 {
+    font-size: 28px;
+  }
+
+  .pageInfo p {
+    font-size: 14px;
+  }
+
+  .userArea {
+    gap: 20px;
+  }
+
+  .dateTime span:first-child {
+    font-size: 20px;
+  }
+
+  .dateTime span:last-child {
+    font-size: 15px;
+  }
+
+  .profileButton {
+    width: 54px;
+    height: 54px;
+  }
+}
+
+/* Tablet */
+@media (max-width: 999px) and (min-width: 768px) {
+  .header {
+    padding: 14px 20px;
+  }
+
+  .pageInfo h1 {
+    font-size: 24px;
+  }
+
+  .pageInfo p {
+    font-size: 13px;
+  }
+
+  .dateTime span:first-child {
+    font-size: 18px;
+  }
+
+  .dateTime span:last-child {
+    font-size: 14px;
+  }
+
+  .profileButton {
+    width: 48px;
+    height: 48px;
+  }
+}
+
+/* Mobile */
+@media (max-width: 767px) {
+  .header {
+    height: 76px;
+    padding: 12px 16px;
+    gap: 14px;
+  }
+
+  .pageInfo {
+    flex: 1;
+  }
+
+  .pageInfo h1 {
+    font-size: 20px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .pageInfo p,
+  .dateTime {
+    display: none;
+  }
+
+  .userArea {
+    gap: 0;
+  }
+
+  .profileButton {
+    width: 44px;
+    height: 44px;
+    font-size: 18px;
+  }
+}
