@@ -18,13 +18,13 @@ from engine.actions.register_actions import (
     register_scheduler_actions,
 )
 
+from engine.security import security_monitor
 
 from engine.actions.register_actions import (
     register_scheduler_actions,
 )
 from engine.managers import (
     scheduler,
-    security_monitor,
 )
 
 

@@ -45,8 +45,8 @@ def validate_token(token) -> str:
             key=security_key,
             algorithms=["EdDSA"],
             issuer="security",
+            subject="security",
             audience="ai_core",
-            subject="ai_core",
         )
 
         return claims

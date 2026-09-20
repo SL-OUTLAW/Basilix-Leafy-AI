@@ -19,7 +19,18 @@ def create_ai_analysis_handler(
 
         current_time = datetime.now(timezone.utc).isoformat()
 
-        latest_sensors = hal.sensors.latest()
+        scheduled_for = task.get("next_run_at")
+
+        if isinstance(
+            scheduled_for,
+            datetime,
+        ):
+            scheduled_for = scheduled_for.isoformat()
+
+        latest_sensors = {
+            sensor_type: (reading.copy() if isinstance(reading, dict) else reading)
+            for sensor_type, reading in hal.sensors.latest.items()
+        }
 
         result = await run_ai(
             task=(
@@ -54,7 +65,7 @@ def create_ai_analysis_handler(
                 "trigger": "scheduled_full_farm_analysis",
                 "scope": "whole_farm",
                 "schedule_id": task.get("schedule_id"),
-                "scheduled_for": task.get("next_run_at"),
+                "scheduled_for": scheduled_for,
                 "current_time": current_time,
                 "latest_sensor_readings": latest_sensors,
             },

@@ -318,7 +318,7 @@ async def check_sensors(
     hal,
 ) -> None:
 
-    latest = hal.sensors.get_latest()
+    latest = hal.sensors.latest()
 
     if not isinstance(
         latest,

@@ -4,7 +4,7 @@ CREATE EXTENSION IF NOT EXISTS timescaledb;
 CREATE EXTENSION IF NOT EXISTS vector;
 
 
-CREATE TABLE IF NOT EXISTS sensors (
+CREATE TABLE sensors (
     sensor_id BIGSERIAL PRIMARY KEY,
     sensor_name VARCHAR(100) NOT NULL,
     sensor_type VARCHAR(50) NOT NULL,
@@ -15,7 +15,13 @@ CREATE TABLE IF NOT EXISTS sensors (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
     CONSTRAINT chk_sensors_level_no
-        CHECK (level_no IN (0, 1, 2)),
+        CHECK (
+            level_no IN (
+                0,
+                1,
+                2
+            )
+        ),
 
     CONSTRAINT uq_sensors_number
         UNIQUE (
@@ -25,14 +31,21 @@ CREATE TABLE IF NOT EXISTS sensors (
         )
 );
 
-CREATE INDEX IF NOT EXISTS idx_sensors_type
-    ON sensors (sensor_type);
 
-CREATE INDEX IF NOT EXISTS idx_sensors_status
-    ON sensors (status);
+CREATE INDEX idx_sensors_type
+    ON sensors (
+        sensor_type
+    );
 
-CREATE INDEX IF NOT EXISTS idx_sensors_level_no
-    ON sensors (level_no);
+CREATE INDEX idx_sensors_status
+    ON sensors (
+        status
+    );
+
+CREATE INDEX idx_sensors_level_no
+    ON sensors (
+        level_no
+    );
 
 
 INSERT INTO sensors (
@@ -99,19 +112,10 @@ VALUES
         1,
         'cm',
         'ACTIVE'
-    )
-ON CONFLICT (
-    sensor_type,
-    level_no,
-    sensor_no
-)
-DO UPDATE SET
-    sensor_name = EXCLUDED.sensor_name,
-    unit = EXCLUDED.unit,
-    status = EXCLUDED.status;
+    );
 
 
-CREATE TABLE IF NOT EXISTS cameras (
+CREATE TABLE cameras (
     camera_id BIGSERIAL PRIMARY KEY,
     camera_name VARCHAR(100) NOT NULL,
     level_no INTEGER NOT NULL,
@@ -130,14 +134,19 @@ CREATE TABLE IF NOT EXISTS cameras (
         )
 );
 
-CREATE INDEX IF NOT EXISTS idx_cameras_status
-    ON cameras (status);
 
-CREATE INDEX IF NOT EXISTS idx_cameras_level_no
-    ON cameras (level_no);
+CREATE INDEX idx_cameras_status
+    ON cameras (
+        status
+    );
+
+CREATE INDEX idx_cameras_level_no
+    ON cameras (
+        level_no
+    );
 
 
-CREATE TABLE IF NOT EXISTS sensor_readings (
+CREATE TABLE sensor_readings (
     reading_id BIGSERIAL,
     sensor_id BIGINT NOT NULL,
     recorded_at TIMESTAMPTZ NOT NULL,
@@ -159,9 +168,14 @@ CREATE TABLE IF NOT EXISTS sensor_readings (
         ),
 
     CONSTRAINT fk_sensor_readings_sensor
-        FOREIGN KEY (sensor_id)
-        REFERENCES sensors(sensor_id)
+        FOREIGN KEY (
+            sensor_id
+        )
+        REFERENCES sensors (
+            sensor_id
+        )
 );
+
 
 SELECT create_hypertable(
     'public.sensor_readings',
@@ -169,24 +183,25 @@ SELECT create_hypertable(
     if_not_exists => TRUE
 );
 
-CREATE INDEX IF NOT EXISTS idx_sensor_readings_sensor_time
+
+CREATE INDEX idx_sensor_readings_sensor_time
     ON sensor_readings (
         sensor_id,
         recorded_at DESC
     );
 
-CREATE INDEX IF NOT EXISTS idx_sensor_readings_recorded_at
+CREATE INDEX idx_sensor_readings_recorded_at
     ON sensor_readings (
         recorded_at DESC
     );
 
-CREATE INDEX IF NOT EXISTS idx_sensor_readings_quality
+CREATE INDEX idx_sensor_readings_quality
     ON sensor_readings (
         quality_status
     );
 
 
-CREATE TABLE IF NOT EXISTS plant_images (
+CREATE TABLE plant_images (
     image_id BIGSERIAL PRIMARY KEY,
     camera_id BIGINT NOT NULL,
     image_path VARCHAR(500) NOT NULL,
@@ -194,24 +209,29 @@ CREATE TABLE IF NOT EXISTS plant_images (
     captured_at TIMESTAMPTZ NOT NULL,
 
     CONSTRAINT fk_plant_images_camera
-        FOREIGN KEY (camera_id)
-        REFERENCES cameras(camera_id)
+        FOREIGN KEY (
+            camera_id
+        )
+        REFERENCES cameras (
+            camera_id
+        )
         ON DELETE CASCADE
 );
 
-CREATE INDEX IF NOT EXISTS idx_plant_images_camera_time
+
+CREATE INDEX idx_plant_images_camera_time
     ON plant_images (
         camera_id,
         captured_at DESC
     );
 
-CREATE INDEX IF NOT EXISTS idx_plant_images_captured_at
+CREATE INDEX idx_plant_images_captured_at
     ON plant_images (
         captured_at DESC
     );
 
 
-CREATE TABLE IF NOT EXISTS plant_image_analysis (
+CREATE TABLE plant_image_analysis (
     analysis_id BIGSERIAL PRIMARY KEY,
     image_id BIGINT NOT NULL,
     model_name VARCHAR(100),
@@ -219,29 +239,34 @@ CREATE TABLE IF NOT EXISTS plant_image_analysis (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
     CONSTRAINT fk_plant_image_analysis_image
-        FOREIGN KEY (image_id)
-        REFERENCES plant_images(image_id)
+        FOREIGN KEY (
+            image_id
+        )
+        REFERENCES plant_images (
+            image_id
+        )
         ON DELETE CASCADE
 );
 
-CREATE INDEX IF NOT EXISTS idx_plant_image_analysis_image
+
+CREATE INDEX idx_plant_image_analysis_image
     ON plant_image_analysis (
         image_id
     );
 
-CREATE INDEX IF NOT EXISTS idx_plant_image_analysis_created
+CREATE INDEX idx_plant_image_analysis_created
     ON plant_image_analysis (
         created_at DESC
     );
 
-CREATE INDEX IF NOT EXISTS idx_plant_image_analysis_data
+CREATE INDEX idx_plant_image_analysis_data
     ON plant_image_analysis
     USING GIN (
         analysis
     );
 
 
-CREATE TABLE IF NOT EXISTS ai_recommendations (
+CREATE TABLE ai_recommendations (
     recommendation_id BIGSERIAL PRIMARY KEY,
     recommendation_type VARCHAR(50) NOT NULL,
     level_no INTEGER NOT NULL,
@@ -284,33 +309,34 @@ CREATE TABLE IF NOT EXISTS ai_recommendations (
         )
 );
 
-CREATE INDEX IF NOT EXISTS idx_ai_recommendations_status
+
+CREATE INDEX idx_ai_recommendations_status
     ON ai_recommendations (
         status
     );
 
-CREATE INDEX IF NOT EXISTS idx_ai_recommendations_risk
+CREATE INDEX idx_ai_recommendations_risk
     ON ai_recommendations (
         risk_level
     );
 
-CREATE INDEX IF NOT EXISTS idx_ai_recommendations_level
+CREATE INDEX idx_ai_recommendations_level
     ON ai_recommendations (
         level_no
     );
 
-CREATE INDEX IF NOT EXISTS idx_ai_recommendations_type
+CREATE INDEX idx_ai_recommendations_type
     ON ai_recommendations (
         recommendation_type
     );
 
-CREATE INDEX IF NOT EXISTS idx_ai_recommendations_created
+CREATE INDEX idx_ai_recommendations_created
     ON ai_recommendations (
         created_at DESC
     );
 
 
-CREATE TABLE IF NOT EXISTS farm_schedule (
+CREATE TABLE farm_schedule (
     schedule_id BIGSERIAL PRIMARY KEY,
     task_name VARCHAR(100) NOT NULL,
     description TEXT,
@@ -359,52 +385,40 @@ CREATE TABLE IF NOT EXISTS farm_schedule (
         )
 );
 
-ALTER TABLE farm_schedule
-ADD COLUMN IF NOT EXISTS interval_seconds INTEGER;
 
-ALTER TABLE farm_schedule
-DROP CONSTRAINT IF EXISTS chk_farm_schedule_interval;
-
-ALTER TABLE farm_schedule
-ADD CONSTRAINT chk_farm_schedule_interval
-CHECK (
-    interval_seconds IS NULL
-    OR interval_seconds > 0
-);
-
-CREATE INDEX IF NOT EXISTS idx_farm_schedule_start_time
+CREATE INDEX idx_farm_schedule_start_time
     ON farm_schedule (
         start_time
     );
 
-CREATE INDEX IF NOT EXISTS idx_farm_schedule_level
+CREATE INDEX idx_farm_schedule_level
     ON farm_schedule (
         level_no
     );
 
-CREATE INDEX IF NOT EXISTS idx_farm_schedule_action
+CREATE INDEX idx_farm_schedule_action
     ON farm_schedule (
         task_action
     );
 
-CREATE INDEX IF NOT EXISTS idx_farm_schedule_next_run
+CREATE INDEX idx_farm_schedule_next_run
     ON farm_schedule (
         next_run_at
     )
     WHERE enabled = TRUE;
 
-CREATE INDEX IF NOT EXISTS idx_farm_schedule_status
+CREATE INDEX idx_farm_schedule_status
     ON farm_schedule (
         status
     );
 
-CREATE INDEX IF NOT EXISTS idx_farm_schedule_enabled
+CREATE INDEX idx_farm_schedule_enabled
     ON farm_schedule (
         enabled
     );
 
 
-CREATE TABLE IF NOT EXISTS task_executions (
+CREATE TABLE task_executions (
     execution_id BIGSERIAL PRIMARY KEY,
     schedule_id BIGINT NOT NULL,
     scheduled_for TIMESTAMPTZ NOT NULL,
@@ -429,50 +443,32 @@ CREATE TABLE IF NOT EXISTS task_executions (
         ),
 
     CONSTRAINT fk_task_executions_schedule
-        FOREIGN KEY (schedule_id)
-        REFERENCES farm_schedule(schedule_id)
+        FOREIGN KEY (
+            schedule_id
+        )
+        REFERENCES farm_schedule (
+            schedule_id
+        )
         ON DELETE CASCADE
 );
 
-ALTER TABLE task_executions
-ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
 
-ALTER TABLE task_executions
-DROP CONSTRAINT IF EXISTS task_executions_status_check;
-
-ALTER TABLE task_executions
-DROP CONSTRAINT IF EXISTS chk_task_executions_status;
-
-ALTER TABLE task_executions
-ADD CONSTRAINT chk_task_executions_status
-CHECK (
-    status IN (
-        'PENDING',
-        'RUNNING',
-        'COMPLETED',
-        'FAILED',
-        'SKIPPED',
-        'BLOCKED',
-        'AWAITING_APPROVAL'
-    )
-);
-
-CREATE INDEX IF NOT EXISTS idx_task_executions_schedule
+CREATE INDEX idx_task_executions_schedule
     ON task_executions (
         schedule_id
     );
 
-CREATE INDEX IF NOT EXISTS idx_task_executions_scheduled_for
+CREATE INDEX idx_task_executions_scheduled_for
     ON task_executions (
         scheduled_for DESC
     );
 
-CREATE INDEX IF NOT EXISTS idx_task_executions_status
+CREATE INDEX idx_task_executions_status
     ON task_executions (
         status
     );
 
-CREATE INDEX IF NOT EXISTS idx_task_executions_running
+CREATE INDEX idx_task_executions_running
     ON task_executions (
         schedule_id,
         status
@@ -483,7 +479,7 @@ CREATE INDEX IF NOT EXISTS idx_task_executions_running
     );
 
 
-CREATE TABLE IF NOT EXISTS approval_requests (
+CREATE TABLE approval_requests (
     approval_id BIGSERIAL PRIMARY KEY,
     recommendation_id BIGINT,
     action_type VARCHAR(100) NOT NULL,
@@ -514,46 +510,48 @@ CREATE TABLE IF NOT EXISTS approval_requests (
         ),
 
     CONSTRAINT fk_approval_requests_recommendation
-        FOREIGN KEY (recommendation_id)
-        REFERENCES ai_recommendations(
+        FOREIGN KEY (
+            recommendation_id
+        )
+        REFERENCES ai_recommendations (
             recommendation_id
         )
         ON DELETE SET NULL
 );
 
-CREATE INDEX IF NOT EXISTS idx_approval_requests_recommendation
+
+CREATE INDEX idx_approval_requests_recommendation
     ON approval_requests (
         recommendation_id
     );
 
-CREATE INDEX IF NOT EXISTS idx_approval_requests_requested_by
+CREATE INDEX idx_approval_requests_requested_by
     ON approval_requests (
         requested_by
     );
 
-CREATE INDEX IF NOT EXISTS idx_approval_requests_reviewed_by
+CREATE INDEX idx_approval_requests_reviewed_by
     ON approval_requests (
         reviewed_by
     );
 
-CREATE INDEX IF NOT EXISTS idx_approval_requests_status
+CREATE INDEX idx_approval_requests_status
     ON approval_requests (
         status
     );
 
-CREATE INDEX IF NOT EXISTS idx_approval_requests_requested_at
+CREATE INDEX idx_approval_requests_requested_at
     ON approval_requests (
         requested_at DESC
     );
 
 
-CREATE TABLE IF NOT EXISTS notifications (
+CREATE TABLE notifications (
     notification_id BIGSERIAL PRIMARY KEY,
     notification_type VARCHAR(100) NOT NULL,
     severity VARCHAR(20) NOT NULL,
     title VARCHAR(255) NOT NULL,
     message TEXT NOT NULL,
-    audience VARCHAR(20) NOT NULL DEFAULT 'ALL',
     entity_type VARCHAR(100),
     entity_id BIGINT,
     metadata JSONB,
@@ -570,11 +568,6 @@ CREATE TABLE IF NOT EXISTS notifications (
             )
         ),
 
-    CONSTRAINT chk_notifications_audience
-        CHECK (
-            audience = 'ALL'
-        ),
-
     CONSTRAINT chk_notifications_status
         CHECK (
             status IN (
@@ -584,72 +577,36 @@ CREATE TABLE IF NOT EXISTS notifications (
         )
 );
 
-ALTER TABLE notifications
-ADD COLUMN IF NOT EXISTS audience VARCHAR(20) NOT NULL DEFAULT 'ALL';
 
-ALTER TABLE notifications
-DROP CONSTRAINT IF EXISTS chk_notifications_severity;
-
-ALTER TABLE notifications
-ADD CONSTRAINT chk_notifications_severity
-CHECK (
-    severity IN (
-        'INFO',
-        'WARN',
-        'CRITICAL'
-    )
-);
-
-ALTER TABLE notifications
-DROP CONSTRAINT IF EXISTS chk_notifications_audience;
-
-ALTER TABLE notifications
-ADD CONSTRAINT chk_notifications_audience
-CHECK (
-    audience = 'ALL'
-);
-
-ALTER TABLE notifications
-DROP CONSTRAINT IF EXISTS chk_notifications_status;
-
-ALTER TABLE notifications
-ADD CONSTRAINT chk_notifications_status
-CHECK (
-    status IN (
-        'OPEN',
-        'RESOLVED'
-    )
-);
-
-CREATE INDEX IF NOT EXISTS idx_notifications_created
+CREATE INDEX idx_notifications_created
     ON notifications (
         created_at DESC
     );
 
-CREATE INDEX IF NOT EXISTS idx_notifications_severity
+CREATE INDEX idx_notifications_severity
     ON notifications (
         severity
     );
 
-CREATE INDEX IF NOT EXISTS idx_notifications_status
+CREATE INDEX idx_notifications_status
     ON notifications (
         status
     );
 
-CREATE INDEX IF NOT EXISTS idx_notifications_entity
+CREATE INDEX idx_notifications_entity
     ON notifications (
         entity_type,
         entity_id
     );
 
-CREATE INDEX IF NOT EXISTS idx_notifications_open
+CREATE INDEX idx_notifications_open
     ON notifications (
         created_at DESC
     )
     WHERE status = 'OPEN';
 
 
-CREATE TABLE IF NOT EXISTS sensor_alert_state (
+CREATE TABLE sensor_alert_state (
     sensor_id BIGINT PRIMARY KEY,
     alert_level VARCHAR(20) NOT NULL DEFAULT 'NORMAL',
     last_value DOUBLE PRECISION,
@@ -678,23 +635,28 @@ CREATE TABLE IF NOT EXISTS sensor_alert_state (
         ),
 
     CONSTRAINT fk_sensor_alert_state_sensor
-        FOREIGN KEY (sensor_id)
-        REFERENCES sensors(sensor_id)
+        FOREIGN KEY (
+            sensor_id
+        )
+        REFERENCES sensors (
+            sensor_id
+        )
         ON DELETE CASCADE
 );
 
-CREATE INDEX IF NOT EXISTS idx_sensor_alert_state_level
+
+CREATE INDEX idx_sensor_alert_state_level
     ON sensor_alert_state (
         alert_level
     );
 
-CREATE INDEX IF NOT EXISTS idx_sensor_alert_state_updated
+CREATE INDEX idx_sensor_alert_state_updated
     ON sensor_alert_state (
         updated_at DESC
     );
 
 
-CREATE TABLE IF NOT EXISTS audit_logs (
+CREATE TABLE audit_logs (
     log_id BIGSERIAL PRIMARY KEY,
     user_id BIGINT,
     action_type VARCHAR(100) NOT NULL,
@@ -705,29 +667,30 @@ CREATE TABLE IF NOT EXISTS audit_logs (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX IF NOT EXISTS idx_audit_logs_user
+
+CREATE INDEX idx_audit_logs_user
     ON audit_logs (
         user_id
     );
 
-CREATE INDEX IF NOT EXISTS idx_audit_logs_action_type
+CREATE INDEX idx_audit_logs_action_type
     ON audit_logs (
         action_type
     );
 
-CREATE INDEX IF NOT EXISTS idx_audit_logs_entity
+CREATE INDEX idx_audit_logs_entity
     ON audit_logs (
         entity_type,
         entity_id
     );
 
-CREATE INDEX IF NOT EXISTS idx_audit_logs_created
+CREATE INDEX idx_audit_logs_created
     ON audit_logs (
         created_at DESC
     );
 
 
-CREATE TABLE IF NOT EXISTS rag_documents (
+CREATE TABLE rag_documents (
     document_id BIGSERIAL PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
     source VARCHAR(500),
@@ -738,24 +701,25 @@ CREATE TABLE IF NOT EXISTS rag_documents (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX IF NOT EXISTS idx_rag_documents_source
+
+CREATE INDEX idx_rag_documents_source
     ON rag_documents (
         source
     );
 
-CREATE INDEX IF NOT EXISTS idx_rag_documents_type
+CREATE INDEX idx_rag_documents_type
     ON rag_documents (
         document_type
     );
 
-CREATE INDEX IF NOT EXISTS idx_rag_documents_metadata
+CREATE INDEX idx_rag_documents_metadata
     ON rag_documents
     USING GIN (
         metadata
     );
 
 
-CREATE TABLE IF NOT EXISTS rag_document_chunks (
+CREATE TABLE rag_document_chunks (
     chunk_id BIGSERIAL PRIMARY KEY,
     document_id BIGINT NOT NULL,
     chunk_index INTEGER NOT NULL,
@@ -765,8 +729,12 @@ CREATE TABLE IF NOT EXISTS rag_document_chunks (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
     CONSTRAINT fk_rag_chunks_document
-        FOREIGN KEY (document_id)
-        REFERENCES rag_documents(document_id)
+        FOREIGN KEY (
+            document_id
+        )
+        REFERENCES rag_documents (
+            document_id
+        )
         ON DELETE CASCADE,
 
     CONSTRAINT uq_rag_document_chunk
@@ -776,32 +744,30 @@ CREATE TABLE IF NOT EXISTS rag_document_chunks (
         )
 );
 
-CREATE INDEX IF NOT EXISTS idx_rag_chunks_document
+
+CREATE INDEX idx_rag_chunks_document
     ON rag_document_chunks (
         document_id
     );
 
-CREATE INDEX IF NOT EXISTS idx_rag_chunks_metadata
+CREATE INDEX idx_rag_chunks_metadata
     ON rag_document_chunks
     USING GIN (
         metadata
     );
 
-CREATE INDEX IF NOT EXISTS idx_rag_chunks_embedding_hnsw
+CREATE INDEX idx_rag_chunks_embedding_hnsw
     ON rag_document_chunks
     USING hnsw (
         embedding vector_cosine_ops
     );
 
 
-CREATE TABLE IF NOT EXISTS system_settings (
+CREATE TABLE system_settings (
     setting_key VARCHAR(100) PRIMARY KEY,
     setting_value JSONB NOT NULL,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
-
-ALTER TABLE system_settings
-ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
 
 
 INSERT INTO system_settings (
@@ -811,6 +777,18 @@ INSERT INTO system_settings (
 VALUES
 (
     'scheduler',
+    '{
+        "polling_rate": 5
+    }'::jsonb
+),
+(
+    'cameras',
+    '{
+        "polling_rate": 30
+    }'::jsonb
+),
+(
+    'sensors',
     '{
         "polling_rate": 5
     }'::jsonb
@@ -900,10 +878,7 @@ VALUES
         "repeat_critical_notifications": false,
         "global_delivery": true
     }'::jsonb
-)
-ON CONFLICT (
-    setting_key
-)
-DO NOTHING;
+);
+
 
 COMMIT;

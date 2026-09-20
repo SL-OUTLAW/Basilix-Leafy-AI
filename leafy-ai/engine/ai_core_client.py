@@ -1,17 +1,20 @@
 from typing import Any
 
-import httpx
 import os
 
-from engine.security.emergency_stop import ai_enabled
+import httpx
+
+from fastapi.encoders import jsonable_encoder
+
 from engine.security.engine_auth import create_token
+from engine.security.emergency_stop import ai_enabled
 
 AI_CORE_URL = os.getenv(
     "AI_CORE_URL",
-    "http://localhost:8001",
+    "http://127.0.0.1:8001",
 )
 
-AI_CORE_TIMEOUT = 180.0
+AI_CORE_TIMEOUT = 900.0
 
 
 async def run_ai(
@@ -25,17 +28,19 @@ async def run_ai(
             "error": "AI access is disabled by system safety state.",
         }
 
-    request_body = {
-        "task": task,
-        "context": context,
-    }
+    request_body = jsonable_encoder(
+        {
+            "task": task,
+            "context": context,
+        }
+    )
 
     try:
 
         async with httpx.AsyncClient() as client:
 
             response = await client.post(
-                f"{AI_CORE_URL}/analyse",
+                f"{AI_CORE_URL}/leafy-ai",
                 json=request_body,
                 timeout=AI_CORE_TIMEOUT,
                 headers={
@@ -47,16 +52,34 @@ async def run_ai(
 
             return response.json()
 
-    except httpx.TimeoutException:
+    except httpx.TimeoutException as error:
 
         return {
             "success": False,
-            "error": "Leafy AI analysis timed out.",
+            "error": f"Leafy AI analysis timed out: {error}",
         }
 
-    except httpx.HTTPError:
+    except httpx.HTTPStatusError as error:
 
         return {
             "success": False,
-            "error": "Leafy AI analysis could not be completed.",
+            "error": (
+                f"Leafy AI returned HTTP "
+                f"{error.response.status_code}: "
+                f"{error.response.text}"
+            ),
+        }
+
+    except httpx.RequestError as error:
+
+        return {
+            "success": False,
+            "error": (f"Could not connect to Leafy AI at " f"{AI_CORE_URL}: {error}"),
+        }
+
+    except ValueError as error:
+
+        return {
+            "success": False,
+            "error": (f"Leafy AI returned an invalid response: {error}"),
         }
