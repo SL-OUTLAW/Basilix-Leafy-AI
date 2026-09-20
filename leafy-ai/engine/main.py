@@ -14,6 +14,9 @@ from engine.managers.db_manager import (
 from engine.managers.settings_manager import (
     manage_settings,
 )
+from engine.actions.register_actions import (
+    register_scheduler_actions,
+)
 
 
 @asynccontextmanager
@@ -28,6 +31,12 @@ async def lifespan(
     hal = Hal()
 
     await hal.start_hal()
+    register_scheduler_actions(hal)
+
+    scheduler_task = asyncio.create_task(
+        scheduler.start(),
+        name="scheduler-worker",
+    )
 
     scheduler_task = asyncio.create_task(
         scheduler.start(),

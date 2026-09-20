@@ -3,6 +3,7 @@ BEGIN;
 CREATE EXTENSION IF NOT EXISTS timescaledb;
 CREATE EXTENSION IF NOT EXISTS vector;
 
+
 CREATE TABLE IF NOT EXISTS sensors (
     sensor_id BIGSERIAL PRIMARY KEY,
     sensor_name VARCHAR(100) NOT NULL,
@@ -17,7 +18,11 @@ CREATE TABLE IF NOT EXISTS sensors (
         CHECK (level_no IN (0, 1, 2)),
 
     CONSTRAINT uq_sensors_number
-        UNIQUE (sensor_type, level_no, sensor_no)
+        UNIQUE (
+            sensor_type,
+            level_no,
+            sensor_no
+        )
 );
 
 CREATE INDEX IF NOT EXISTS idx_sensors_type
@@ -134,7 +139,10 @@ CREATE TABLE IF NOT EXISTS sensor_readings (
     value DOUBLE PRECISION NOT NULL,
     quality_status VARCHAR(20) NOT NULL,
 
-    PRIMARY KEY (reading_id, recorded_at),
+    PRIMARY KEY (
+        reading_id,
+        recorded_at
+    ),
 
     CONSTRAINT chk_sensor_readings_quality
         CHECK (
@@ -157,13 +165,20 @@ SELECT create_hypertable(
 );
 
 CREATE INDEX IF NOT EXISTS idx_sensor_readings_sensor_time
-    ON sensor_readings (sensor_id, recorded_at DESC);
+    ON sensor_readings (
+        sensor_id,
+        recorded_at DESC
+    );
 
 CREATE INDEX IF NOT EXISTS idx_sensor_readings_recorded_at
-    ON sensor_readings (recorded_at DESC);
+    ON sensor_readings (
+        recorded_at DESC
+    );
 
 CREATE INDEX IF NOT EXISTS idx_sensor_readings_quality
-    ON sensor_readings (quality_status);
+    ON sensor_readings (
+        quality_status
+    );
 
 
 CREATE TABLE IF NOT EXISTS plant_images (
@@ -180,10 +195,15 @@ CREATE TABLE IF NOT EXISTS plant_images (
 );
 
 CREATE INDEX IF NOT EXISTS idx_plant_images_camera_time
-    ON plant_images (camera_id, captured_at DESC);
+    ON plant_images (
+        camera_id,
+        captured_at DESC
+    );
 
 CREATE INDEX IF NOT EXISTS idx_plant_images_captured_at
-    ON plant_images (captured_at DESC);
+    ON plant_images (
+        captured_at DESC
+    );
 
 
 CREATE TABLE IF NOT EXISTS plant_image_analysis (
@@ -200,14 +220,20 @@ CREATE TABLE IF NOT EXISTS plant_image_analysis (
 );
 
 CREATE INDEX IF NOT EXISTS idx_plant_image_analysis_image
-    ON plant_image_analysis (image_id);
+    ON plant_image_analysis (
+        image_id
+    );
 
 CREATE INDEX IF NOT EXISTS idx_plant_image_analysis_created
-    ON plant_image_analysis (created_at DESC);
+    ON plant_image_analysis (
+        created_at DESC
+    );
 
 CREATE INDEX IF NOT EXISTS idx_plant_image_analysis_data
     ON plant_image_analysis
-    USING GIN (analysis);
+    USING GIN (
+        analysis
+    );
 
 
 CREATE TABLE IF NOT EXISTS ai_recommendations (
@@ -226,7 +252,13 @@ CREATE TABLE IF NOT EXISTS ai_recommendations (
     reviewed_at TIMESTAMPTZ,
 
     CONSTRAINT chk_ai_recommendations_level_no
-        CHECK (level_no IN (0, 1, 2)),
+        CHECK (
+            level_no IN (
+                0,
+                1,
+                2
+            )
+        ),
 
     CONSTRAINT chk_ai_recommendations_risk_level
         CHECK (
@@ -248,19 +280,29 @@ CREATE TABLE IF NOT EXISTS ai_recommendations (
 );
 
 CREATE INDEX IF NOT EXISTS idx_ai_recommendations_status
-    ON ai_recommendations (status);
+    ON ai_recommendations (
+        status
+    );
 
 CREATE INDEX IF NOT EXISTS idx_ai_recommendations_risk
-    ON ai_recommendations (risk_level);
+    ON ai_recommendations (
+        risk_level
+    );
 
 CREATE INDEX IF NOT EXISTS idx_ai_recommendations_level
-    ON ai_recommendations (level_no);
+    ON ai_recommendations (
+        level_no
+    );
 
 CREATE INDEX IF NOT EXISTS idx_ai_recommendations_type
-    ON ai_recommendations (recommendation_type);
+    ON ai_recommendations (
+        recommendation_type
+    );
 
 CREATE INDEX IF NOT EXISTS idx_ai_recommendations_created
-    ON ai_recommendations (created_at DESC);
+    ON ai_recommendations (
+        created_at DESC
+    );
 
 
 CREATE TABLE IF NOT EXISTS farm_schedule (
@@ -270,6 +312,7 @@ CREATE TABLE IF NOT EXISTS farm_schedule (
     task_action VARCHAR(100) NOT NULL,
     level_no INTEGER NOT NULL,
     start_time TIME NOT NULL,
+    interval_seconds INTEGER,
     duration_seconds INTEGER,
     target_value NUMERIC,
     unit VARCHAR(50),
@@ -282,7 +325,19 @@ CREATE TABLE IF NOT EXISTS farm_schedule (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
     CONSTRAINT chk_farm_schedule_level_no
-        CHECK (level_no IN (0, 1, 2)),
+        CHECK (
+            level_no IN (
+                0,
+                1,
+                2
+            )
+        ),
+
+    CONSTRAINT chk_farm_schedule_interval
+        CHECK (
+            interval_seconds IS NULL
+            OR interval_seconds > 0
+        ),
 
     CONSTRAINT chk_farm_schedule_duration
         CHECK (
@@ -300,23 +355,35 @@ CREATE TABLE IF NOT EXISTS farm_schedule (
 );
 
 CREATE INDEX IF NOT EXISTS idx_farm_schedule_start_time
-    ON farm_schedule (start_time);
+    ON farm_schedule (
+        start_time
+    );
 
 CREATE INDEX IF NOT EXISTS idx_farm_schedule_level
-    ON farm_schedule (level_no);
+    ON farm_schedule (
+        level_no
+    );
 
 CREATE INDEX IF NOT EXISTS idx_farm_schedule_action
-    ON farm_schedule (task_action);
+    ON farm_schedule (
+        task_action
+    );
 
 CREATE INDEX IF NOT EXISTS idx_farm_schedule_next_run
-    ON farm_schedule (next_run_at)
+    ON farm_schedule (
+        next_run_at
+    )
     WHERE enabled = TRUE;
 
 CREATE INDEX IF NOT EXISTS idx_farm_schedule_status
-    ON farm_schedule (status);
+    ON farm_schedule (
+        status
+    );
 
 CREATE INDEX IF NOT EXISTS idx_farm_schedule_enabled
-    ON farm_schedule (enabled);
+    ON farm_schedule (
+        enabled
+    );
 
 
 CREATE TABLE IF NOT EXISTS task_executions (
@@ -328,6 +395,7 @@ CREATE TABLE IF NOT EXISTS task_executions (
     status VARCHAR(30) NOT NULL,
     result JSONB,
     error_message TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
     CONSTRAINT chk_task_executions_status
         CHECK (
@@ -349,13 +417,29 @@ CREATE TABLE IF NOT EXISTS task_executions (
 );
 
 CREATE INDEX IF NOT EXISTS idx_task_executions_schedule
-    ON task_executions (schedule_id);
+    ON task_executions (
+        schedule_id
+    );
 
 CREATE INDEX IF NOT EXISTS idx_task_executions_scheduled_for
-    ON task_executions (scheduled_for DESC);
+    ON task_executions (
+        scheduled_for DESC
+    );
 
 CREATE INDEX IF NOT EXISTS idx_task_executions_status
-    ON task_executions (status);
+    ON task_executions (
+        status
+    );
+
+CREATE INDEX IF NOT EXISTS idx_task_executions_running
+    ON task_executions (
+        schedule_id,
+        status
+    )
+    WHERE status IN (
+        'PENDING',
+        'RUNNING'
+    );
 
 
 CREATE TABLE IF NOT EXISTS approval_requests (
@@ -395,99 +479,244 @@ CREATE TABLE IF NOT EXISTS approval_requests (
 );
 
 CREATE INDEX IF NOT EXISTS idx_approval_requests_recommendation
-    ON approval_requests (recommendation_id);
+    ON approval_requests (
+        recommendation_id
+    );
 
 CREATE INDEX IF NOT EXISTS idx_approval_requests_requested_by
-    ON approval_requests (requested_by);
+    ON approval_requests (
+        requested_by
+    );
 
 CREATE INDEX IF NOT EXISTS idx_approval_requests_reviewed_by
-    ON approval_requests (reviewed_by);
+    ON approval_requests (
+        reviewed_by
+    );
 
 CREATE INDEX IF NOT EXISTS idx_approval_requests_status
-    ON approval_requests (status);
+    ON approval_requests (
+        status
+    );
 
 CREATE INDEX IF NOT EXISTS idx_approval_requests_requested_at
-    ON approval_requests (requested_at DESC);
+    ON approval_requests (
+        requested_at DESC
+    );
 
 
-CREATE TABLE IF NOT EXISTS audit_logs (
-    log_id BIGSERIAL PRIMARY KEY,
-    user_id BIGINT,
-    action_type VARCHAR(100) NOT NULL,
-    entity_id BIGINT,
-    entity_type VARCHAR(100),
-    description TEXT NOT NULL,
-    metadata JSONB,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
-CREATE INDEX IF NOT EXISTS idx_audit_logs_user
-    ON audit_logs (user_id);
-
-CREATE INDEX IF NOT EXISTS idx_audit_logs_action_type
-    ON audit_logs (action_type);
-
-CREATE INDEX IF NOT EXISTS idx_audit_logs_entity
-    ON audit_logs (entity_type, entity_id);
-
-CREATE INDEX IF NOT EXISTS idx_audit_logs_created
-    ON audit_logs (created_at DESC);
-
-
-CREATE TABLE IF NOT EXISTS rag_documents (
-    document_id BIGSERIAL PRIMARY KEY,
+CREATE TABLE IF NOT EXISTS notifications (
+    notification_id BIGSERIAL PRIMARY KEY,
+    notification_type VARCHAR(100) NOT NULL,
+    severity VARCHAR(20) NOT NULL,
     title VARCHAR(255) NOT NULL,
-    source VARCHAR(500),
-    document_type VARCHAR(100),
-    content_hash VARCHAR(128) UNIQUE,
-    metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+    message TEXT NOT NULL,
+    entity_type VARCHAR(100),
+    entity_id BIGINT,
+    metadata JSONB,
+    status VARCHAR(30) NOT NULL DEFAULT 'OPEN',
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    resolved_at TIMESTAMPTZ,
+
+    CONSTRAINT chk_notifications_severity
+        CHECK (
+            severity IN (
+                'INFO',
+                'WARN',
+                'CRITICAL'
+            )
+        ),
+
+    CONSTRAINT chk_notifications_status
+        CHECK (
+            status IN (
+                'OPEN',
+                'RESOLVED'
+            )
+        )
 );
 
-CREATE INDEX IF NOT EXISTS idx_rag_documents_source
-    ON rag_documents (source);
+CREATE INDEX IF NOT EXISTS idx_notifications_created
+    ON notifications (
+        created_at DESC
+    );
 
-CREATE INDEX IF NOT EXISTS idx_rag_documents_type
-    ON rag_documents (document_type);
+CREATE INDEX IF NOT EXISTS idx_notifications_severity
+    ON notifications (
+        severity
+    );
 
-CREATE INDEX IF NOT EXISTS idx_rag_documents_metadata
-    ON rag_documents
-    USING GIN (metadata);
+CREATE INDEX IF NOT EXISTS idx_notifications_status
+    ON notifications (
+        status
+    );
+
+CREATE INDEX IF NOT EXISTS idx_notifications_entity
+    ON notifications (
+        entity_type,
+        entity_id
+    );
+
+CREATE INDEX IF NOT EXISTS idx_notifications_open
+    ON notifications (
+        created_at DESC
+    )
+    WHERE status = 'OPEN';
 
 
-CREATE TABLE IF NOT EXISTS rag_document_chunks (
-    chunk_id BIGSERIAL PRIMARY KEY,
-    document_id BIGINT NOT NULL,
-    chunk_index INTEGER NOT NULL,
-    content TEXT NOT NULL,
-    metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
-    embedding vector(768),
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+CREATE TABLE IF NOT EXISTS sensor_alert_state (
+    sensor_id BIGINT PRIMARY KEY,
+    alert_level VARCHAR(20) NOT NULL DEFAULT 'NORMAL',
+    last_value DOUBLE PRECISION,
+    last_quality_status VARCHAR(20),
+    last_checked_at TIMESTAMPTZ,
+    last_notification_at TIMESTAMPTZ,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
-    CONSTRAINT fk_rag_chunks_document
-        FOREIGN KEY (document_id)
-        REFERENCES rag_documents(document_id)
-        ON DELETE CASCADE,
+    CONSTRAINT chk_sensor_alert_state_level
+        CHECK (
+            alert_level IN (
+                'NORMAL',
+                'WARN',
+                'CRITICAL'
+            )
+        ),
 
-    CONSTRAINT uq_rag_document_chunk
-        UNIQUE (document_id, chunk_index)
+    CONSTRAINT chk_sensor_alert_state_quality
+        CHECK (
+            last_quality_status IS NULL
+            OR last_quality_status IN (
+                'VALID',
+                'SUSPECT',
+                'INVALID'
+            )
+        ),
+
+    CONSTRAINT fk_sensor_alert_state_sensor
+        FOREIGN KEY (sensor_id)
+        REFERENCES sensors(sensor_id)
+        ON DELETE CASCADE
 );
 
-CREATE INDEX IF NOT EXISTS idx_rag_chunks_document
-    ON rag_document_chunks (document_id);
+CREATE INDEX IF NOT EXISTS idx_sensor_alert_state_level
+    ON sensor_alert_state (
+        alert_level
+    );
 
-CREATE INDEX IF NOT EXISTS idx_rag_chunks_metadata
-    ON rag_document_chunks
-    USING GIN (metadata);
+CREATE INDEX IF NOT EXISTS idx_sensor_alert_state_updated
+    ON sensor_alert_state (
+        updated_at DESC
+    );
 
-CREATE INDEX IF NOT EXISTS idx_rag_chunks_embedding_hnsw
-    ON rag_document_chunks
-    USING hnsw (embedding vector_cosine_ops);
 
 CREATE TABLE IF NOT EXISTS system_settings (
     setting_key VARCHAR(100) PRIMARY KEY,
-    setting_value JSONB NOT NULL
+    setting_value JSONB NOT NULL,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+
+INSERT INTO system_settings (
+    setting_key,
+    setting_value
+)
+VALUES
+(
+    'scheduler',
+    '{
+        "polling_rate": 5
+    }'::jsonb
+),
+(
+    'security',
+    '{
+        "sensor_check_interval_seconds": 5,
+        "emergency_stop": false,
+        "ai_enabled": true
+    }'::jsonb
+),
+(
+    'risk',
+    '{
+        "RUN_IRRIGATION": "HIGH",
+        "SET_LIGHTING": "LOW",
+        "SET_FAN": "LOW",
+        "DOSE_PH": "HIGH",
+        "DOSE_EC": "HIGH",
+        "CREATE_SCHEDULE": "LOW",
+        "UPDATE_SCHEDULE": "LOW",
+        "ENABLE_SCHEDULE": "LOW",
+        "DISABLE_SCHEDULE": "HIGH",
+        "RUN_VISION_ANALYSIS": "LOW",
+        "RUN_AI_ANALYSIS": "LOW"
+    }'::jsonb
+),
+(
+    'sensor_security_thresholds',
+    '{
+        "ph": {
+            "enabled": true,
+            "lower_limit": 5.5,
+            "upper_limit": 6.5,
+            "warning_distance": 0.3,
+            "critical_distance": 0.1
+        },
+        "ec": {
+            "enabled": true,
+            "lower_limit": 1500,
+            "upper_limit": 3000,
+            "warning_distance": 250,
+            "critical_distance": 100
+        },
+        "water_temperature": {
+            "enabled": true,
+            "lower_limit": 18,
+            "upper_limit": 28,
+            "warning_distance": 2,
+            "critical_distance": 0.5
+        },
+        "ambient_temperature": {
+            "enabled": true,
+            "lower_limit": 15,
+            "upper_limit": 32,
+            "warning_distance": 3,
+            "critical_distance": 1
+        },
+        "humidity": {
+            "enabled": true,
+            "lower_limit": 40,
+            "upper_limit": 80,
+            "warning_distance": 5,
+            "critical_distance": 2
+        },
+        "dew_point": {
+            "enabled": false,
+            "lower_limit": 5,
+            "upper_limit": 25,
+            "warning_distance": 3,
+            "critical_distance": 1
+        },
+        "water_level": {
+            "enabled": true,
+            "lower_limit": 20,
+            "upper_limit": 100,
+            "warning_distance": 10,
+            "critical_distance": 5
+        }
+    }'::jsonb
+),
+(
+    'notifications',
+    '{
+        "sensor_alert_cooldown_seconds": 300,
+        "repeat_critical_notifications": false,
+        "global_delivery": true
+    }'::jsonb
+)
+ON CONFLICT (
+    setting_key
+)
+DO UPDATE SET
+    setting_value = EXCLUDED.setting_value;
+
 
 COMMIT;
