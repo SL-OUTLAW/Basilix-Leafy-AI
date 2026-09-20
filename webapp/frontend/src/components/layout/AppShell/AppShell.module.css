@@ -1,0 +1,52 @@
+.layout {
+  display: flex;
+
+  width: 100%;
+  min-height: 100dvh;
+
+  background: var(--color-bg-main);
+}
+
+.main {
+  flex: 1;
+  min-width: 0;
+  min-height: 100dvh;
+}
+
+.content {
+  width: 100%;
+  padding: 32px;
+}
+
+.overlay {
+  display: none;
+}
+
+/* Smaller desktop */
+@media (max-width: 1399px) and (min-width: 1000px) {
+  .content {
+    padding: 24px;
+  }
+}
+
+/* Tablet */
+@media (max-width: 999px) and (min-width: 768px) {
+  .content {
+    padding: 20px;
+  }
+}
+
+/* Mobile */
+@media (max-width: 767px) {
+  .layout {
+    display: block;
+  }
+
+  .main {
+    width: 100%;
+  }
+
+  .content {
+    padding: 16px 16px 100px;
+  }
+}
