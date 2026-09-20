@@ -1,6 +1,17 @@
 const { backendQuery } = require("./backendDatabase");
 
 async function authorizeAllowedUser(email) {
+  if (typeof email !== "string") {
+    return null;
+  }
+
+  const normalizedEmail =
+    email.trim().toLowerCase();
+
+  if (!normalizedEmail) {
+    return null;
+  }
+
   const result = await backendQuery(
     `
     SELECT
@@ -9,20 +20,24 @@ async function authorizeAllowedUser(email) {
       role,
       enabled
     FROM allowed_users
-    WHERE email = $1
+    WHERE LOWER(email) = $1::varchar
     LIMIT 1;
     `,
-    [email]
+    [normalizedEmail]
   );
 
   const allowedUser = result.rows[0];
 
-  if (!allowedUser || allowedUser.enabled !== true) {
+  if (
+    !allowedUser ||
+    allowedUser.enabled !== true
+  ) {
     return null;
   }
 
   return {
-    allowedUserId: allowedUser.allowed_user_id,
+    allowedUserId:
+      allowedUser.allowed_user_id,
     email: allowedUser.email,
     role: allowedUser.role
   };

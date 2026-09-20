@@ -1,4 +1,6 @@
 const express = require("express");
+const { rateLimit } = require("express-rate-limit");
+const authSessionRoutes = require("./authSession");
 
 const { verifyGoogleCredential } = require("../services/googleAuth");
 const { authorizeAllowedUser } = require("../services/allowedUserAuth");
@@ -7,11 +9,27 @@ const { createToken } = require("../services/jwtAuth");
 const { logAuditEvent } = require("../services/auditLogger");
 const { authenticate } = require("../middleware/authenticate");
 const { requireRole } = require("../middleware/authorizeRole");
+const { createSession } = require("../services/sessionService");
 
 const router = express.Router();
 
-router.post("/google", async (req, res) => {
-  const { credential } = req.body || {};
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 10,
+  standardHeaders: "draft-8",
+  legacyHeaders: false,
+  skipSuccessfulRequests: true,
+  message: {
+    authenticated: false,
+    error: "Too many login attempts. Try again later."
+  }
+});
+
+
+
+
+router.post("/google", loginLimiter, async (req, res) => {
+  const { credential, rememberMe } = req.body || {};
 
   let googleUser;
   let allowedUser;
@@ -90,10 +108,50 @@ router.post("/google", async (req, res) => {
     });
   }
 
+  if (!appUser || appUser.is_active !== true) {
+    try {
+      await logAuditEvent(
+        "USER_LOGIN_DENIED",
+        "Google login was denied",
+        appUser?.user_id || null,
+        { reason: "ACCOUNT_INACTIVE" }
+      );
+    } catch (auditError) {
+      console.error("Audit logging failed:", auditError);
+    }
+
+    return res.status(403).json({
+      authenticated: false,
+      error: "User is not authorized"
+    });
+  }
+
   let token;
 
   try {
     token = createToken(appUser);
+
+    const session = await createSession(
+      appUser.user_id,
+      rememberMe === true
+    );
+
+    const cookieOptions = {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      path: "/api/auth"
+    };
+
+    if (rememberMe === true) {
+      cookieOptions.maxAge = 30 * 24 * 60 * 60 * 1000;
+    }
+
+    res.cookie(
+      "leafy_refresh",
+      session.refreshToken,
+      cookieOptions
+    );
   } catch (error) {
     console.error("JWT creation failed:", error);
 
@@ -128,7 +186,13 @@ router.post("/google", async (req, res) => {
   });
 });
 
+
+
+router.use(authSessionRoutes);
+
 router.get("/me", authenticate, requireRole("OPERATOR", "ADMIN"), (req, res) => {
+  res.set("Cache-Control", "no-store");
+
   res.json({
     authenticated: true,
     user: req.user
