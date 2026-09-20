@@ -1,9 +1,9 @@
 from typing import Any
 
+import httpx
 import os
 
-import httpx
-
+from engine.security.emergency_stop import ai_enabled
 from engine.security.engine_auth import create_token
 
 AI_CORE_URL = os.getenv(
@@ -18,6 +18,12 @@ async def run_ai(
     task: str,
     context: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
+
+    if not ai_enabled():
+        return {
+            "success": False,
+            "error": "AI access is disabled by system safety state.",
+        }
 
     request_body = {
         "task": task,

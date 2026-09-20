@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 from typing import Any
 
 from engine.ai_core_client import run_ai
+from engine.security.emergency_stop import ai_enabled
 
 
 def create_ai_analysis_handler(
@@ -11,6 +12,10 @@ def create_ai_analysis_handler(
     async def run_ai_analysis(
         task: dict[str, Any],
     ) -> dict[str, Any]:
+
+        if not ai_enabled():
+
+            raise RuntimeError("AI access is disabled by system safety state")
 
         current_time = datetime.now(timezone.utc).isoformat()
 
@@ -22,7 +27,7 @@ def create_ai_analysis_handler(
                 "Assess the current state of both farm levels and the shared farm systems. "
                 "Use the current farm state supplied in context as the latest available evidence. "
                 "Evaluate pH, EC, water temperature, ambient temperature, humidity, dew point, "
-                "water level,  plant health, growth, canopy condition, crowding, spacing, harvest "
+                "water level, plant health, growth, canopy condition, crowding, spacing, harvest "
                 "readiness, irrigation, lighting, and other meaningful farm conditions. "
                 "Use sensor history when trends, persistence, stability, anomalies, or recent "
                 "changes need to be established. "

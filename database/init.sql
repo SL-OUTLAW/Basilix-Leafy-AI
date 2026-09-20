@@ -122,7 +122,12 @@ CREATE TABLE IF NOT EXISTS cameras (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
     CONSTRAINT chk_cameras_level_no
-        CHECK (level_no IN (1, 2))
+        CHECK (
+            level_no IN (
+                1,
+                2
+            )
+        )
 );
 
 CREATE INDEX IF NOT EXISTS idx_cameras_status
@@ -354,6 +359,19 @@ CREATE TABLE IF NOT EXISTS farm_schedule (
         )
 );
 
+ALTER TABLE farm_schedule
+ADD COLUMN IF NOT EXISTS interval_seconds INTEGER;
+
+ALTER TABLE farm_schedule
+DROP CONSTRAINT IF EXISTS chk_farm_schedule_interval;
+
+ALTER TABLE farm_schedule
+ADD CONSTRAINT chk_farm_schedule_interval
+CHECK (
+    interval_seconds IS NULL
+    OR interval_seconds > 0
+);
+
 CREATE INDEX IF NOT EXISTS idx_farm_schedule_start_time
     ON farm_schedule (
         start_time
@@ -416,6 +434,29 @@ CREATE TABLE IF NOT EXISTS task_executions (
         ON DELETE CASCADE
 );
 
+ALTER TABLE task_executions
+ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
+
+ALTER TABLE task_executions
+DROP CONSTRAINT IF EXISTS task_executions_status_check;
+
+ALTER TABLE task_executions
+DROP CONSTRAINT IF EXISTS chk_task_executions_status;
+
+ALTER TABLE task_executions
+ADD CONSTRAINT chk_task_executions_status
+CHECK (
+    status IN (
+        'PENDING',
+        'RUNNING',
+        'COMPLETED',
+        'FAILED',
+        'SKIPPED',
+        'BLOCKED',
+        'AWAITING_APPROVAL'
+    )
+);
+
 CREATE INDEX IF NOT EXISTS idx_task_executions_schedule
     ON task_executions (
         schedule_id
@@ -474,7 +515,9 @@ CREATE TABLE IF NOT EXISTS approval_requests (
 
     CONSTRAINT fk_approval_requests_recommendation
         FOREIGN KEY (recommendation_id)
-        REFERENCES ai_recommendations(recommendation_id)
+        REFERENCES ai_recommendations(
+            recommendation_id
+        )
         ON DELETE SET NULL
 );
 
@@ -510,6 +553,7 @@ CREATE TABLE IF NOT EXISTS notifications (
     severity VARCHAR(20) NOT NULL,
     title VARCHAR(255) NOT NULL,
     message TEXT NOT NULL,
+    audience VARCHAR(20) NOT NULL DEFAULT 'ALL',
     entity_type VARCHAR(100),
     entity_id BIGINT,
     metadata JSONB,
@@ -526,6 +570,11 @@ CREATE TABLE IF NOT EXISTS notifications (
             )
         ),
 
+    CONSTRAINT chk_notifications_audience
+        CHECK (
+            audience = 'ALL'
+        ),
+
     CONSTRAINT chk_notifications_status
         CHECK (
             status IN (
@@ -533,6 +582,43 @@ CREATE TABLE IF NOT EXISTS notifications (
                 'RESOLVED'
             )
         )
+);
+
+ALTER TABLE notifications
+ADD COLUMN IF NOT EXISTS audience VARCHAR(20) NOT NULL DEFAULT 'ALL';
+
+ALTER TABLE notifications
+DROP CONSTRAINT IF EXISTS chk_notifications_severity;
+
+ALTER TABLE notifications
+ADD CONSTRAINT chk_notifications_severity
+CHECK (
+    severity IN (
+        'INFO',
+        'WARN',
+        'CRITICAL'
+    )
+);
+
+ALTER TABLE notifications
+DROP CONSTRAINT IF EXISTS chk_notifications_audience;
+
+ALTER TABLE notifications
+ADD CONSTRAINT chk_notifications_audience
+CHECK (
+    audience = 'ALL'
+);
+
+ALTER TABLE notifications
+DROP CONSTRAINT IF EXISTS chk_notifications_status;
+
+ALTER TABLE notifications
+ADD CONSTRAINT chk_notifications_status
+CHECK (
+    status IN (
+        'OPEN',
+        'RESOLVED'
+    )
 );
 
 CREATE INDEX IF NOT EXISTS idx_notifications_created
@@ -608,11 +694,114 @@ CREATE INDEX IF NOT EXISTS idx_sensor_alert_state_updated
     );
 
 
+CREATE TABLE IF NOT EXISTS audit_logs (
+    log_id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT,
+    action_type VARCHAR(100) NOT NULL,
+    entity_id BIGINT,
+    entity_type VARCHAR(100),
+    description TEXT NOT NULL,
+    metadata JSONB,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_audit_logs_user
+    ON audit_logs (
+        user_id
+    );
+
+CREATE INDEX IF NOT EXISTS idx_audit_logs_action_type
+    ON audit_logs (
+        action_type
+    );
+
+CREATE INDEX IF NOT EXISTS idx_audit_logs_entity
+    ON audit_logs (
+        entity_type,
+        entity_id
+    );
+
+CREATE INDEX IF NOT EXISTS idx_audit_logs_created
+    ON audit_logs (
+        created_at DESC
+    );
+
+
+CREATE TABLE IF NOT EXISTS rag_documents (
+    document_id BIGSERIAL PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    source VARCHAR(500),
+    document_type VARCHAR(100),
+    content_hash VARCHAR(128) UNIQUE,
+    metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_rag_documents_source
+    ON rag_documents (
+        source
+    );
+
+CREATE INDEX IF NOT EXISTS idx_rag_documents_type
+    ON rag_documents (
+        document_type
+    );
+
+CREATE INDEX IF NOT EXISTS idx_rag_documents_metadata
+    ON rag_documents
+    USING GIN (
+        metadata
+    );
+
+
+CREATE TABLE IF NOT EXISTS rag_document_chunks (
+    chunk_id BIGSERIAL PRIMARY KEY,
+    document_id BIGINT NOT NULL,
+    chunk_index INTEGER NOT NULL,
+    content TEXT NOT NULL,
+    metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+    embedding vector(768),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+    CONSTRAINT fk_rag_chunks_document
+        FOREIGN KEY (document_id)
+        REFERENCES rag_documents(document_id)
+        ON DELETE CASCADE,
+
+    CONSTRAINT uq_rag_document_chunk
+        UNIQUE (
+            document_id,
+            chunk_index
+        )
+);
+
+CREATE INDEX IF NOT EXISTS idx_rag_chunks_document
+    ON rag_document_chunks (
+        document_id
+    );
+
+CREATE INDEX IF NOT EXISTS idx_rag_chunks_metadata
+    ON rag_document_chunks
+    USING GIN (
+        metadata
+    );
+
+CREATE INDEX IF NOT EXISTS idx_rag_chunks_embedding_hnsw
+    ON rag_document_chunks
+    USING hnsw (
+        embedding vector_cosine_ops
+    );
+
+
 CREATE TABLE IF NOT EXISTS system_settings (
     setting_key VARCHAR(100) PRIMARY KEY,
     setting_value JSONB NOT NULL,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+ALTER TABLE system_settings
+ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
 
 
 INSERT INTO system_settings (
@@ -715,8 +904,6 @@ VALUES
 ON CONFLICT (
     setting_key
 )
-DO UPDATE SET
-    setting_value = EXCLUDED.setting_value;
-
+DO NOTHING;
 
 COMMIT;

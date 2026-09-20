@@ -19,6 +19,15 @@ from engine.actions.register_actions import (
 )
 
 
+from engine.actions.register_actions import (
+    register_scheduler_actions,
+)
+from engine.managers import (
+    scheduler,
+    security_monitor,
+)
+
+
 @asynccontextmanager
 async def lifespan(
     app: FastAPI,
@@ -31,6 +40,7 @@ async def lifespan(
     hal = Hal()
 
     await hal.start_hal()
+
     register_scheduler_actions(hal)
 
     scheduler_task = asyncio.create_task(
@@ -38,9 +48,9 @@ async def lifespan(
         name="scheduler-worker",
     )
 
-    scheduler_task = asyncio.create_task(
-        scheduler.start(),
-        name="scheduler-worker",
+    security_task = asyncio.create_task(
+        security_monitor.start(hal),
+        name="security-monitor",
     )
 
     app.state.hal = hal
@@ -51,11 +61,15 @@ async def lifespan(
 
     finally:
 
+        await security_monitor.stop()
+
         await scheduler.stop()
 
+        security_task.cancel()
         scheduler_task.cancel()
 
         await asyncio.gather(
+            security_task,
             scheduler_task,
             return_exceptions=True,
         )
