@@ -3,7 +3,11 @@ from typing import Any, Awaitable, Callable
 
 from psycopg.types.json import Jsonb
 
-from engine.managers.db_manager import run_query
+from engine.logger.logger import audit_log
+from engine.managers.db_manager import (
+    get_connection,
+    run_query,
+)
 from engine.managers.settings_manager import settings
 
 loop = False
@@ -397,6 +401,64 @@ async def _update_task_execution(
     )
 
 
+async def _audit_task_execution(
+    task: dict[str, Any],
+    execution_id: int,
+    status: str,
+    result: Any = None,
+    error: Exception | None = None,
+) -> None:
+
+    action_type = (
+        "SCHEDULED_TASK_COMPLETED" if status == "COMPLETED" else "SCHEDULED_TASK_FAILED"
+    )
+
+    description = (
+        f"Scheduled task {task.get('task_name')} completed successfully."
+        if status == "COMPLETED"
+        else f"Scheduled task {task.get('task_name')} failed."
+    )
+
+    scheduled_for = task.get("next_run_at")
+
+    if hasattr(
+        scheduled_for,
+        "isoformat",
+    ):
+        scheduled_for = scheduled_for.isoformat()
+
+    metadata = {
+        "execution_id": execution_id,
+        "schedule_id": task.get("schedule_id"),
+        "task_name": task.get("task_name"),
+        "task_action": task.get("task_action"),
+        "level_no": task.get("level_no"),
+        "scheduled_for": scheduled_for,
+        "interval_seconds": task.get("interval_seconds"),
+        "duration_seconds": task.get("duration_seconds"),
+        "status": status,
+    }
+
+    if result is not None:
+        metadata["result"] = result
+
+    if error is not None:
+        metadata["error_type"] = type(error).__name__
+
+        metadata["error"] = str(error)
+
+    async with get_connection() as conn:
+
+        await audit_log(
+            conn=conn,
+            action_type=action_type,
+            entity_type="task_execution",
+            entity_id=execution_id,
+            description=description,
+            metadata=metadata,
+        )
+
+
 async def _run_farm_action(
     task: dict[str, Any],
 ) -> Any:
@@ -409,6 +471,55 @@ async def _run_farm_action(
         raise ValueError(f"No handler registered for scheduled action: {task_action}")
 
     return await handler(task)
+
+
+async def _schedule_has_active_execution(
+    schedule_id: int,
+) -> bool:
+
+    rows = await run_query(
+        """
+        SELECT EXISTS (
+            SELECT 1
+            FROM task_executions
+            WHERE schedule_id = %s
+              AND status IN (
+                  'PENDING',
+                  'RUNNING'
+              )
+        );
+        """,
+        (schedule_id,),
+    )
+
+    if not rows:
+        return False
+
+    return bool(rows[0][0])
+
+
+async def _skip_missed_interval_occurrences(
+    schedule_id: int,
+) -> None:
+
+    await run_query(
+        """
+        UPDATE farm_schedule
+        SET
+            next_run_at =
+                NOW()
+                + (
+                    interval_seconds
+                    * INTERVAL '1 second'
+                ),
+
+            updated_at = NOW()
+
+        WHERE schedule_id = %s
+          AND interval_seconds IS NOT NULL;
+        """,
+        (schedule_id,),
+    )
 
 
 async def run_scheduled_task(
@@ -433,17 +544,31 @@ async def run_scheduled_task(
 
         result = await _run_farm_action(task)
 
+        execution_result = (
+            result
+            if result is not None
+            else {
+                "success": True,
+            }
+        )
+
         await _update_task_execution(
             execution_id=execution_id,
             status="COMPLETED",
-            result=(
-                result
-                if result is not None
-                else {
-                    "success": True,
-                }
-            ),
+            result=execution_result,
         )
+
+        try:
+
+            await _audit_task_execution(
+                task=task,
+                execution_id=execution_id,
+                status="COMPLETED",
+                result=execution_result,
+            )
+
+        except Exception:
+            pass
 
         return result
 
@@ -455,7 +580,31 @@ async def run_scheduled_task(
             error_message=str(error),
         )
 
+        try:
+
+            await _audit_task_execution(
+                task=task,
+                execution_id=execution_id,
+                status="FAILED",
+                error=error,
+            )
+
+        except Exception:
+            pass
+
         raise
+
+
+async def _run_background_task(
+    task: dict[str, Any],
+) -> None:
+
+    try:
+
+        await run_scheduled_task(task)
+
+    except Exception:
+        pass
 
 
 async def _prepare_due_task(
@@ -476,11 +625,27 @@ async def _prepare_due_task(
                 CASE
                     WHEN interval_seconds IS NOT NULL
                     THEN
-                        next_run_at
-                        + (
-                            interval_seconds
-                            * INTERVAL '1 second'
-                        )
+                        CASE
+                            WHEN
+                                next_run_at
+                                + (
+                                    interval_seconds
+                                    * INTERVAL '1 second'
+                                )
+                                > NOW()
+                            THEN
+                                next_run_at
+                                + (
+                                    interval_seconds
+                                    * INTERVAL '1 second'
+                                )
+                            ELSE
+                                NOW()
+                                + (
+                                    interval_seconds
+                                    * INTERVAL '1 second'
+                                )
+                        END
 
                     ELSE
                         CASE
@@ -567,9 +732,23 @@ async def start():
 
             for row in tasks:
 
+                schedule_id = row[0]
+                interval_seconds = row[5]
+
+                if await _schedule_has_active_execution(schedule_id):
+
+                    if interval_seconds is not None:
+
+                        await _skip_missed_interval_occurrences(schedule_id)
+
+                    continue
+
                 task = await _prepare_due_task(row)
 
-                asyncio.create_task(run_scheduled_task(task))
+                asyncio.create_task(
+                    _run_background_task(task),
+                    name=f"scheduled-task-{schedule_id}",
+                )
 
             await asyncio.sleep(
                 settings.get(

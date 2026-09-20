@@ -332,13 +332,21 @@ class Cameras:
 
         self.loop = True
 
-        await self.load_cameras()
-
         while self.loop:
+
+            await self.load_cameras()
 
             await self.capture_all()
 
-            await asyncio.sleep(settings.get("cameras").get("polling_rate"))
+            await asyncio.sleep(
+                settings.get(
+                    "cameras",
+                    {},
+                ).get(
+                    "polling_rate",
+                    30.0,
+                )
+            )
 
     async def stop(
         self,

@@ -9,7 +9,7 @@ from fastapi import (
 from pydantic import BaseModel
 
 from ai_core.main import leafy_ai
-from ai_core.llm_auth import validate_engine_token
+from ai_core.llm_auth import validate_token
 
 app = FastAPI(
     title="Leafy AI Core",
@@ -43,7 +43,7 @@ async def analyse(
             detail="Invalid authorization header",
         )
 
-    if not validate_engine_token(token):
+    if not validate_token(token):
         raise HTTPException(
             status_code=401,
             detail="Invalid or expired token",

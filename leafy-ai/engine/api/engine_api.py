@@ -19,6 +19,8 @@ from engine.managers.settings_manager import (
 
 from engine.managers.tool_manager import execute_tools as run_tools
 
+from engine.security.emergency_stop import ai_enabled
+
 router = APIRouter()
 
 
@@ -68,8 +70,13 @@ async def execute_tools(
             detail="Invalid or expired token",
         )
 
-    results = await run_tools(request.tool_calls)
+    if not ai_enabled():
+        raise HTTPException(
+            status_code=423,
+            detail="AI access is disabled",
+        )
 
+    results = await run_tools(request.tool_calls)
 
     return {
         "success": True,

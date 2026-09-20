@@ -14,6 +14,18 @@ from engine.managers.db_manager import (
 from engine.managers.settings_manager import (
     manage_settings,
 )
+from engine.actions.register_actions import (
+    register_scheduler_actions,
+)
+
+from engine.security import security_monitor
+
+from engine.actions.register_actions import (
+    register_scheduler_actions,
+)
+from engine.managers import (
+    scheduler,
+)
 
 
 @asynccontextmanager
@@ -29,9 +41,16 @@ async def lifespan(
 
     await hal.start_hal()
 
+    register_scheduler_actions(hal)
+
     scheduler_task = asyncio.create_task(
         scheduler.start(),
         name="scheduler-worker",
+    )
+
+    security_task = asyncio.create_task(
+        security_monitor.start(hal),
+        name="security-monitor",
     )
 
     app.state.hal = hal
@@ -42,11 +61,15 @@ async def lifespan(
 
     finally:
 
+        await security_monitor.stop()
+
         await scheduler.stop()
 
+        security_task.cancel()
         scheduler_task.cancel()
 
         await asyncio.gather(
+            security_task,
             scheduler_task,
             return_exceptions=True,
         )
