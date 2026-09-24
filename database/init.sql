@@ -875,8 +875,7 @@ VALUES
     'notifications',
     '{
         "sensor_alert_cooldown_seconds": 300,
-        "repeat_critical_notifications": false,
-        "global_delivery": true
+        "repeat_critical_notifications": false
     }'::jsonb
 );
 
