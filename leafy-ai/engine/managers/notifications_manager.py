@@ -4,6 +4,7 @@ from psycopg.types.json import Jsonb
 
 from engine.managers.db_manager import run_query
 
+
 VALID_SEVERITIES = {
     "INFO",
     "WARN",
@@ -22,7 +23,9 @@ async def create_notification(
 ) -> int:
 
     if severity not in VALID_SEVERITIES:
-        raise ValueError(f"Invalid notification severity: {severity}")
+        raise ValueError(
+            f"Invalid notification severity: {severity}"
+        )
 
     rows = await run_query(
         """
@@ -31,7 +34,6 @@ async def create_notification(
             severity,
             title,
             message,
-            audience,
             entity_type,
             entity_id,
             metadata,
@@ -42,7 +44,6 @@ async def create_notification(
             %s,
             %s,
             %s,
-            'ALL',
             %s,
             %s,
             %s,
@@ -57,12 +58,18 @@ async def create_notification(
             message,
             entity_type,
             entity_id,
-            (Jsonb(metadata) if metadata is not None else None),
+            (
+                Jsonb(metadata)
+                if metadata is not None
+                else None
+            ),
         ),
     )
 
     if not rows:
-        raise RuntimeError("Failed to create notification")
+        raise RuntimeError(
+            "Failed to create notification"
+        )
 
     return rows[0][0]
 
@@ -73,6 +80,33 @@ async def get_notifications(
     limit: int = 100,
 ) -> list[dict[str, Any]]:
 
+    if limit <= 0:
+        raise ValueError(
+            "limit must be greater than zero"
+        )
+
+    if limit > 500:
+        limit = 500
+
+    if status not in (
+        None,
+        "OPEN",
+        "RESOLVED",
+    ):
+        raise ValueError(
+            f"Invalid notification status: {status}"
+        )
+
+    if severity not in (
+        None,
+        "INFO",
+        "WARN",
+        "CRITICAL",
+    ):
+        raise ValueError(
+            f"Invalid notification severity: {severity}"
+        )
+
     rows = await run_query(
         """
         SELECT
@@ -81,7 +115,6 @@ async def get_notifications(
             severity,
             title,
             message,
-            audience,
             entity_type,
             entity_id,
             metadata,
@@ -93,11 +126,13 @@ async def get_notifications(
             %s::varchar IS NULL
             OR status = %s
         )
-          AND (
+        AND (
             %s::varchar IS NULL
             OR severity = %s
         )
-        ORDER BY created_at DESC
+        ORDER BY
+            created_at DESC,
+            notification_id DESC
         LIMIT %s;
         """,
         (
@@ -116,16 +151,77 @@ async def get_notifications(
             "severity": row[2],
             "title": row[3],
             "message": row[4],
-            "audience": row[5],
-            "entity_type": row[6],
-            "entity_id": row[7],
-            "metadata": row[8],
-            "status": row[9],
-            "created_at": (row[10].isoformat() if row[10] is not None else None),
-            "resolved_at": (row[11].isoformat() if row[11] is not None else None),
+            "entity_type": row[5],
+            "entity_id": row[6],
+            "metadata": row[7],
+            "status": row[8],
+            "created_at": (
+                row[9].isoformat()
+                if row[9] is not None
+                else None
+            ),
+            "resolved_at": (
+                row[10].isoformat()
+                if row[10] is not None
+                else None
+            ),
         }
         for row in rows
     ]
+
+
+async def get_notification(
+    notification_id: int,
+) -> dict[str, Any] | None:
+
+    rows = await run_query(
+        """
+        SELECT
+            notification_id,
+            notification_type,
+            severity,
+            title,
+            message,
+            entity_type,
+            entity_id,
+            metadata,
+            status,
+            created_at,
+            resolved_at
+        FROM notifications
+        WHERE notification_id = %s;
+        """,
+        (
+            notification_id,
+        ),
+    )
+
+    if not rows:
+        return None
+
+    row = rows[0]
+
+    return {
+        "notification_id": row[0],
+        "notification_type": row[1],
+        "severity": row[2],
+        "title": row[3],
+        "message": row[4],
+        "entity_type": row[5],
+        "entity_id": row[6],
+        "metadata": row[7],
+        "status": row[8],
+        "created_at": (
+            row[9].isoformat()
+            if row[9] is not None
+            else None
+        ),
+        "resolved_at": (
+            row[10].isoformat()
+            if row[10] is not None
+            else None
+        ),
+    }
 
 
 async def resolve_notification(
@@ -142,7 +238,9 @@ async def resolve_notification(
           AND status = 'OPEN'
         RETURNING notification_id;
         """,
-        (notification_id,),
+        (
+            notification_id,
+        ),
     )
 
     return bool(rows)
@@ -163,5 +261,29 @@ async def resolve_sensor_notification(
           AND notification_type = 'SENSOR_THRESHOLD'
           AND status = 'OPEN';
         """,
-        (sensor_id,),
+        (
+            sensor_id,
+        ),
+    )
+
+
+async def resolve_entity_notifications(
+    entity_type: str,
+    entity_id: int,
+) -> None:
+
+    await run_query(
+        """
+        UPDATE notifications
+        SET
+            status = 'RESOLVED',
+            resolved_at = NOW()
+        WHERE entity_type = %s
+          AND entity_id = %s
+          AND status = 'OPEN';
+        """,
+        (
+            entity_type,
+            entity_id,
+        ),
     )
