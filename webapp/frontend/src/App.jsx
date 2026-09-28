@@ -7,6 +7,7 @@ import Settings from "./components/settings/Settings";
 import Overview from "./features/overview/Overview";
 import Farm from "./features/farm/Farm";
 import LeafyAI from "./features/leafyAI/LeafyAI";
+import Safety from "./features/safety/Safety";
 
 import {
   getCurrentUser,
@@ -32,8 +33,7 @@ const pages = {
   },
   safety: {
     title: "Safety Management",
-    subtitle: "Manage AI, Farm and Tasks Safety",
-    placeholder: "Safety content will go here."
+    subtitle: "Manage AI, Farm and Tasks Safety"
   },
   logs: {
     title: "Audit Logs",
@@ -203,6 +203,12 @@ function App() {
         />
       ) : activePage === "leafyAI" ? (
         <LeafyAI
+          data={null}
+          loading={false}
+          error=""
+        />
+      ) : activePage === "safety" ? (
+        <Safety
           data={null}
           loading={false}
           error=""
