@@ -1,0 +1,230 @@
+.panel {
+  min-width: 0;
+  overflow: hidden;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+}
+
+.header {
+  min-height: 66px;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.header h2 {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: 19px;
+  font-weight: 600;
+}
+
+.closeButton {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-primary);
+  background: var(--color-bg-card-inner);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.closeButton:hover {
+  color: var(--color-green);
+  border-color: var(--color-green);
+}
+
+.taskHeading {
+  padding: 16px 16px 12px;
+  display: grid;
+  grid-template-columns: 50px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+}
+
+
+.taskHeading h3 {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.status {
+  padding: 4px 9px;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.completed {
+  color: var(--color-green);
+  background: color-mix(
+    in srgb,
+    var(--color-green) 7%,
+    transparent
+  );
+}
+
+.upcoming {
+  color: var(--color-orange);
+  background: color-mix(
+    in srgb,
+    var(--color-orange) 7%,
+    transparent
+  );
+}
+
+.scheduled {
+  color: var(--color-blue);
+  background: color-mix(
+    in srgb,
+    var(--color-blue) 7%,
+    transparent
+  );
+}
+
+.disabled {
+  color: var(--color-text-secondary);
+}
+
+.information {
+  margin: 0;
+  padding: 6px 24px 16px;
+  display: grid;
+  gap: 11px;
+}
+
+.information div {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+
+.information dt,
+.information dd {
+  margin: 0;
+  font-size: 13px;
+}
+
+.information dt {
+  color: var(--color-text-primary);
+  font-weight: 600;
+}
+
+.information dd {
+  color: var(--color-text-primary);
+}
+
+.description {
+  padding: 14px 16px 15px;
+  border-top: 1px solid var(--color-border);
+}
+
+.description h3 {
+  margin: 0 0 8px;
+  color: var(--color-text-primary);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.description p {
+  margin: 0;
+  min-height: 36px;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.actions {
+  padding: 11px 16px 16px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 14px;
+}
+
+.actions button {
+  min-height: 36px;
+  padding: 0 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 13px;
+}
+
+.actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.78;
+}
+
+.completeButton {
+  color: var(--color-green);
+  background: color-mix(
+    in srgb,
+    var(--color-green) 7%,
+    transparent
+  );
+  border: 1px solid var(--color-green);
+}
+
+.cancelButton {
+  color: var(--color-red);
+  background: color-mix(
+    in srgb,
+    var(--color-red) 6%,
+    transparent
+  );
+  border: 1px solid var(--color-red);
+}
+
+.secondaryButton {
+  color: var(--color-text-primary);
+  background: transparent;
+  border: 1px solid var(--color-border);
+}
+
+[data-theme="light"] .completeButton {
+  background: #edf9f2;
+}
+
+[data-theme="light"] .cancelButton {
+  background: #fff4f4;
+}
+
+@media (max-width: 520px) {
+  .taskHeading {
+    grid-template-columns: 50px minmax(0, 1fr);
+  }
+
+  .status {
+    grid-column: 2;
+    justify-self: start;
+  }
+
+  .information {
+    padding-inline: 16px;
+  }
+
+  .actions {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+
+
+.cancelled {
+  color: var(--color-red);
+}

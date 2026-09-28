@@ -9,6 +9,7 @@ import Farm from "./features/farm/Farm";
 import LeafyAI from "./features/leafyAI/LeafyAI";
 import Safety from "./features/safety/Safety";
 import Logs from "./features/logs/Logs";
+import Schedule from "./features/schedule/Schedule";
 
 import {
   getCurrentUser,
@@ -42,13 +43,11 @@ const pages = {
   },
   schedule: {
     title: "Task Schedule",
-    subtitle: "Manage scheduled tasks",
-    placeholder: "Schedule content will go here."
+    subtitle: "Manage scheduled tasks"
   },
   settings: {
     title: "Settings",
-    subtitle: "",
-    placeholder: "Settings content will go here."
+    subtitle: ""
   }
 };
 
@@ -219,13 +218,13 @@ function App() {
           loading={false}
           error=""
         />
-      ) : activePage === "settings" ? (
+      ) : activePage === "schedule" ? (
+        <Schedule token={token} />
+      ) : (
         <Settings
           theme={theme}
           setTheme={setTheme}
         />
-      ) : (
-        <p>{currentPage.placeholder}</p>
       )}
     </AppShell>
   );
