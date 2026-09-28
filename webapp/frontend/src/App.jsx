@@ -113,18 +113,30 @@ function App() {
   const handleLogout = useCallback(async () => {
     try {
       await logout();
-    } catch (error) {
-      console.error("Logout failed:", error.message);
+    } catch {
     }
 
     setToken("");
     setUser(null);
+    setActivePage("overview");
   }, []);
 
 
 
   if (!authChecked) {
-    return <p>Checking sign in...</p>;
+    return (
+      <main
+        style={{
+          minHeight: "100vh",
+          display: "grid",
+          placeItems: "center",
+          background: "var(--color-bg-main)",
+          color: "var(--color-text-muted)"
+        }}
+      >
+        Checking sign in...
+      </main>
+    );
   }
 
   if (!token || !user) {

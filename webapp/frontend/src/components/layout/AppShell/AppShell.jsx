@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 import Sidebar from "../Sidebar/Sidebar";
 import Header from "../Header/Header";
 import MobileNav from "../MobileNav/MobileNav";
@@ -11,12 +13,20 @@ function AppShell({
   title,
   subtitle
 }) {
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
   return (
-    <div className={styles.layout}>
+    <div
+      className={`${styles.layout} ${
+        sidebarCollapsed ? styles.sidebarCollapsed : ""
+      }`}
+    >
       <Sidebar
         activePage={activePage}
         onNavigate={onNavigate}
         onLogout={onLogout}
+        collapsed={sidebarCollapsed}
+        onToggle={() => setSidebarCollapsed((value) => !value)}
       />
 
       <div className={styles.main}>

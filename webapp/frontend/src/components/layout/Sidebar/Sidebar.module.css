@@ -1,43 +1,76 @@
 .sidebar {
-  width: 260px;
-  min-height: 100dvh;
-  padding: 16px;
+  position: fixed;
+  inset: 0 auto 0 0;
+  z-index: 100;
 
-  background: var(--color-bg-sidebar);
+  width: var(--sidebar-width);
+  height: 100dvh;
+  padding: 16px;
 
   display: flex;
   flex-direction: column;
-  flex-shrink: 0;
   gap: 28px;
 
   overflow-y: auto;
   overflow-x: hidden;
+
+  background: var(--color-bg-sidebar);
+
+  transition: width 180ms ease;
 }
 
-.logo {
-  height: 92px;
+.sidebarHeader {
+  min-height: 92px;
+
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 32px;
+  align-items: center;
+  gap: 10px;
+
+  flex-shrink: 0;
+}
+
+.brand {
+  min-width: 0;
 
   display: flex;
   align-items: center;
   gap: 14px;
-
-  position: relative;
 }
 
-.logo > img {
+.brand img {
   width: 76px;
   height: 76px;
   flex-shrink: 0;
 }
 
-.logo span {
+.brand span {
   font-size: 24px;
   font-weight: 600;
   white-space: nowrap;
 }
 
-.closeButton {
-  display: none;
+.toggleButton {
+  width: 30px !important;
+  height: 30px !important;
+  padding: 0 !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  border: 1px solid var(--color-border) !important;
+  border-radius: 8px !important;
+
+  background: var(--color-bg-card) !important;
+  color: var(--color-text-primary) !important;
+
+  cursor: pointer;
+}
+
+.toggleButton svg {
+  width: 17px;
+  height: 17px;
 }
 
 .sidebar nav {
@@ -55,7 +88,7 @@
   border-radius: 10px;
 
   background: transparent;
-  color: white;
+  color: var(--color-nav-text);
 
   display: flex;
   align-items: center;
@@ -64,6 +97,8 @@
   font-size: 20px;
   font-weight: 600;
   text-align: left;
+
+  cursor: pointer;
 }
 
 .sidebar button img {
@@ -77,8 +112,8 @@
 }
 
 .sidebar .active {
-  background: var(--color-green-dark);
-  color: var(--color-green);
+  background: var(--color-nav-active-bg);
+  color: var(--color-nav-active-text);
 }
 
 .sidebar .active img {
@@ -119,36 +154,135 @@
   filter: brightness(0);
 }
 
-/* Smaller desktop */
-@media (max-width: 1399px) and (min-width: 1050px) {
+/* Collapsed desktop rail */
+
+.collapsed {
+  width: 84px;
+  padding: 10px 10px 12px;
+  gap: 14px;
+}
+
+.collapsed .sidebarHeader {
+  min-height: 104px;
+
+  grid-template-columns: 1fr;
+  grid-template-rows: 52px 30px;
+
+  justify-items: center;
+  align-content: start;
+
+  gap: 12px;
+}
+
+.collapsed .brand {
+  justify-content: center;
+}
+
+.collapsed .brand img {
+  width: 48px;
+  height: 48px;
+}
+
+.collapsed .brand span {
+  display: none;
+}
+
+.collapsed .toggleButton {
+  width: 28px !important;
+  height: 28px !important;
+}
+
+.collapsed .toggleButton svg {
+  width: 16px;
+  height: 16px;
+}
+
+.collapsed nav {
+  gap: 8px;
+}
+
+.collapsed nav span,
+.collapsed .emergency span,
+.collapsed .bottom span {
+  display: none;
+}
+
+.collapsed button:not(.toggleButton) {
+  width: 50px;
+  height: 46px;
+  padding: 0;
+  margin: 0 auto;
+
+  justify-content: center;
+
+  border-radius: 10px;
+}
+
+.collapsed button:not(.toggleButton) img {
+  width: 25px;
+  height: 25px;
+}
+
+.collapsed .emergency {
+  background: transparent;
+}
+
+.collapsed .emergency img {
+  width: 25px !important;
+  height: 25px !important;
+}
+
+.collapsed .bottom {
+  gap: 6px;
+}
+
+.collapsed .bottom button {
+  background: transparent;
+}
+
+.collapsed .bottom button img {
+  width: 25px !important;
+  height: 25px !important;
+}
+
+@media (max-width: 1399px) and (min-width: 1100px) {
   .sidebar {
-    width: 200px;
-    padding: 12px;
-    gap: 20px;
+    padding: 14px;
+    gap: 22px;
   }
 
-  .logo {
-    height: 76px;
-  }
-
-  .logo > img {
-    width: 58px;
-    height: 58px;
-  }
-
-  .logo span {
-    font-size: 20px;
-  }
-
-  .sidebar nav {
+  .sidebar.collapsed {
+    width: 84px;
+    padding: 10px 10px 12px;
     gap: 14px;
   }
 
+  .sidebar.collapsed nav {
+    gap: 8px;
+  }
+
+  .sidebarHeader {
+    min-height: 82px;
+  }
+
+  .brand img {
+    width: 64px;
+    height: 64px;
+  }
+
+  .brand span {
+    font-size: 21px;
+  }
+
+  .sidebar nav {
+    gap: 16px;
+  }
+
   .sidebar button {
-    height: 50px;
-    padding: 0 16px;
-    gap: 12px;
-    font-size: 16px;
+    height: 52px;
+    padding: 0 18px;
+    gap: 14px;
+    font-size: 17px;
   }
 
   .sidebar button img {
@@ -163,38 +297,120 @@
   }
 }
 
-/* Tablet */
-@media (max-width: 1049px) and (min-width: 768px) {
-  .sidebar {
-    width: 88px;
-    padding: 12px;
+@media (max-width: 1099px) and (min-width: 768px) {
+  .toggleButton {
+    display: none !important;
   }
 
-  .logo {
+  .sidebar {
+    padding: 12px;
+    gap: 20px;
+  }
+
+  .sidebarHeader {
+    min-height: 72px;
+    display: flex;
     justify-content: center;
   }
 
-  .logo > img {
-    width: 60px;
-    height: 60px;
+  .brand img {
+    width: 56px;
+    height: 56px;
   }
 
-  .logo span,
+  .brand span,
   .sidebar nav span,
   .emergency span,
   .bottom span {
     display: none;
   }
 
+  .sidebar nav {
+    gap: 14px;
+  }
+
   .sidebar button {
+    height: 52px;
     padding: 0;
     justify-content: center;
   }
+
+  .sidebar button img {
+    width: 28px;
+    height: 28px;
+  }
+
+  .emergency img,
+  .bottom button img {
+    width: 30px !important;
+    height: 30px !important;
+  }
 }
 
-/* Mobile */
 @media (max-width: 767px) {
   .sidebar {
     display: none;
   }
+}
+
+/* Light sidebar */
+
+[data-theme="light"] .sidebar {
+  color: #ffffff;
+}
+
+[data-theme="light"] .brand span {
+  color: #ffffff;
+}
+
+[data-theme="light"] .sidebar nav button {
+  color: #ffffff;
+}
+
+[data-theme="light"] .sidebar nav button img {
+  filter: brightness(0) invert(1);
+}
+
+[data-theme="light"] .sidebar .active {
+  background: #f7f6f2;
+  color: var(--color-green);
+}
+
+[data-theme="light"] .sidebar .active img {
+  filter: brightness(0) saturate(100%)
+    invert(63%) sepia(66%) saturate(600%)
+    hue-rotate(105deg) brightness(90%) contrast(88%);
+}
+
+[data-theme="light"] .toggleButton {
+  background: var(--color-green-dark) !important;
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.22) !important;
+}
+
+[data-theme="light"] .bottom button {
+  background: #f7f6f2;
+  color: #202725;
+}
+
+[data-theme="light"] .bottom button img {
+  filter: brightness(0);
+}
+
+[data-theme="light"] .sidebar .emergency {
+  background: #6f1010;
+  color: #ff3b3b;
+}
+
+[data-theme="light"] .collapsed .bottom button,
+[data-theme="light"] .collapsed .emergency {
+  background: transparent;
+}
+
+[data-theme="light"] .collapsed .bottom button img {
+  filter: brightness(0);
+}
+
+[data-theme="light"] .collapsed .emergency img {
+  filter: none;
 }

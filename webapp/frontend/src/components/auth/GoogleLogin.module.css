@@ -1,64 +1,331 @@
-.login {
+.page {
+  width: 100%;
   min-height: 100vh;
-
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
-
-  padding: 24px;
-
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+  padding: 20px;
   background: var(--color-bg-main);
   color: var(--color-text-primary);
-
-  text-align: center;
 }
 
-.login h1 {
-  margin: 0;
+.imagePanel,
+.loginPanel {
+  min-width: 0;
+  min-height: calc(100vh - 40px);
+  border-radius: 16px;
+}
 
-  font-size: 32px;
+.imagePanel {
+  position: relative;
+  overflow: hidden;
+  background: var(--color-bg-sidebar);
+}
+
+.imagePanel img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.imagePanel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    rgba(6, 10, 9, 0.72),
+    transparent 52%
+  );
+}
+
+.imageText {
+  position: absolute;
+  z-index: 1;
+  left: 42px;
+  right: 42px;
+  bottom: 42px;
+}
+
+.imageText span {
+  color: var(--color-green);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 2px;
+}
+
+.imageText h2 {
+  max-width: 500px;
+  margin: 10px 0 0;
+  color: #ffffff;
+  font-size: 38px;
+  line-height: 1.1;
   font-weight: 600;
 }
 
-.login p {
-  margin: 0;
+.loginPanel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-card);
+}
 
-  color: var(--color-text-secondary);
+.loginContent {
+  width: 100%;
+  max-width: 420px;
+  min-width: 0;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-bottom: 54px;
+}
+
+.brand img {
+  width: 76px;
+  height: 76px;
+  object-fit: contain;
+}
+
+.brand h1,
+.heading h2 {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-weight: 600;
+}
+
+.brand h1 {
+  font-size: 38px;
+}
+
+.brand p {
+  margin: 5px 0 0;
+  color: var(--color-green);
   font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 2px;
+}
+
+.heading {
+  margin-bottom: 28px;
+}
+
+.heading h2 {
+  margin-bottom: 12px;
+  font-size: 42px;
+}
+
+.heading p {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.googleButton {
+  width: 100%;
+  max-width: 400px;
+  min-height: 44px;
+  display: flex;
+  justify-content: center;
 }
 
 .remember {
+  width: fit-content;
   display: flex;
-  flex-direction: row;
   align-items: center;
-  gap: 8px;
-
-  color: var(--color-text-secondary);
-  font-size: 14px;
-  font-weight: 400;
+  gap: 10px;
+  margin-top: 20px;
+  color: var(--color-text-muted);
+  font-size: 15px;
+  cursor: pointer;
 }
 
 .remember input {
-  width: 16px;
-  height: 16px;
-
+  width: 18px;
+  height: 18px;
+  margin: 0;
   accent-color: var(--color-green);
 }
 
-.error {
-  max-width: 380px;
-
-  color: var(--color-red);
+.remember input:disabled {
+  cursor: not-allowed;
 }
 
-@media (max-width: 480px) {
-  .login {
-    padding: 18px;
+.note,
+.loading,
+.error {
+  font-size: 14px;
+}
+
+.note {
+  margin: 26px 0 0;
+  color: var(--color-text-muted);
+  line-height: 1.6;
+}
+
+.loading,
+.error {
+  margin: 16px 0 0;
+}
+
+.loading {
+  color: var(--color-green);
+}
+
+.error {
+  color: var(--color-red);
+  line-height: 1.5;
+}
+
+@media (max-width: 1000px) {
+  .page {
+    gap: 14px;
+    padding: 14px;
   }
 
-  .login h1 {
+  .imagePanel,
+  .loginPanel {
+    min-height: calc(100vh - 28px);
+  }
+
+  .loginPanel {
+    padding: 32px;
+  }
+
+  .brand {
+    margin-bottom: 42px;
+  }
+
+  .brand img {
+    width: 66px;
+    height: 66px;
+  }
+
+  .brand h1 {
+    font-size: 32px;
+  }
+
+  .heading h2 {
+    font-size: 36px;
+  }
+
+  .imageText {
+    left: 30px;
+    right: 30px;
+    bottom: 30px;
+  }
+
+  .imageText h2 {
+    font-size: 32px;
+  }
+}
+
+@media (max-width: 760px) {
+  .page {
+    min-height: 100svh;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 10px;
+  }
+
+  .imagePanel {
+    width: 100%;
+    height: 240px;
+    min-height: 240px;
+    flex-shrink: 0;
+    border-radius: 14px;
+  }
+
+  .imageText {
+    display: none;
+  }
+
+  .loginPanel {
+    width: 100%;
+    min-height: calc(100svh - 270px);
+    flex: 1;
+    padding: 36px 28px;
+    border-radius: 14px;
+  }
+
+  .loginContent {
+    max-width: none;
+  }
+
+  .brand {
+    margin-bottom: 38px;
+  }
+
+  .brand img {
+    width: 64px;
+    height: 64px;
+  }
+
+  .brand h1 {
+    font-size: 31px;
+  }
+
+  .brand p {
+    font-size: 13px;
+  }
+
+  .heading h2 {
+    font-size: 36px;
+  }
+
+  .heading p {
+    font-size: 15px;
+  }
+
+  .googleButton {
+    max-width: none;
+  }
+}
+
+@media (max-width: 400px) {
+  .page {
+    gap: 8px;
+    padding: 8px;
+  }
+
+  .imagePanel {
+    height: 210px;
+    min-height: 210px;
+    border-radius: var(--radius-large);
+  }
+
+  .loginPanel {
+    min-height: calc(100svh - 234px);
+    padding: 30px 22px;
+    border-radius: var(--radius-large);
+  }
+
+  .brand {
+    margin-bottom: 32px;
+  }
+
+  .brand img {
+    width: 58px;
+    height: 58px;
+  }
+
+  .brand h1 {
     font-size: 28px;
+  }
+
+  .heading h2 {
+    font-size: 32px;
+  }
+
+  .heading p {
+    font-size: 14px;
   }
 }
