@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import AppShell from "./components/layout/AppShell/AppShell";
 import GoogleLogin from "./components/auth/GoogleLogin";
 import Settings from "./components/settings/Settings";
+
 import Overview from "./features/overview/Overview";
 
 import {
@@ -11,44 +12,39 @@ import {
   logout
 } from "./services/authApi";
 
+import { getOverviewData } from "./services/overviewApi";
+
 const pages = {
   overview: {
     title: "System Overview",
-    subtitle: "Real-time summary of your farm",
-    placeholder: "Overview content will go here."
+    subtitle: "Real-time summary of your farm"
   },
-
   farm: {
     title: "Farm Management",
     subtitle: "Manage farm",
     placeholder: "Farm content will go here."
   },
-
   leafyAI: {
     title: "Leafy AI",
     subtitle:
       "Ask questions, review recommendations, and see the reasoning behind them",
     placeholder: "Leafy AI content will go here."
   },
-
   safety: {
     title: "Safety Management",
     subtitle: "Manage AI, Farm and Tasks Safety",
     placeholder: "Safety content will go here."
   },
-
   logs: {
     title: "Audit Logs",
     subtitle: "Track and review system activities",
     placeholder: "Audit Logs content will go here."
   },
-
   schedule: {
     title: "Task Schedule",
     subtitle: "Manage scheduled tasks",
     placeholder: "Schedule content will go here."
   },
-
   settings: {
     title: "Settings",
     subtitle: "",
@@ -64,9 +60,12 @@ function App() {
   });
 
   const [token, setToken] = useState("");
-
   const [user, setUser] = useState(null);
   const [authChecked, setAuthChecked] = useState(false);
+
+  const [overviewData, setOverviewData] = useState(null);
+  const [overviewLoading, setOverviewLoading] = useState(false);
+  const [overviewError, setOverviewError] = useState("");
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
@@ -104,6 +103,44 @@ function App() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!token || activePage !== "overview") {
+      return;
+    }
+
+    let cancelled = false;
+
+    async function loadOverview() {
+      setOverviewLoading(true);
+      setOverviewError("");
+
+      try {
+        const data = await getOverviewData(token);
+
+        if (!cancelled) {
+          setOverviewData(data);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setOverviewData(null);
+          setOverviewError(
+            error.message || "Unable to load overview data."
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          setOverviewLoading(false);
+        }
+      }
+    }
+
+    loadOverview();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [token, activePage]);
+
   const handleLogin = useCallback((data) => {
     setToken(data.token);
     setUser(data.user);
@@ -120,8 +157,6 @@ function App() {
     setUser(null);
     setActivePage("overview");
   }, []);
-
-
 
   if (!authChecked) {
     return (
@@ -154,7 +189,12 @@ function App() {
       subtitle={currentPage.subtitle}
     >
       {activePage === "overview" ? (
-        <Overview />
+        <Overview
+          data={overviewData}
+          loading={overviewLoading}
+          error={overviewError}
+          onGoToFarm={() => setActivePage("farm")}
+        />
       ) : activePage === "settings" ? (
         <Settings
           theme={theme}

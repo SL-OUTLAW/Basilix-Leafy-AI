@@ -1,0 +1,173 @@
+.panel {
+  min-height: 300px;
+  padding: 16px;
+
+  display: flex;
+  flex-direction: column;
+
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-medium);
+}
+
+.header {
+  margin-bottom: 14px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.header h2 {
+  margin: 0;
+
+  color: var(--color-text-primary);
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.state {
+  flex: 1;
+  min-height: 230px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  text-align: center;
+}
+
+.grid {
+  flex: 1;
+
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.card {
+  min-width: 0;
+  min-height: 130px;
+  padding: 18px;
+
+  display: flex;
+  align-items: center;
+  gap: 18px;
+
+  background: var(--color-bg-card-inner);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-medium);
+}
+
+.icon {
+  width: 58px;
+  height: 58px;
+
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+}
+
+.iconGraphic {
+  width: 30px;
+  height: 30px;
+
+  display: block;
+
+}
+
+.channelIcon,
+.irrigationIcon {
+  color: #34d399;
+  background: rgba(52, 211, 153, 0.14);
+}
+
+.fanIcon {
+  color: #f2f6f4;
+  background: rgba(242, 246, 244, 0.14);
+}
+
+.content {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+}
+
+.card h3 {
+  margin: 0;
+
+  color: var(--color-text-primary);
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.card p {
+  margin: 0;
+
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+[data-theme="light"] .card {
+  background: var(--color-bg-card);
+}
+
+[data-theme="light"] .channelIcon,
+[data-theme="light"] .irrigationIcon {
+  color: #209c63;
+  background: #e8f6ee;
+}
+
+[data-theme="light"] .fanIcon {
+  color: #5f6668;
+  background: #ecefed;
+}
+
+@media (max-width: 1100px) {
+  .card {
+    min-height: 120px;
+    padding: 16px;
+  }
+
+  .icon {
+    width: 52px;
+    height: 52px;
+  }
+
+  .iconGraphic {
+    width: 27px;
+    height: 27px;
+  }
+}
+
+@media (max-width: 767px) {
+  .panel {
+    min-height: auto;
+  }
+
+  .header h2 {
+    font-size: 18px;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: none;
+  }
+
+  .card {
+    min-height: 112px;
+  }
+}

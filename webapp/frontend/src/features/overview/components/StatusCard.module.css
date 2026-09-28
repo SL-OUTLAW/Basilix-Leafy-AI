@@ -6,7 +6,7 @@
   align-items: center;
   gap: 14px;
 
-  background: var(--color-bg-card);
+  background: var(--color-bg-card-inner);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-medium);
 }
@@ -14,17 +14,51 @@
 .iconArea {
   width: 72px;
   height: 72px;
+
   flex-shrink: 0;
 
   display: flex;
   align-items: center;
   justify-content: center;
+
+  border: 1px solid transparent;
+  border-radius: 50%;
 }
 
-.iconArea img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
+.iconGraphic {
+  width: 46px;
+  height: 46px;
+  display: block;
+}
+
+.green .iconArea {
+  color: #34d399;
+  background: rgba(52, 211, 153, 0.12);
+  border-color: rgba(52, 211, 153, 0.38);
+}
+
+.orange .iconArea {
+  color: #ff7b00;
+  background: #433a2d;
+  border-color: rgba(255, 123, 0, 0.38);
+}
+
+.blue .iconArea {
+  color: #00a8d2;
+  background: #16304a;
+  border-color: rgba(0, 168, 210, 0.45);
+}
+
+.green .value {
+  color: #34d399;
+}
+
+.orange .value {
+  color: #ff7b00;
+}
+
+.blue .value {
+  color: #00a8d2;
 }
 
 .content {
@@ -41,13 +75,13 @@
   color: var(--color-text-primary);
   font-size: 18px;
   font-weight: 600;
+
   white-space: nowrap;
 }
 
 .value {
   margin: 0;
 
-  color: var(--color-green);
   font-size: 30px;
   font-weight: 600;
 }
@@ -57,14 +91,53 @@
   font-size: 14px;
 }
 
+[data-theme="light"] .card {
+  background: var(--color-bg-card);
+}
+
+[data-theme="light"] .green .iconArea {
+  color: #209c63;
+  background: #e8f6ee;
+  border-color: #b9ddcb;
+}
+
+[data-theme="light"] .orange .iconArea {
+  color: #d96500;
+  background: #fff1d6;
+  border-color: #f3c68f;
+}
+
+[data-theme="light"] .blue .iconArea {
+  color: #0063dc;
+  background: #eaf1f8;
+  border-color: #b8d2f2;
+}
+
+[data-theme="light"] .green .value {
+  color: #209c63;
+}
+
+[data-theme="light"] .orange .value {
+  color: #d96500;
+}
+
+[data-theme="light"] .blue .value {
+  color: #0063dc;
+}
+
 @media (max-width: 767px) {
   .card {
     min-height: 96px;
   }
 
   .iconArea {
-    width: 52px;
-    height: 52px;
+    width: 56px;
+    height: 56px;
+  }
+
+  .iconGraphic {
+    width: 38px;
+    height: 38px;
   }
 
   .content h3 {
