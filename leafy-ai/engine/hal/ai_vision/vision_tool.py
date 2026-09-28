@@ -6,7 +6,7 @@ from engine.hal.ai_vision.detector import analyse_image
 from engine.managers.db_manager import run_query
 
 
-MODEL_NAME = "basil_segmentation_yolo26s_final.pt"
+MODEL_NAME = "basil_vision_pipeline_v1"
 
 _latest_analysis = None
 
@@ -18,15 +18,33 @@ def _build_public_analysis(analysis, image_id):
         "camera": analysis.get("camera"),
         "image": analysis.get("image"),
         "health": analysis.get("health"),
+        "visual_anomaly": analysis.get("visual_anomaly"),
         "canopy": analysis.get("canopy"),
+        "size": analysis.get("size"),
+        "crowding": analysis.get("crowding"),
+        "appearance": analysis.get("appearance"),
+        "water_stress": analysis.get("water_stress"),
+        "nutrient_stress": analysis.get("nutrient_stress"),
+        "growth": analysis.get("growth"),
+        "harvest_readiness": analysis.get("harvest_readiness"),
     }
 
 async def analyse_camera_images(image_paths):
     """
-    Analyse camera images supplied as:
+    Analyse camera images supplied as either:
 
     {
         image_id: image_path,
+        ...
+    }
+
+    or:
+
+    {
+        image_id: {
+            "image_path": image_path,
+            "camera_name": camera_name,
+        },
         ...
     }
 
@@ -41,15 +59,14 @@ async def analyse_camera_images(image_paths):
             "source": "vision",
             "status": "error",
             "error": (
-                "image_paths must be a non-empty dictionary "
-                "of {image_id: image_path}."
+                "image_paths must be a non-empty dictionary."
             ),
         }
 
     results = {}
     successful = 0
 
-    for image_id, image_path in image_paths.items():
+    for image_id, image_data in image_paths.items():
 
         try:
             image_id = int(image_id)
@@ -60,6 +77,14 @@ async def analyse_camera_images(image_paths):
             }
             continue
 
+        camera_name = None
+
+        if isinstance(image_data, dict):
+            image_path = image_data.get("image_path")
+            camera_name = image_data.get("camera_name")
+        else:
+            image_path = image_data
+
         if not isinstance(image_path, str) or not image_path:
             results[str(image_id)] = {
                 "status": "error",
@@ -67,9 +92,17 @@ async def analyse_camera_images(image_paths):
             }
             continue
 
+        if camera_name is not None and not isinstance(camera_name, str):
+            results[str(image_id)] = {
+                "status": "error",
+                "error": "Invalid camera_name.",
+            }
+            continue
+
         analysis = await asyncio.to_thread(
             analyse_image,
             image_path,
+            camera_name,
         )
 
         if analysis.get("status") != "success":

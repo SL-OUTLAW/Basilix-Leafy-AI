@@ -85,3 +85,7 @@ npm-debug.log*
 
 ### Frontend build ###
 webapp/frontend/dist/
+
+# Basilix AI Vision runtime models
+!leafy-ai/engine/hal/ai_vision/models/basil_segmentation_yolo26s_final.pt
+!leafy-ai/engine/hal/ai_vision/models/basil_health_yolo26s_final.pt
