@@ -5,6 +5,7 @@ import GoogleLogin from "./components/auth/GoogleLogin";
 import Settings from "./components/settings/Settings";
 
 import Overview from "./features/overview/Overview";
+import Farm from "./features/farm/Farm";
 
 import {
   getCurrentUser,
@@ -21,8 +22,7 @@ const pages = {
   },
   farm: {
     title: "Farm Management",
-    subtitle: "Manage farm",
-    placeholder: "Farm content will go here."
+    subtitle: "Manage farm"
   },
   leafyAI: {
     title: "Leafy AI",
@@ -194,6 +194,12 @@ function App() {
           loading={overviewLoading}
           error={overviewError}
           onGoToFarm={() => setActivePage("farm")}
+        />
+      ) : activePage === "farm" ? (
+        <Farm
+          data={null}
+          loading={false}
+          error=""
         />
       ) : activePage === "settings" ? (
         <Settings
