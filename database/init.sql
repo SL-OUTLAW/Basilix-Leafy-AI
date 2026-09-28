@@ -794,6 +794,12 @@ VALUES
     }'::jsonb
 ),
 (
+    'vision',
+    '{
+        "polling_rate": 1800
+    }'::jsonb
+),
+(
     'security',
     '{
         "sensor_check_interval_seconds": 5,
