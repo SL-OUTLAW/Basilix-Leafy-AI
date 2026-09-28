@@ -1,87 +1,161 @@
 import asyncio
 import json
+
 from copy import deepcopy
+from datetime import datetime
+from typing import Any
 
 from engine.hal.ai_vision.detector import analyse_image
-from engine.managers.db_manager import run_query
-
+from engine.logger.logger import audit_log
+from engine.managers.db_manager import (
+    get_connection,
+    run_query,
+)
+from engine.managers.settings_manager import settings
 
 MODEL_NAME = "basil_segmentation_yolo26s_final.pt"
 
-_latest_analysis = None
 
-def _build_public_analysis(analysis, image_id):
-    return {
-        "source": "vision",
-        "status": "success",
-        "image_id": image_id,
-        "camera": analysis.get("camera"),
-        "image": analysis.get("image"),
-        "health": analysis.get("health"),
-        "canopy": analysis.get("canopy"),
-    }
+class VisionAnalysis:
 
-async def analyse_camera_images(image_paths):
-    """
-    Analyse camera images supplied as:
+    def __init__(self):
+        self.loop = False
 
-    {
-        image_id: image_path,
-        ...
-    }
+        self.latest_analysis: dict[str, Any] | None = None
 
-    Successful analyses are stored in plant_image_analysis.
-    A compact whole-camera analysis is returned as a JSON-compatible dictionary.
-    """
+    async def get_latest_images(
+        self,
+    ) -> list[dict[str, Any]]:
 
-    global _latest_analysis
+        rows = await run_query("""
+            SELECT DISTINCT ON (c.camera_id)
+                pi.image_id,
+                pi.camera_id,
+                c.camera_name,
+                c.level_no,
+                pi.image_path,
+                pi.captured_at
+            FROM cameras c
+            JOIN plant_images pi
+                ON pi.camera_id = c.camera_id
+            WHERE c.status = 'ACTIVE'
+            ORDER BY
+                c.camera_id ASC,
+                pi.captured_at DESC,
+                pi.image_id DESC;
+            """)
 
-    if not isinstance(image_paths, dict) or not image_paths:
+        return [
+            {
+                "image_id": row[0],
+                "camera_id": row[1],
+                "camera_name": row[2],
+                "level_no": row[3],
+                "image_path": row[4],
+                "captured_at": (row[5].isoformat() if row[5] is not None else None),
+            }
+            for row in rows
+        ]
+
+    async def get_latest_unanalysed_images(
+        self,
+    ) -> list[dict[str, Any]]:
+
+        rows = await run_query("""
+            SELECT
+                latest.image_id,
+                latest.camera_id,
+                latest.camera_name,
+                latest.level_no,
+                latest.image_path,
+                latest.captured_at
+            FROM (
+                SELECT DISTINCT ON (c.camera_id)
+                    pi.image_id,
+                    pi.camera_id,
+                    c.camera_name,
+                    c.level_no,
+                    pi.image_path,
+                    pi.captured_at
+                FROM cameras c
+                JOIN plant_images pi
+                    ON pi.camera_id = c.camera_id
+                WHERE c.status = 'ACTIVE'
+                ORDER BY
+                    c.camera_id ASC,
+                    pi.captured_at DESC,
+                    pi.image_id DESC
+            ) AS latest
+            LEFT JOIN plant_image_analysis pia
+                ON pia.image_id = latest.image_id
+            WHERE pia.analysis_id IS NULL
+            ORDER BY
+                latest.level_no ASC,
+                latest.camera_id ASC;
+            """)
+
+        return [
+            {
+                "image_id": row[0],
+                "camera_id": row[1],
+                "camera_name": row[2],
+                "level_no": row[3],
+                "image_path": row[4],
+                "captured_at": (row[5].isoformat() if row[5] is not None else None),
+            }
+            for row in rows
+        ]
+
+    def _build_public_analysis(
+        self,
+        analysis: dict[str, Any],
+        image_id: int,
+    ) -> dict[str, Any]:
+
         return {
             "source": "vision",
-            "status": "error",
-            "error": (
-                "image_paths must be a non-empty dictionary "
-                "of {image_id: image_path}."
-            ),
+            "status": "success",
+            "image_id": image_id,
+            "camera": analysis.get("camera"),
+            "image": analysis.get("image"),
+            "health": analysis.get("health"),
+            "canopy": analysis.get("canopy"),
         }
 
-    results = {}
-    successful = 0
+    async def analyse_image(
+        self,
+        image: dict[str, Any],
+    ) -> dict[str, Any]:
 
-    for image_id, image_path in image_paths.items():
-
-        try:
-            image_id = int(image_id)
-        except (TypeError, ValueError):
-            results[str(image_id)] = {
-                "status": "error",
-                "error": "Invalid image_id.",
-            }
-            continue
-
-        if not isinstance(image_path, str) or not image_path:
-            results[str(image_id)] = {
-                "status": "error",
-                "error": "Invalid image_path.",
-            }
-            continue
-
-        analysis = await asyncio.to_thread(
-            analyse_image,
-            image_path,
-        )
-
-        if analysis.get("status") != "success":
-            results[str(image_id)] = analysis
-            continue
-
-        analysis = _build_public_analysis(
-            analysis,
-            image_id,
-        )
+        image_id = image["image_id"]
 
         try:
+
+            analysis = await asyncio.to_thread(
+                analyse_image,
+                image["image_path"],
+            )
+
+            if not isinstance(
+                analysis,
+                dict,
+            ):
+                raise RuntimeError("Vision model returned an invalid result.")
+
+            if analysis.get("status") != "success":
+
+                raise RuntimeError(
+                    analysis.get(
+                        "error",
+                        "Vision analysis failed.",
+                    )
+                )
+
+            analysis = self._build_public_analysis(
+                analysis,
+                image_id,
+            )
+
             rows = await run_query(
                 """
                 INSERT INTO plant_image_analysis (
@@ -89,8 +163,14 @@ async def analyse_camera_images(image_paths):
                     model_name,
                     analysis
                 )
-                VALUES (%s, %s, %s::jsonb)
-                RETURNING analysis_id, created_at;
+                VALUES (
+                    %s,
+                    %s,
+                    %s::jsonb
+                )
+                RETURNING
+                    analysis_id,
+                    created_at;
                 """,
                 (
                     image_id,
@@ -100,48 +180,283 @@ async def analyse_camera_images(image_paths):
             )
 
             if not rows:
-                raise RuntimeError(
-                    "Database insert returned no result."
+
+                raise RuntimeError("Database insert returned no result.")
+
+            analysis_id = rows[0][0]
+            created_at = rows[0][1]
+
+            result = {
+                "status": "success",
+                "image_id": image_id,
+                "analysis_id": analysis_id,
+                "created_at": (
+                    created_at.isoformat() if created_at is not None else None
+                ),
+                "analysis": analysis,
+            }
+
+            try:
+
+                await self._audit_success(
+                    image=image,
+                    analysis_id=analysis_id,
+                    created_at=created_at,
                 )
 
-            analysis_id, created_at = rows[0]
+            except Exception:
+                pass
 
-            results[str(image_id)] = {
-                "status": "success",
-                "analysis_id": analysis_id,
-                "created_at": created_at.isoformat(),
-                "analysis": analysis,
-            }
-
-            successful += 1
+            return result
 
         except Exception as error:
-            results[str(image_id)] = {
+
+            try:
+
+                await self._audit_failure(
+                    image=image,
+                    error=error,
+                )
+
+            except Exception:
+                pass
+
+            return {
                 "status": "error",
+                "image_id": image_id,
                 "error": str(error),
-                "analysis": analysis,
             }
 
-    if successful == len(image_paths):
-        status = "success"
-    elif successful > 0:
-        status = "partial_success"
-    else:
-        status = "error"
+    async def analyse_latest_images(
+        self,
+    ) -> dict[str, Any]:
 
-    result = {
-        "source": "vision",
-        "status": status,
-        "processed": len(image_paths),
-        "successful": successful,
-        "results": results,
-    }
+        images = await self.get_latest_unanalysed_images()
 
-    if status == "success":
-        _latest_analysis = deepcopy(result)
+        if not images:
 
-    return result
+            latest_images = await self.get_latest_images()
 
+            if not latest_images:
 
-def get_latest_analysis():
-    return deepcopy(_latest_analysis)
+                return {
+                    "source": "vision",
+                    "status": "no_data",
+                    "processed": 0,
+                    "successful": 0,
+                    "results": {},
+                    "message": (
+                        "No camera images are currently " "available for analysis."
+                    ),
+                }
+
+            return {
+                "source": "vision",
+                "status": "no_new_data",
+                "processed": 0,
+                "successful": 0,
+                "results": {},
+                "message": (
+                    "The latest available camera images " "have already been analysed."
+                ),
+            }
+
+        results: dict[str, Any] = {}
+
+        successful = 0
+
+        analyses = await asyncio.gather(
+            *[self.analyse_image(image) for image in images],
+            return_exceptions=True,
+        )
+
+        for image, result in zip(
+            images,
+            analyses,
+        ):
+
+            image_id = image["image_id"]
+
+            if isinstance(
+                result,
+                Exception,
+            ):
+
+                results[str(image_id)] = {
+                    "status": "error",
+                    "image_id": image_id,
+                    "error": str(result),
+                }
+
+                continue
+
+            results[str(image_id)] = result
+
+            if result.get("status") == "success":
+
+                successful += 1
+
+        if successful == len(images):
+
+            status = "success"
+
+        elif successful > 0:
+
+            status = "partial_success"
+
+        else:
+
+            status = "error"
+
+        result = {
+            "source": "vision",
+            "status": status,
+            "processed": len(images),
+            "successful": successful,
+            "results": results,
+        }
+
+        if successful > 0:
+
+            self.latest_analysis = deepcopy(result)
+
+        return result
+
+    async def _audit_success(
+        self,
+        image: dict[str, Any],
+        analysis_id: int,
+        created_at: datetime | None,
+    ) -> None:
+
+        async with get_connection() as conn:
+
+            await audit_log(
+                conn=conn,
+                action_type="VISION_ANALYSIS_COMPLETED",
+                entity_type="plant_image_analysis",
+                entity_id=analysis_id,
+                description=(
+                    "Vision analysis completed successfully "
+                    f"for {image['camera_name']}."
+                ),
+                metadata={
+                    "analysis_id": analysis_id,
+                    "image_id": image["image_id"],
+                    "camera_id": image["camera_id"],
+                    "camera_name": image["camera_name"],
+                    "level_no": image["level_no"],
+                    "image_path": image["image_path"],
+                    "captured_at": image["captured_at"],
+                    "analysed_at": (
+                        created_at.isoformat() if created_at is not None else None
+                    ),
+                    "model_name": MODEL_NAME,
+                },
+            )
+
+    async def _audit_failure(
+        self,
+        image: dict[str, Any],
+        error: Exception,
+    ) -> None:
+
+        async with get_connection() as conn:
+
+            await audit_log(
+                conn=conn,
+                action_type="VISION_ANALYSIS_FAILED",
+                entity_type="plant_image",
+                entity_id=image["image_id"],
+                description=("Vision analysis failed " f"for {image['camera_name']}."),
+                metadata={
+                    "image_id": image["image_id"],
+                    "camera_id": image["camera_id"],
+                    "camera_name": image["camera_name"],
+                    "level_no": image["level_no"],
+                    "image_path": image["image_path"],
+                    "captured_at": image["captured_at"],
+                    "model_name": MODEL_NAME,
+                    "error_type": type(error).__name__,
+                    "error": str(error),
+                },
+            )
+
+    async def run_once(
+        self,
+    ) -> dict[str, Any]:
+
+        return await self.analyse_latest_images()
+
+    def get_latest_analysis(
+        self,
+    ) -> dict[str, Any] | None:
+
+        return deepcopy(self.latest_analysis)
+
+    async def start(
+        self,
+    ) -> None:
+
+        self.loop = True
+
+        while self.loop:
+
+            print("hererer")
+
+            try:
+
+                await self.analyse_latest_images()
+
+            except Exception as error:
+
+                try:
+
+                    async with get_connection() as conn:
+
+                        await audit_log(
+                            conn=conn,
+                            action_type="VISION_ANALYSIS_LOOP_FAILED",
+                            entity_type="vision",
+                            description=(
+                                "The scheduled vision analysis " "loop failed."
+                            ),
+                            metadata={
+                                "error_type": type(error).__name__,
+                                "error": str(error),
+                            },
+                        )
+
+                except Exception:
+                    pass
+
+            polling_rate = settings.get(
+                "vision",
+                {},
+            ).get(
+                "polling_rate",
+                1800,
+            )
+
+            try:
+
+                polling_rate = float(polling_rate)
+
+            except (
+                TypeError,
+                ValueError,
+            ):
+
+                polling_rate = 1800.0
+
+            if polling_rate <= 0:
+
+                polling_rate = 1800.0
+
+            await asyncio.sleep(polling_rate)
+
+    async def stop(
+        self,
+    ) -> None:
+
+        self.loop = False

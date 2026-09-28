@@ -332,21 +332,67 @@ class Cameras:
 
         self.loop = True
 
+
         while self.loop:
 
-            await self.load_cameras()
+            try:
 
-            await self.capture_all()
+                await self.load_cameras()
 
-            await asyncio.sleep(
-                settings.get(
-                    "cameras",
-                    {},
-                ).get(
-                    "polling_rate",
-                    30.0,
-                )
+
+                await self.capture_all()
+
+            except asyncio.CancelledError:
+
+                raise
+
+            except Exception as error:
+
+
+                try:
+
+                    async with get_connection() as conn:
+
+                        await audit_log(
+                            conn=conn,
+                            action_type="CAMERA_LOOP_FAILED",
+                            entity_type="camera",
+                            description=(
+                                "The camera capture loop encountered an error."
+                            ),
+                            metadata={
+                                "error_type": type(error).__name__,
+                                "error": str(error),
+                            },
+                        )
+
+                except Exception:
+                    pass
+
+            polling_rate = settings.get(
+                "cameras",
+                {},
+            ).get(
+                "polling_rate",
+                30.0,
             )
+
+            try:
+
+                polling_rate = float(polling_rate)
+
+            except (
+                TypeError,
+                ValueError,
+            ):
+
+                polling_rate = 30.0
+
+            if polling_rate <= 0:
+
+                polling_rate = 30.0
+
+            await asyncio.sleep(polling_rate)
 
     async def stop(
         self,
@@ -363,7 +409,6 @@ async def test():
     try:
         await cameras.load_cameras()
 
-        print(f"Loaded " f"{len(cameras.cameras)} " f"camera(s)")
 
         for camera in cameras.cameras:
 
