@@ -6,6 +6,7 @@ import Settings from "./components/settings/Settings";
 
 import Overview from "./features/overview/Overview";
 import Farm from "./features/farm/Farm";
+import LeafyAI from "./features/leafyAI/LeafyAI";
 
 import {
   getCurrentUser,
@@ -27,8 +28,7 @@ const pages = {
   leafyAI: {
     title: "Leafy AI",
     subtitle:
-      "Ask questions, review recommendations, and see the reasoning behind them",
-    placeholder: "Leafy AI content will go here."
+      "Ask questions, review recommendations, and see the reasoning behind them"
   },
   safety: {
     title: "Safety Management",
@@ -197,6 +197,12 @@ function App() {
         />
       ) : activePage === "farm" ? (
         <Farm
+          data={null}
+          loading={false}
+          error=""
+        />
+      ) : activePage === "leafyAI" ? (
+        <LeafyAI
           data={null}
           loading={false}
           error=""

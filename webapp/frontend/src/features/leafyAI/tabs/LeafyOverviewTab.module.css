@@ -1,0 +1,363 @@
+.overview {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.statusGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.summaryCard,
+.smallSummaryCard,
+.aiFeed,
+.highlightCard {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-medium);
+}
+
+.summaryCard {
+  min-height: 118px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+.cardLabel,
+.eyebrow {
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.cardValue {
+  margin-top: 9px;
+  color: var(--color-text-primary);
+  font-size: 25px;
+  line-height: 1;
+}
+
+.summaryCard p {
+  margin: auto 0 0;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.statusGrid .summaryCard:nth-child(1) {
+  border-top: 2px solid var(--color-green);
+}
+
+.statusGrid .summaryCard:nth-child(2) {
+  border-top: 2px solid #00a8d2;
+}
+
+.statusGrid .summaryCard:nth-child(3) {
+  border-top: 2px solid var(--color-green);
+}
+
+.statusGrid .summaryCard:nth-child(1) .cardValue,
+.statusGrid .summaryCard:nth-child(3) .cardValue {
+  color: var(--color-green);
+}
+
+.statusGrid .summaryCard:nth-child(2) .cardValue {
+  color: #00a8d2;
+}
+
+.highlightGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.highlightCard {
+  min-width: 0;
+  min-height: 175px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+}
+
+.highlightGrid .highlightCard:nth-child(1) {
+  border-left: 3px solid var(--color-green);
+}
+
+.highlightGrid .highlightCard:nth-child(2) {
+  border-left: 3px solid #00a8d2;
+}
+
+.highlightGrid .highlightCard:nth-child(1) .eyebrow {
+  color: var(--color-green);
+}
+
+.highlightGrid .highlightCard:nth-child(2) .eyebrow {
+  color: #00a8d2;
+}
+
+.highlightHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.highlightHeader h2 {
+  margin: 7px 0 0;
+  color: var(--color-text-primary);
+  font-size: 20px;
+}
+
+.highlightTime {
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.highlightDescription {
+  margin: 14px 0 0;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.chipRow {
+  margin-top: auto;
+  padding-top: 14px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.chip {
+  padding: 5px 9px;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-bg-card-inner);
+  color: var(--color-text-secondary);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.aiFeed {
+  min-height: 310px;
+  padding: 18px;
+  border-top: 2px solid rgba(52, 211, 153, 0.75);
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.sectionHeader h2 {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: 19px;
+}
+
+.sectionHeader p {
+  margin: 5px 0 0;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.readOnly {
+  color: var(--color-green);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.feedEmptyState {
+  min-height: 225px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.feedEmptyState h3 {
+  margin: 0 0 7px;
+  color: var(--color-text-primary);
+  font-size: 15px;
+}
+
+.feedEmptyState p {
+  max-width: 340px;
+  margin: 0 auto;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.feedList {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.feedItem {
+  display: grid;
+  grid-template-columns: 8px 92px minmax(0, 1fr);
+  align-items: start;
+  gap: 12px;
+  padding: 13px 0;
+  border: none;
+  border-bottom: 1px solid var(--color-border);
+  border-radius: 0;
+  background: transparent;
+}
+
+.feedItem:last-child {
+  border-bottom: none;
+}
+
+.feedItem:hover {
+  background: transparent;
+  border-color: var(--color-border);
+  transform: none;
+}
+
+.feedDot {
+  width: 7px;
+  height: 7px;
+  margin-top: 6px;
+  border-radius: 50%;
+  background: var(--color-green);
+}
+
+.itemTime {
+  padding-top: 1px;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.feedItem h3 {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.feedItem p {
+  margin: 4px 0 0;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.overviewSummaryGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.smallSummaryCard {
+  min-height: 130px;
+  padding: 18px;
+}
+
+.overviewSummaryGrid .smallSummaryCard:nth-child(1) {
+  border-left: 3px solid var(--color-green);
+}
+
+.overviewSummaryGrid .smallSummaryCard:nth-child(2) {
+  border-left: 3px solid #00a8d2;
+}
+
+.overviewSummaryGrid .smallSummaryCard:nth-child(1) strong {
+  color: var(--color-green);
+}
+
+.overviewSummaryGrid .smallSummaryCard:nth-child(2) strong {
+  color: #00a8d2;
+}
+
+.smallSummaryCard strong {
+  display: block;
+  margin-top: 12px;
+  font-size: 30px;
+}
+
+.smallSummaryCard p {
+  margin: 7px 0 0;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+}
+
+[data-theme="light"] .chip {
+  background: var(--color-bg-card);
+}
+
+[data-theme="light"] .statusGrid .summaryCard:nth-child(1) .cardValue,
+[data-theme="light"] .statusGrid .summaryCard:nth-child(3) .cardValue,
+[data-theme="light"] .highlightGrid .highlightCard:nth-child(1) .eyebrow,
+[data-theme="light"] .overviewSummaryGrid .smallSummaryCard:nth-child(1) strong {
+  color: #209c63;
+}
+
+[data-theme="light"] .statusGrid .summaryCard:nth-child(2) .cardValue,
+[data-theme="light"] .highlightGrid .highlightCard:nth-child(2) .eyebrow,
+[data-theme="light"] .overviewSummaryGrid .smallSummaryCard:nth-child(2) strong {
+  color: #0063dc;
+}
+
+[data-theme="light"] .feedItem:hover {
+  background: #f1faf5;
+}
+
+@media (max-width: 1000px) {
+  .statusGrid,
+  .highlightGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 767px) {
+  .overview {
+    gap: 12px;
+  }
+
+  .overviewSummaryGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .summaryCard,
+  .smallSummaryCard,
+  .aiFeed,
+  .highlightCard {
+    padding: 15px;
+  }
+
+  .sectionHeader h2 {
+    font-size: 17px;
+  }
+
+  .feedItem {
+    grid-template-columns: 8px minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  .itemTime {
+    grid-column: 2;
+    margin-bottom: -4px;
+  }
+
+  .feedItem > div:last-child {
+    grid-column: 2;
+  }
+}
+
