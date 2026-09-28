@@ -1,0 +1,300 @@
+.logs {
+  width: 100%;
+
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.toolbar {
+  padding: 14px 16px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-medium);
+}
+
+.dateRange {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.dateField {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dateField label {
+  min-width: max-content;
+
+  color: var(--color-text-primary);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.dateControl {
+  position: relative;
+  width: 190px;
+}
+
+.dateControl input {
+  width: 100%;
+  min-height: 42px;
+  padding: 0 44px 0 13px;
+
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+
+  background: var(--color-bg-card-inner);
+  color: var(--color-text-primary);
+
+  font: inherit;
+  font-size: 13px;
+
+  color-scheme: dark;
+}
+
+.dateControl input:focus {
+  outline: none;
+  border-color: var(--color-green);
+}
+
+.dateControl input::-webkit-calendar-picker-indicator {
+  opacity: 0;
+  width: 42px;
+  height: 100%;
+  cursor: pointer;
+}
+
+.calendarButton {
+  position: absolute;
+  top: 50%;
+  right: 7px;
+  width: 34px;
+  height: 34px;
+  padding: 5px;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--color-text-primary);
+  cursor: pointer;
+}
+
+.calendarButton:hover {
+  background: var(--color-bg-section);
+}
+
+.calendarButton svg {
+  width: 23px;
+  height: 23px;
+}
+
+.toolbarActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.toolbarButton {
+  min-height: 42px;
+  padding: 0 16px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+
+  background: var(--color-bg-card-inner);
+  color: var(--color-text-primary);
+
+  font-size: 13px;
+  font-weight: 500;
+
+  cursor: pointer;
+}
+
+.toolbarButton:hover:not(:disabled) {
+  border-color: var(--color-green);
+}
+
+.activeFilterButton {
+  border-color: var(--color-green);
+  color: var(--color-green);
+}
+
+.errorState {
+  padding: 12px 14px;
+
+  color: var(--color-red);
+  background: var(--color-red-dark);
+  border: 1px solid var(--color-red);
+  border-radius: var(--radius-medium);
+
+  font-size: 13px;
+}
+
+.toolbarButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.buttonIcon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.buttonIcon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.dateError {
+  padding: 10px 14px;
+  border: 1px solid var(--color-red);
+  border-radius: 8px;
+  background: var(--color-red-dark);
+  color: var(--color-red);
+  font-size: 13px;
+}
+
+.filterPanel {
+  padding: 14px 16px;
+
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 220px));
+  gap: 12px;
+
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-medium);
+}
+
+.filterField {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.filterField label {
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.filterField select {
+  min-height: 40px;
+  padding: 0 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 7px;
+  background: var(--color-bg-card-inner);
+  color: var(--color-text-primary);
+  font: inherit;
+  font-size: 13px;
+}
+
+.filterField select:focus {
+  outline: none;
+  border-color: var(--color-green);
+}
+
+.contentGrid {
+  display: grid;
+  gap: 16px;
+}
+
+.tableOnly {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.withDetails {
+  grid-template-columns: minmax(0, 1fr) 320px;
+}
+
+[data-theme="light"] .dateControl input,
+[data-theme="light"] .toolbarButton,
+[data-theme="light"] .filterField select {
+  background: #f4f2ee;
+}
+
+[data-theme="light"] .dateControl input {
+  color-scheme: light;
+}
+
+[data-theme="light"] .dateError {
+  background: #fff5f4;
+}
+
+@media (max-width: 1100px) {
+  .withDetails {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 850px) {
+  .toolbar {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .dateRange {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+
+  .dateField {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .dateControl {
+    width: 100%;
+  }
+
+  .toolbarActions {
+    width: 100%;
+  }
+
+  .toolbarButton {
+    flex: 1;
+  }
+}
+
+@media (max-width: 600px) {
+  .logs {
+    gap: 12px;
+  }
+
+  .toolbar {
+    padding: 12px;
+  }
+
+  .dateRange {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .filterPanel {
+    grid-template-columns: 1fr;
+  }
+
+  .contentGrid {
+    min-height: 0;
+  }
+}

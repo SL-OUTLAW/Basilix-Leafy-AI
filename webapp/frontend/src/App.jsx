@@ -8,6 +8,7 @@ import Overview from "./features/overview/Overview";
 import Farm from "./features/farm/Farm";
 import LeafyAI from "./features/leafyAI/LeafyAI";
 import Safety from "./features/safety/Safety";
+import Logs from "./features/logs/Logs";
 
 import {
   getCurrentUser,
@@ -37,8 +38,7 @@ const pages = {
   },
   logs: {
     title: "Audit Logs",
-    subtitle: "Track and review system activities",
-    placeholder: "Audit Logs content will go here."
+    subtitle: "Track and review system activities"
   },
   schedule: {
     title: "Task Schedule",
@@ -209,6 +209,12 @@ function App() {
         />
       ) : activePage === "safety" ? (
         <Safety
+          data={null}
+          loading={false}
+          error=""
+        />
+      ) : activePage === "logs" ? (
+        <Logs
           data={null}
           loading={false}
           error=""
