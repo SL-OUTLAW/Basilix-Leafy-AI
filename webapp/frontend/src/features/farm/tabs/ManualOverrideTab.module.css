@@ -1,0 +1,32 @@
+.override {
+  min-height: 320px;
+  margin-top: 16px;
+  padding: 24px;
+
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-medium);
+}
+
+.override h2 {
+  margin: 0 0 10px;
+
+  color: var(--color-text-primary);
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.override p {
+  margin: 0;
+
+  color: var(--color-text-secondary);
+  font-size: 14px;
+}
+
+@media (max-width: 767px) {
+  .override {
+    min-height: 220px;
+    margin-top: 14px;
+    padding: 18px;
+  }
+}

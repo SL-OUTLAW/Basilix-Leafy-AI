@@ -1,0 +1,221 @@
+.panel {
+  --farm-camera-height: clamp(300px, 31vh, 340px);
+
+  height: 100%;
+  padding: 16px;
+
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-medium);
+}
+
+.panel h2 {
+  margin: 0 0 12px;
+
+  color: var(--color-text-primary);
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.content {
+  position: relative;
+
+  height: var(--farm-camera-height);
+  min-height: var(--farm-camera-height);
+
+  overflow: hidden;
+
+  background: var(--color-bg-card-inner);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-medium);
+}
+
+.overlay {
+  position: relative;
+  z-index: 3;
+
+  height: var(--farm-camera-height);
+  min-height: var(--farm-camera-height);
+  padding: 12px;
+
+  pointer-events: none;
+
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.levelList {
+  width: min(100%, 320px);
+
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  pointer-events: auto;
+}
+
+@media (min-width: 768px) and (max-width: 1200px) {
+  .levelList {
+    width: min(320px, calc(100% - 130px));
+  }
+}
+
+.levelState {
+  min-height: 40px;
+  padding: 9px 12px;
+
+  display: flex;
+  align-items: center;
+
+  color: var(--color-text-secondary);
+  background: rgba(14, 18, 19, 0.78);
+  border: 1px solid var(--color-border);
+  border-radius: 7px;
+
+  font-size: 13px;
+}
+
+.level {
+  width: 100%;
+  min-height: 40px;
+  padding: 9px 12px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  color: var(--color-text-primary);
+  background: rgba(14, 18, 19, 0.78);
+  border: 1px solid var(--color-border);
+  border-radius: 7px;
+
+  font: inherit;
+  cursor: pointer;
+
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
+}
+
+.level:hover {
+  border-color: var(--color-green);
+}
+
+.selectedLevel {
+  background: rgba(30, 74, 58, 0.88);
+  border-color: var(--color-green);
+}
+
+.level span {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.level strong {
+  color: var(--color-orange);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.farmButton {
+  min-height: 36px;
+  padding: 7px 12px;
+
+  pointer-events: auto;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  color: var(--color-green);
+  background: rgba(14, 18, 19, 0.82);
+  border: 1px solid var(--color-green);
+  border-radius: 7px;
+
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.farmButton:hover {
+  background: rgba(52, 211, 153, 0.12);
+}
+
+[data-theme="light"] .level,
+[data-theme="light"] .levelState {
+  background: rgba(255, 255, 255, 0.92);
+}
+
+[data-theme="light"] .selectedLevel {
+  background: #e8f6ee;
+  border-color: var(--color-green);
+}
+
+[data-theme="light"] .farmButton {
+  background: rgba(255, 255, 255, 0.92);
+}
+
+@media (max-width: 1100px) {
+  .panel {
+    --farm-camera-height: 320px;
+  }
+}
+
+@media (max-width: 520px) {
+  .panel {
+    --farm-camera-height: 290px;
+  }
+
+  .level,
+  .levelState {
+    min-height: 44px;
+  }
+}
+
+@media (max-width: 767px) {
+  .panel {
+    --farm-camera-height: 300px;
+
+    padding: 16px;
+  }
+
+  .panel h2 {
+    font-size: 18px;
+  }
+
+  .content {
+    height: auto;
+    min-height: 0;
+
+    display: flex;
+    flex-direction: column;
+
+    overflow: visible;
+
+    background: transparent;
+    border: none;
+  }
+
+  .overlay {
+    height: auto;
+    min-height: 0;
+    padding: 12px 0 0;
+
+    gap: 8px;
+    justify-content: flex-start;
+
+    pointer-events: auto;
+  }
+
+  .levelList {
+    width: 100%;
+  }
+
+  .farmButton {
+    margin-top: 4px;
+  }
+}

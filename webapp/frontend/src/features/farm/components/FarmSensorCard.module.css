@@ -1,0 +1,328 @@
+.card {
+  min-height: 200px;
+  padding: var(--card-padding);
+
+  display: flex;
+  flex-direction: column;
+
+  background: var(--color-bg-card-inner);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-medium);
+}
+
+.top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.top h3 {
+  margin: 0;
+
+  color: var(--color-text-primary);
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.value {
+  margin: 5px 0 0;
+
+  color: var(--color-text-primary);
+  font-size: 23px;
+  font-weight: 600;
+}
+
+.expandButton {
+  width: 30px;
+  height: 30px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+
+  background: var(--icon-neutral-bg);
+  color: var(--icon-neutral);
+  border-color: var(--icon-neutral-border);
+
+  cursor: pointer;
+}
+
+.chart {
+  min-height: 60px;
+  flex: 1;
+
+  margin: 12px 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: var(--color-text-secondary);
+  font-size: 12px;
+}
+
+.sparkline {
+  width: 100%;
+  height: 60px;
+
+  overflow: visible;
+}
+
+.sparkline polyline {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.green .chart {
+  color: #34d399;
+}
+
+.orange .chart {
+  color: #ff7b00;
+}
+
+.blue .chart {
+  color: #00a8d2;
+}
+
+.neutral .chart {
+  color: var(--color-text-secondary);
+}
+
+.statusText {
+  color: var(--color-text-secondary);
+}
+
+.green .statusText {
+  color: #34d399;
+}
+
+.orange .statusText {
+  color: #ff7b00;
+}
+
+.blue .statusText {
+  color: #00a8d2;
+}
+
+.bottom {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+
+  font-size: 14px;
+}
+
+.connectionLive {
+  color: #34d399;
+}
+
+.connectionOffline {
+  color: var(--color-red);
+}
+
+.connectionNeutral {
+  color: var(--color-text-secondary);
+}
+
+.waterGauge {
+  position: relative;
+
+  width: 100%;
+  height: 58px;
+
+  overflow: hidden;
+
+  background: #07566a;
+  border-radius: 7px;
+}
+
+.waterFill {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  background: #11afd2;
+}
+
+.expanded {
+  width: 100%;
+  height: 100%;
+
+  min-width: 0;
+  min-height: 0;
+
+  display: flex;
+  flex-direction: column;
+}
+
+.expandedTop {
+  margin-bottom: 16px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.expandedValue {
+  margin: 0;
+
+  color: var(--color-text-primary);
+  font-size: 30px;
+  font-weight: 600;
+}
+
+.expandedChart {
+  width: 100%;
+  flex: 1;
+
+  min-width: 0;
+  min-height: 360px;
+
+  display: flex;
+  align-items: stretch;
+  justify-content: stretch;
+
+  overflow: hidden;
+
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-medium);
+
+  background: var(--color-bg-card-inner);
+  color: var(--color-text-secondary);
+}
+
+.expanded .sparkline {
+  width: calc(100% - 32px);
+  height: 100%;
+  min-height: 300px;
+
+  margin: auto;
+}
+
+.expanded .waterGauge {
+  width: min(480px, calc(100% - 40px));
+  height: 300px;
+
+  margin: auto;
+}
+
+.expanded.green .expandedChart {
+  color: #34d399;
+}
+
+.expanded.orange .expandedChart {
+  color: #ff7b00;
+}
+
+.expanded.blue .expandedChart {
+  color: #00a8d2;
+}
+
+.expandedBottom {
+  margin-top: 16px;
+
+  display: flex;
+  justify-content: space-between;
+
+  font-size: 14px;
+}
+
+[data-theme="light"] .card {
+  background: var(--color-bg-card);
+}
+
+[data-theme="light"] .green .chart,
+[data-theme="light"] .green .statusText,
+[data-theme="light"] .expanded.green .expandedChart {
+  color: #209c63;
+}
+
+[data-theme="light"] .orange .chart,
+[data-theme="light"] .orange .statusText,
+[data-theme="light"] .expanded.orange .expandedChart {
+  color: #d96500;
+}
+
+[data-theme="light"] .blue .chart,
+[data-theme="light"] .blue .statusText,
+[data-theme="light"] .expanded.blue .expandedChart {
+  color: #0063dc;
+}
+
+[data-theme="light"] .connectionLive {
+  color: #209c63;
+}
+
+[data-theme="light"] .waterGauge {
+  background: #dbe9f1;
+}
+
+[data-theme="light"] .waterFill {
+  background: #00a8d2;
+}
+
+@media (max-width: 767px) {
+  .expandedTop {
+    margin-bottom: 12px;
+  }
+
+  .expandedChart {
+    min-height: 280px;
+  }
+
+  .expandedValue {
+    font-size: 26px;
+  }
+}
+
+@media (max-width: 520px) {
+  .card {
+    min-height: 155px;
+  }
+
+  .chart {
+    min-height: 48px;
+    margin: 8px 0;
+  }
+
+  .sparkline {
+    height: 48px;
+  }
+
+  .waterGauge {
+    height: 48px;
+  }
+
+  .expandedChart {
+    min-height: 0;
+  }
+
+  .expanded .sparkline {
+    min-height: 220px;
+  }
+
+  .expanded .waterGauge {
+    width: min(320px, calc(100% - 24px));
+    height: 200px;
+  }
+
+  .expandedValue {
+    font-size: 24px;
+  }
+}
+
+.expandButton svg {
+  width: 17px;
+  height: 17px;
+}

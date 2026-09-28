@@ -1,0 +1,22 @@
+.overview {
+  width: 100%;
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 12px;
+}
+
+.middle {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+
+  gap: 12px;
+}
+
+@media (max-width: 1000px) {
+  .middle {
+    grid-template-columns: 1fr;
+  }
+}

@@ -3,7 +3,6 @@
   display: none;
 }
 
-/* light theme icons */
 [data-theme="light"] .mobileNav button:not(.active) img {
   filter: brightness(0);
 }
@@ -17,7 +16,7 @@
     position: fixed;
     left: 12px;
     right: 12px;
-    bottom: 12px;
+    bottom: calc(12px + env(safe-area-inset-bottom));
     z-index: 1000;
 
     height: 68px;
@@ -53,7 +52,6 @@
     width: 26px;
     height: 26px;
 
-    /* Normal inactive icon colour */
     filter: brightness(0) invert(1);
   }
 
@@ -62,8 +60,8 @@
   }
 
   .mobileNav .active {
-    background: var(--color-green-dark);
-    color: var(--color-green);
+    background: var(--color-nav-active-bg);
+    color: var(--color-nav-active-text);
   }
 
   .mobileNav .active img {
@@ -80,7 +78,7 @@
   .moreMenu {
     position: fixed;
     right: 12px;
-    bottom: 90px;
+    bottom: calc(92px + env(safe-area-inset-bottom));
     z-index: 1000;
 
     width: 180px;

@@ -89,7 +89,6 @@
   object-fit: cover;
 }
 
-/* Smaller desktop */
 @media (max-width: 1399px) and (min-width: 1000px) {
   .header {
     padding: 16px 24px;
@@ -121,7 +120,6 @@
   }
 }
 
-/* Tablet */
 @media (max-width: 999px) and (min-width: 768px) {
   .header {
     padding: 14px 20px;
@@ -149,7 +147,6 @@
   }
 }
 
-/* Mobile */
 @media (max-width: 767px) {
   .header {
     height: 76px;

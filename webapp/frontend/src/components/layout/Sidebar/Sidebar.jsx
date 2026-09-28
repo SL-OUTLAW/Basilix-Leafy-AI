@@ -1,3 +1,4 @@
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import styles from "./Sidebar.module.css";
 
 import logo from "../../../assets/sidebar/leafy-ai-logo.png";
@@ -14,30 +15,47 @@ import logout from "../../../assets/sidebar/logout.svg";
 function Sidebar({
   activePage,
   onNavigate,
-  onLogout
+  onLogout,
+  collapsed = false,
+  onToggle
 }) {
-
-  const handleNavigate = (page) => {
-    onNavigate(page);
-  };
-
   return (
-    <aside className={styles.sidebar}>
+    <aside
+      className={`${styles.sidebar} ${
+        collapsed ? styles.collapsed : ""
+      }`}
+    >
+      <div className={styles.sidebarHeader}>
+        <div className={styles.brand}>
+          <img src={logo} alt="Leafy AI logo" />
+          <span>Leafy AI</span>
+        </div>
 
-      <div className={styles.logo}>
-        <img src={logo} alt="Leafy AI logo" />
-
-        <span>Leafy AI</span>
-
+        <button
+          className={styles.toggleButton}
+          type="button"
+          onClick={onToggle}
+          aria-label={
+            collapsed ? "Expand sidebar" : "Collapse sidebar"
+          }
+          title={
+            collapsed ? "Expand sidebar" : "Collapse sidebar"
+          }
+        >
+          {collapsed ? (
+            <ChevronRight aria-hidden="true" />
+          ) : (
+            <ChevronLeft aria-hidden="true" />
+          )}
+        </button>
       </div>
 
       <nav>
         <button
-          className={
-            activePage === "overview" ? styles.active : ""
-          }
+          className={activePage === "overview" ? styles.active : ""}
           type="button"
-          onClick={() => handleNavigate("overview")}
+          onClick={() => onNavigate("overview")}
+          title={collapsed ? "Overview" : undefined}
         >
           <img src={overview} alt="" />
           <span>Overview</span>
@@ -46,29 +64,28 @@ function Sidebar({
         <button
           className={activePage === "farm" ? styles.active : ""}
           type="button"
-          onClick={() => handleNavigate("farm")}
+          onClick={() => onNavigate("farm")}
+          title={collapsed ? "Farm" : undefined}
         >
           <img src={farm} alt="" />
           <span>Farm</span>
         </button>
 
         <button
-          className={
-            activePage === "leafyAI" ? styles.active : ""
-          }
+          className={activePage === "leafyAI" ? styles.active : ""}
           type="button"
-          onClick={() => handleNavigate("leafyAI")}
+          onClick={() => onNavigate("leafyAI")}
+          title={collapsed ? "Leafy AI" : undefined}
         >
           <img src={leafyAI} alt="" />
           <span>Leafy AI</span>
         </button>
 
         <button
-          className={
-            activePage === "safety" ? styles.active : ""
-          }
+          className={activePage === "safety" ? styles.active : ""}
           type="button"
-          onClick={() => handleNavigate("safety")}
+          onClick={() => onNavigate("safety")}
+          title={collapsed ? "Safety" : undefined}
         >
           <img src={safety} alt="" />
           <span>Safety</span>
@@ -77,18 +94,18 @@ function Sidebar({
         <button
           className={activePage === "logs" ? styles.active : ""}
           type="button"
-          onClick={() => handleNavigate("logs")}
+          onClick={() => onNavigate("logs")}
+          title={collapsed ? "Logs" : undefined}
         >
           <img src={logs} alt="" />
           <span>Logs</span>
         </button>
 
         <button
-          className={
-            activePage === "schedule" ? styles.active : ""
-          }
+          className={activePage === "schedule" ? styles.active : ""}
           type="button"
-          onClick={() => handleNavigate("schedule")}
+          onClick={() => onNavigate("schedule")}
+          title={collapsed ? "Schedule" : undefined}
         >
           <img src={schedule} alt="" />
           <span>Schedule</span>
@@ -98,6 +115,7 @@ function Sidebar({
       <button
         className={styles.emergency}
         type="button"
+        title={collapsed ? "Emergency" : undefined}
       >
         <img src={emergency} alt="" />
         <span>Emergency</span>
@@ -105,11 +123,10 @@ function Sidebar({
 
       <div className={styles.bottom}>
         <button
-          className={
-            activePage === "settings" ? styles.active : ""
-          }
+          className={activePage === "settings" ? styles.active : ""}
           type="button"
-          onClick={() => handleNavigate("settings")}
+          onClick={() => onNavigate("settings")}
+          title={collapsed ? "Setting" : undefined}
         >
           <img src={settings} alt="" />
           <span>Setting</span>
@@ -118,6 +135,7 @@ function Sidebar({
         <button
           type="button"
           onClick={onLogout}
+          title={collapsed ? "Log out" : undefined}
         >
           <img src={logout} alt="" />
           <span>Log out</span>

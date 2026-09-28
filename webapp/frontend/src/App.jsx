@@ -3,7 +3,13 @@ import { useCallback, useEffect, useState } from "react";
 import AppShell from "./components/layout/AppShell/AppShell";
 import GoogleLogin from "./components/auth/GoogleLogin";
 import Settings from "./components/settings/Settings";
+
 import Overview from "./features/overview/Overview";
+import Farm from "./features/farm/Farm";
+import LeafyAI from "./features/leafyAI/LeafyAI";
+import Safety from "./features/safety/Safety";
+import Logs from "./features/logs/Logs";
+import Schedule from "./features/schedule/Schedule";
 
 import {
   getCurrentUser,
@@ -11,48 +17,37 @@ import {
   logout
 } from "./services/authApi";
 
+import { getOverviewData } from "./services/overviewApi";
+
 const pages = {
   overview: {
     title: "System Overview",
-    subtitle: "Real-time summary of your farm",
-    placeholder: "Overview content will go here."
+    subtitle: "Real-time summary of your farm"
   },
-
   farm: {
     title: "Farm Management",
-    subtitle: "Manage farm",
-    placeholder: "Farm content will go here."
+    subtitle: "Manage farm"
   },
-
   leafyAI: {
     title: "Leafy AI",
     subtitle:
-      "Ask questions, review recommendations, and see the reasoning behind them",
-    placeholder: "Leafy AI content will go here."
+      "Ask questions, review recommendations, and see the reasoning behind them"
   },
-
   safety: {
     title: "Safety Management",
-    subtitle: "Manage AI, Farm and Tasks Safety",
-    placeholder: "Safety content will go here."
+    subtitle: "Manage AI, Farm and Tasks Safety"
   },
-
   logs: {
     title: "Audit Logs",
-    subtitle: "Track and review system activities",
-    placeholder: "Audit Logs content will go here."
+    subtitle: "Track and review system activities"
   },
-
   schedule: {
     title: "Task Schedule",
-    subtitle: "Manage scheduled tasks",
-    placeholder: "Schedule content will go here."
+    subtitle: "Manage scheduled tasks"
   },
-
   settings: {
     title: "Settings",
-    subtitle: "",
-    placeholder: "Settings content will go here."
+    subtitle: ""
   }
 };
 
@@ -64,9 +59,12 @@ function App() {
   });
 
   const [token, setToken] = useState("");
-
   const [user, setUser] = useState(null);
   const [authChecked, setAuthChecked] = useState(false);
+
+  const [overviewData, setOverviewData] = useState(null);
+  const [overviewLoading, setOverviewLoading] = useState(false);
+  const [overviewError, setOverviewError] = useState("");
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
@@ -104,6 +102,44 @@ function App() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!token || activePage !== "overview") {
+      return;
+    }
+
+    let cancelled = false;
+
+    async function loadOverview() {
+      setOverviewLoading(true);
+      setOverviewError("");
+
+      try {
+        const data = await getOverviewData(token);
+
+        if (!cancelled) {
+          setOverviewData(data);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setOverviewData(null);
+          setOverviewError(
+            error.message || "Unable to load overview data."
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          setOverviewLoading(false);
+        }
+      }
+    }
+
+    loadOverview();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [token, activePage]);
+
   const handleLogin = useCallback((data) => {
     setToken(data.token);
     setUser(data.user);
@@ -113,18 +149,28 @@ function App() {
   const handleLogout = useCallback(async () => {
     try {
       await logout();
-    } catch (error) {
-      console.error("Logout failed:", error.message);
+    } catch {
     }
 
     setToken("");
     setUser(null);
+    setActivePage("overview");
   }, []);
 
-
-
   if (!authChecked) {
-    return <p>Checking sign in...</p>;
+    return (
+      <main
+        style={{
+          minHeight: "100vh",
+          display: "grid",
+          placeItems: "center",
+          background: "var(--color-bg-main)",
+          color: "var(--color-text-muted)"
+        }}
+      >
+        Checking sign in...
+      </main>
+    );
   }
 
   if (!token || !user) {
@@ -142,14 +188,43 @@ function App() {
       subtitle={currentPage.subtitle}
     >
       {activePage === "overview" ? (
-        <Overview />
-      ) : activePage === "settings" ? (
+        <Overview
+          data={overviewData}
+          loading={overviewLoading}
+          error={overviewError}
+          onGoToFarm={() => setActivePage("farm")}
+        />
+      ) : activePage === "farm" ? (
+        <Farm
+          data={null}
+          loading={false}
+          error=""
+        />
+      ) : activePage === "leafyAI" ? (
+        <LeafyAI
+          data={null}
+          loading={false}
+          error=""
+        />
+      ) : activePage === "safety" ? (
+        <Safety
+          data={null}
+          loading={false}
+          error=""
+        />
+      ) : activePage === "logs" ? (
+        <Logs
+          data={null}
+          loading={false}
+          error=""
+        />
+      ) : activePage === "schedule" ? (
+        <Schedule token={token} />
+      ) : (
         <Settings
           theme={theme}
           setTheme={setTheme}
         />
-      ) : (
-        <p>{currentPage.placeholder}</p>
       )}
     </AppShell>
   );

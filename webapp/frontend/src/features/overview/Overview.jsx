@@ -1,112 +1,210 @@
-import farmHealthIcon from "../../assets/overview/farm-health.svg";
-import plantsIcon from "../../assets/overview/plants.svg";
-import alertsIcon from "../../assets/overview/alerts.svg";
-import pendingIcon from "../../assets/overview/pending.svg";
-import autoExecutedIcon from "../../assets/overview/auto-executed.svg";
-import approvedIcon from "../../assets/overview/approved.svg";
+import {
+  CircleCheck,
+  Clock3,
+  Gauge,
+  HeartPulse,
+  TriangleAlert,
+  Zap
+} from "lucide-react";
 
 import StatusCard from "./components/StatusCard";
 import SensorCard from "./components/SensorCard";
+import FarmOverviewPanel from "./components/FarmOverviewPanel";
+import RecommendationsPanel from "./components/RecommendationsPanel";
+import NotificationsPanel from "./components/NotificationsPanel";
+
 import styles from "./Overview.module.css";
 
+function Overview({
+  data = null,
+  loading = false,
+  error = "",
+  onGoToFarm,
+  onViewNotifications
+}) {
+  const summary = data?.summary ?? {};
+  const sensors = data?.sensors ?? {};
 
-function Overview() {
+  const recommendations =
+    Array.isArray(data?.recommendations)
+      ? data.recommendations
+      : [];
+
+  const notifications =
+    Array.isArray(data?.notifications)
+      ? data.notifications
+      : [];
+
+  const hasError = Boolean(error);
+  const sectionErrors = data?.errors ?? {};
+
+  const unavailableNote = loading
+    ? "Loading..."
+    : hasError
+      ? "Unavailable"
+      : "Not available";
+
+  const errorMessage =
+    typeof error === "string" && error.trim()
+      ? error
+      : "Unable to load overview data.";
+
   return (
     <div className={styles.overview}>
+      {hasError && (
+        <div
+          className={styles.errorState}
+          role="alert"
+        >
+          {errorMessage}
+        </div>
+      )}
+
       <section className={styles.statusSection}>
         <StatusCard
           title="Farm Health"
-          value="—"
-          note="Not available yet"
-          icon={farmHealthIcon}
+          value={summary.farmHealth?.value}
+          note={
+            summary.farmHealth?.note ||
+            unavailableNote
+          }
+          icon={HeartPulse}
+          tone="green"
         />
 
         <StatusCard
-          title="Plants"
-          value="—"
-          note="Not available yet"
-          icon={plantsIcon}
+          title="Active Sensors"
+          value={summary.activeSensors?.value}
+          note={
+            summary.activeSensors?.note ||
+            unavailableNote
+          }
+          icon={Gauge}
+          tone="green"
         />
 
         <StatusCard
           title="Alerts"
-          value="—"
-          note="Waiting for live data"
-          icon={alertsIcon}
+          value={summary.alerts?.value}
+          note={
+            summary.alerts?.note ||
+            unavailableNote
+          }
+          icon={TriangleAlert}
+          tone="orange"
         />
 
         <StatusCard
           title="Pending"
-          value="—"
-          note="Approval API not ready"
-          icon={pendingIcon}
+          value={summary.pending?.value}
+          note={
+            summary.pending?.note ||
+            unavailableNote
+          }
+          icon={Clock3}
+          tone="orange"
         />
 
         <StatusCard
           title="Auto Executed"
-          value="—"
-          note="Not available yet"
-          icon={autoExecutedIcon}
+          value={summary.autoExecuted?.value}
+          note={
+            summary.autoExecuted?.note ||
+            unavailableNote
+          }
+          icon={Zap}
+          tone="blue"
         />
 
         <StatusCard
           title="Approved"
-          value="—"
-          note="Not available yet"
-          icon={approvedIcon}
+          value={summary.approved?.value}
+          note={
+            summary.approved?.note ||
+            unavailableNote
+          }
+          icon={CircleCheck}
+          tone="green"
         />
       </section>
 
       <div className={styles.mainRow}>
-        <section className={styles.panel}>
-          <div className={styles.panelHeader}>
-            <h2>Farm Overview</h2>
-          </div>
+        <FarmOverviewPanel
+          data={data?.farmOverview}
+          loading={loading}
+          error={
+            hasError ||
+            Boolean(sectionErrors.farmOverview)
+          }
+          onGoToFarm={onGoToFarm}
+        />
 
-          <div className={styles.emptyState}>
-            <p>Farm overview data is not available yet.</p>
-          </div>
-        </section>
-
-        <section className={styles.panel}>
-          <div className={styles.panelHeader}>
-            <h2>Leafy AI Recommendations</h2>
-            <span>24h</span>
-          </div>
-
-          <div className={styles.emptyState}>
-            <p>
-              Recommendations will appear here after authentication is connected.
-            </p>
-          </div>
-        </section>
+        <RecommendationsPanel
+          recommendations={recommendations}
+          loading={loading}
+          error={hasError}
+        />
       </div>
 
       <section className={styles.sensorSection}>
         <SensorCard
-            title="pH Level"
-            value="—"
-            status="Not available"
+          type="ph"
+          title="pH Level"
+          value={sensors.ph?.value}
+          status={sensors.ph?.status || unavailableNote}
+          tone={sensors.ph?.tone || "neutral"}
+          trend={sensors.ph?.trend}
         />
 
         <SensorCard
-            title="Temperature"
-            value="—"
-            status="Not available"
+          type="temperature"
+          title="Temperature"
+          value={sensors.temperature?.value}
+          status={
+            sensors.temperature?.status ||
+            unavailableNote
+          }
+          tone={
+            sensors.temperature?.tone ||
+            "neutral"
+          }
+          trend={sensors.temperature?.trend}
         />
 
         <SensorCard
-            title="Water Level"
-            value="—"
-            status="Not available"
+          type="water"
+          title="Water Level"
+          value={sensors.waterLevel?.value}
+          status={
+            sensors.waterLevel?.status ||
+            unavailableNote
+          }
+          tone={
+            sensors.waterLevel?.tone ||
+            "neutral"
+          }
+          percentage={sensors.waterLevel?.percentage}
         />
 
         <SensorCard
-            title="EC Level"
-            value="—"
-            status="Not available"
+          type="ec"
+          title="EC Level"
+          value={sensors.ec?.value}
+          status={sensors.ec?.status || unavailableNote}
+          tone={sensors.ec?.tone || "neutral"}
+          trend={sensors.ec?.trend}
         />
-        </section>
+      </section>
+
+      <NotificationsPanel
+        notifications={notifications}
+        loading={loading}
+        error={
+          hasError ||
+          Boolean(sectionErrors.notifications)
+        }
+        onViewAll={onViewNotifications}
+      />
     </div>
   );
 }

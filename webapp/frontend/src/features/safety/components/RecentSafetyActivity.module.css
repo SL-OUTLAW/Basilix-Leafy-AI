@@ -1,0 +1,186 @@
+.panel {
+  height: 260px;
+  min-width: 0;
+
+  padding: 16px;
+
+  display: flex;
+  flex-direction: column;
+
+  border: 1px solid #3a4344;
+  border-radius: 8px;
+
+  background: #1E2527;
+}
+
+.panel h2 {
+  margin: 0;
+
+  color: #FFFFF4;
+
+  font-size: 20px;
+}
+
+.list {
+  flex: 1;
+  min-height: 0;
+
+  margin-top: 14px;
+  padding-right: 7px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  scrollbar-width: thin;
+  scrollbar-color: #667170 transparent;
+}
+
+.row {
+  min-height: 74px;
+
+  padding: 10px 12px;
+
+  flex: 0 0 auto;
+
+  display: grid;
+  grid-template-columns:
+    76px
+    56px
+    minmax(0, 1fr)
+    110px;
+
+  align-items: center;
+  column-gap: 0;
+
+  border: 1px solid #3a4344;
+  border-radius: 14px;
+
+  background: #293133;
+}
+
+.row time,
+.relative {
+  color: #FFFFF4;
+
+  font-size: 12px;
+}
+
+.copy {
+  min-width: 0;
+  padding-left: 27px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.copy strong {
+  color: #FFFFF4;
+
+  font-size: 14px;
+}
+
+.copy span {
+  overflow: hidden;
+
+  color: #A5B0AC;
+
+  font-size: 12px;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.relative {
+  text-align: right;
+}
+
+.state {
+  flex: 1;
+
+  display: grid;
+  place-items: center;
+
+  color: #A5B0AC;
+
+  text-align: center;
+}
+
+[data-theme="light"] .panel {
+  border-color: #d8d0c6;
+
+  background: #F4F2EE;
+}
+
+[data-theme="light"] .row {
+  border-color: #D8D0C6;
+
+  background: #ffffff;
+}
+
+[data-theme="light"] .panel h2,
+[data-theme="light"] .row time,
+[data-theme="light"] .relative,
+[data-theme="light"] .copy strong {
+  color: #202725;
+}
+
+[data-theme="light"] .copy span,
+[data-theme="light"] .state {
+  color: #7A7A72;
+}
+
+@media (max-width: 600px) {
+  .panel {
+    height: 310px;
+
+    padding: 14px;
+  }
+
+  .panel h2 {
+    font-size: 18px;
+  }
+
+  .row {
+    min-height: 88px;
+
+    grid-template-columns:
+      62px
+      56px
+      minmax(0, 1fr);
+
+    padding: 10px 12px;
+
+    column-gap: 0;
+    row-gap: 6px;
+
+    border-radius: 9px;
+  }
+
+  .row time {
+    white-space: nowrap;
+  }
+
+  .copy {
+    padding-left: 16px;
+  }
+
+  .relative {
+    grid-column: 3;
+
+    padding-left: 16px;
+
+    text-align: left;
+
+    font-size: 11px;
+  }
+
+  .copy span {
+    white-space: normal;
+  }
+}
+

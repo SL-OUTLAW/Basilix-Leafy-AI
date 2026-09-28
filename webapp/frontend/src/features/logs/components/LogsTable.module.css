@@ -1,0 +1,226 @@
+.tablePanel {
+  min-width: 0;
+  padding: 8px;
+
+  display: flex;
+  flex-direction: column;
+
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-medium);
+}
+
+.tableWrapper {
+  width: 100%;
+  min-height: 520px;
+  flex: 1;
+  overflow-x: auto;
+}
+
+.tableWrapper table {
+  width: 100%;
+  min-width: 850px;
+
+  border-collapse: separate;
+  border-spacing: 0 6px;
+}
+
+.tableWrapper thead th {
+  padding: 13px 16px;
+
+  background: var(--color-bg-card-inner);
+  color: var(--color-text-primary);
+
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+}
+
+.tableWrapper thead th:first-child {
+  border-radius: 8px 0 0 8px;
+}
+
+.tableWrapper thead th:last-child {
+  border-radius: 0 8px 8px 0;
+}
+
+.logRow,
+.selectedRow {
+  cursor: pointer;
+}
+
+.logRow td,
+.selectedRow td {
+  padding: 15px 16px;
+
+  background: var(--color-bg-card-inner);
+  color: var(--color-text-primary);
+
+  font-size: 13px;
+
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.logRow:hover td {
+  background: var(--color-bg-section);
+}
+
+.logRow td:first-child,
+.selectedRow td:first-child {
+  border-radius: 8px 0 0 8px;
+}
+
+.logRow td:last-child,
+.selectedRow td:last-child {
+  border-radius: 0 8px 8px 0;
+}
+
+.selectedRow td {
+  background: var(--color-green-dark);
+
+  border-top: 1px solid var(--color-green);
+  border-bottom: 1px solid var(--color-green);
+}
+
+.selectedRow td:first-child {
+  border-left: 1px solid var(--color-green);
+}
+
+.selectedRow td:last-child {
+  border-right: 1px solid var(--color-green);
+}
+
+.typeBadge {
+  font-weight: 600;
+}
+
+.typeApproval {
+  color: var(--color-green);
+}
+
+.typeAlert {
+  color: var(--color-orange);
+}
+
+.typeTask {
+  color: var(--color-blue);
+}
+
+.emptyState {
+  min-height: 400px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  text-align: center;
+}
+
+.emptyState h3 {
+  margin: 0 0 7px;
+
+  color: var(--color-text-primary);
+  font-size: 15px;
+}
+
+.emptyState p {
+  max-width: 360px;
+  margin: 0 auto;
+
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.tableFooter {
+  min-height: 52px;
+  padding: 8px 12px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+
+  border-top: 1px solid var(--color-border);
+
+  color: var(--color-text-secondary);
+  font-size: 13px;
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pagination button {
+  width: 38px;
+  height: 38px;
+
+  border: 1px solid var(--color-border);
+  border-radius: 7px;
+
+  background: var(--color-bg-card-inner);
+  color: var(--color-text-primary);
+
+  font-size: 20px;
+  line-height: 1;
+}
+
+.pagination button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.pagination .currentPage {
+  border-color: var(--color-green);
+  color: var(--color-green);
+}
+
+[data-theme="light"] .tableWrapper thead th,
+[data-theme="light"] .logRow td,
+[data-theme="light"] .pagination button {
+  background: #f4f2ee;
+}
+
+[data-theme="light"] .selectedRow td {
+  background: #e8f7ef;
+}
+
+@media (max-width: 600px) {
+  .tablePanel {
+    min-height: 420px;
+  }
+
+  .tableWrapper {
+    min-height: 360px;
+  }
+
+  .emptyState {
+    min-height: 300px;
+  }
+
+  .tableFooter {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+.pageEllipsis {
+  min-width: 30px;
+  height: 38px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  color: var(--color-text-secondary);
+  font-size: 16px;
+}
+
+@media (max-width: 1100px) {
+  .tableWrapper {
+    min-height: 460px;
+  }
+}
