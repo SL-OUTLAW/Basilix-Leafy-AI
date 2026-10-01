@@ -2,7 +2,11 @@ import asyncio
 from typing import Any
 
 
-from engine.managers.db_manager import run_query
+from engine.logger.logger import audit_log
+from engine.managers.db_manager import (
+    get_connection,
+    run_query,
+)
 from engine.managers.notifications_manager import (
     create_notification,
     resolve_sensor_notification,
@@ -355,8 +359,24 @@ async def start(
 
             await check_sensors(hal)
 
-        except Exception:
-            pass
+        except Exception as error:
+            try:
+                async with get_connection() as conn:
+                    await audit_log(
+                        conn=conn,
+                        action_type="SECURITY_MONITOR_FAILED",
+                        entity_type="security",
+                        description="The security sensor monitoring loop failed.",
+                        metadata={
+                            "error_type": type(error).__name__,
+                            "error": str(error),
+                        },
+                    )
+            except Exception as audit_error:
+                print(
+                    f"Security monitor error: {error}. "
+                    f"Audit logging also failed: {audit_error}."
+                )
 
         polling_rate = _get_security_settings().get(
             "sensor_check_interval_seconds",

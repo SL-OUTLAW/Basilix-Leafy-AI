@@ -1,10 +1,12 @@
 import asyncio
+import json
 
-from typing import Any, Awaitable, Callable
+from typing import Any
 
 from engine.hal.drivers import (
     SixOutletPowerSystem,
 )
+from engine.managers.db_manager import run_query
 from engine.managers.settings_manager import settings
 
 
@@ -12,13 +14,13 @@ class FarmControls:
 
     def __init__(
         self,
-        sensors,
+        sensors=None,
     ):
+        self.sensors = sensors
+
         self.power = SixOutletPowerSystem(
             use_discovery=False,
         )
-
-        self.sensors = sensors
 
         self.started = False
 
@@ -26,6 +28,8 @@ class FarmControls:
             int,
             dict[str, Any],
         ] = {}
+
+        self.dosing_lock = asyncio.Lock()
 
     async def start(
         self,
@@ -48,13 +52,10 @@ class FarmControls:
             return
 
         try:
-
             await self.power.disconnect()
 
         finally:
-
             self.started = False
-
             self.latest_state = {}
 
     def _require_started(
@@ -95,7 +96,6 @@ class FarmControls:
         for name, outlet in mapping.items():
 
             try:
-
                 outlet_number = int(outlet)
 
             except (
@@ -121,7 +121,6 @@ class FarmControls:
         outlet = mapping.get(equipment)
 
         if outlet is None:
-
             raise RuntimeError(f"No outlet mapping configured for '{equipment}'.")
 
         return outlet
@@ -132,7 +131,6 @@ class FarmControls:
     ) -> None:
 
         if outlet < 1 or outlet > 6:
-
             raise ValueError("Farm control outlet must be between 1 and 6.")
 
     async def refresh_state(
@@ -230,7 +228,6 @@ class FarmControls:
         self._validate_outlet(outlet)
 
         if off_seconds <= 0:
-
             raise ValueError("off_seconds must be greater than zero.")
 
         await self.power.cycle_power(
@@ -273,7 +270,6 @@ class FarmControls:
             1,
             2,
         ):
-
             raise ValueError("Lighting level must be 1 or 2.")
 
         equipment = "lighting_level_1" if level_no == 1 else "lighting_level_2"
@@ -367,95 +363,190 @@ class FarmControls:
 
         return configuration
 
-    @staticmethod
     def _validate_dosing_settings(
-        configuration: dict[str, Any],
+        self,
         setting_key: str,
-    ) -> tuple[
-        float,
-        int,
-        int,
-        int,
-        int,
-        str,
-    ]:
+    ) -> dict[str, Any]:
 
-        enabled = configuration.get(
+        configuration = self._get_dosing_settings(setting_key)
+
+        if not configuration.get(
             "enabled",
             False,
-        )
-
-        if not enabled:
-
-            raise RuntimeError(f"{setting_key} dosing is disabled.")
+        ):
+            raise RuntimeError(f"{setting_key} is disabled.")
 
         try:
-
-            tolerance = float(configuration.get("target_tolerance"))
-
-            dose_seconds = int(configuration.get("dose_seconds"))
-
-            settle_seconds = int(configuration.get("settle_seconds"))
-
-            max_cycles = int(configuration.get("max_cycles"))
-
-            max_total_dose_seconds = int(configuration.get("max_total_dose_seconds"))
+            target_tolerance = float(configuration["target_tolerance"])
+            dose_seconds = float(configuration["dose_seconds"])
+            settle_seconds = float(configuration["settle_seconds"])
+            max_cycles = int(configuration["max_cycles"])
+            max_total_dose_seconds = float(configuration["max_total_dose_seconds"])
+            max_sensor_age_seconds = float(
+                configuration.get(
+                    "max_sensor_age_seconds",
+                    30,
+                )
+            )
 
         except (
+            KeyError,
             TypeError,
             ValueError,
         ) as error:
-
             raise RuntimeError(f"Invalid {setting_key} dosing settings.") from error
 
         direction = str(
             configuration.get(
                 "direction",
-                "UP",
+                "",
             )
         ).upper()
-
-        if tolerance <= 0:
-
-            raise RuntimeError(
-                f"{setting_key} target_tolerance must be greater than zero."
-            )
-
-        if dose_seconds <= 0:
-
-            raise RuntimeError(f"{setting_key} dose_seconds must be greater than zero.")
-
-        if settle_seconds <= 0:
-
-            raise RuntimeError(
-                f"{setting_key} settle_seconds must be greater than zero."
-            )
-
-        if max_cycles <= 0:
-
-            raise RuntimeError(f"{setting_key} max_cycles must be greater than zero.")
-
-        if max_total_dose_seconds <= 0:
-
-            raise RuntimeError(
-                f"{setting_key} max_total_dose_seconds must be greater than zero."
-            )
 
         if direction not in (
             "UP",
             "DOWN",
         ):
-
             raise RuntimeError(f"{setting_key} direction must be UP or DOWN.")
 
-        return (
-            tolerance,
-            dose_seconds,
-            settle_seconds,
-            max_cycles,
-            max_total_dose_seconds,
-            direction,
+        if target_tolerance < 0:
+            raise RuntimeError("target_tolerance cannot be negative.")
+
+        if dose_seconds <= 0:
+            raise RuntimeError("dose_seconds must be greater than zero.")
+
+        if settle_seconds <= 0:
+            raise RuntimeError("settle_seconds must be greater than zero.")
+
+        if max_cycles <= 0:
+            raise RuntimeError("max_cycles must be greater than zero.")
+
+        if max_total_dose_seconds <= 0:
+            raise RuntimeError("max_total_dose_seconds must be greater than zero.")
+
+        if max_sensor_age_seconds <= 0:
+            raise RuntimeError("max_sensor_age_seconds must be greater than zero.")
+
+        return {
+            "target_tolerance": target_tolerance,
+            "dose_seconds": dose_seconds,
+            "settle_seconds": settle_seconds,
+            "max_cycles": max_cycles,
+            "max_total_dose_seconds": max_total_dose_seconds,
+            "max_sensor_age_seconds": max_sensor_age_seconds,
+            "direction": direction,
+        }
+
+    def _get_target_bounds(
+        self,
+        sensor_type: str,
+    ) -> tuple[float, float]:
+
+        thresholds = settings.get(
+            "sensor_security_thresholds",
+            {},
         )
+
+        if not isinstance(
+            thresholds,
+            dict,
+        ):
+            raise RuntimeError("Invalid sensor_security_thresholds settings.")
+
+        sensor_thresholds = thresholds.get(
+            sensor_type,
+            {},
+        )
+
+        if not isinstance(
+            sensor_thresholds,
+            dict,
+        ):
+            raise RuntimeError(f"Invalid safety thresholds for {sensor_type}.")
+
+        try:
+            lower_limit = float(sensor_thresholds["lower_limit"])
+            upper_limit = float(sensor_thresholds["upper_limit"])
+
+        except (
+            KeyError,
+            TypeError,
+            ValueError,
+        ) as error:
+            raise RuntimeError(
+                f"Missing or invalid safety target limits for {sensor_type}."
+            ) from error
+
+        if lower_limit >= upper_limit:
+            raise RuntimeError(f"Invalid safety target limits for {sensor_type}.")
+
+        return lower_limit, upper_limit
+
+    def _validate_target(
+        self,
+        sensor_type: str,
+        target: float,
+    ) -> None:
+
+        lower_limit, upper_limit = self._get_target_bounds(sensor_type)
+
+        if target < lower_limit or target > upper_limit:
+            raise ValueError(
+                f"{sensor_type} target must be between {lower_limit} and {upper_limit}."
+            )
+
+    async def _get_latest_sensor_value(
+        self,
+        sensor_type: str,
+        max_sensor_age_seconds: float,
+    ) -> float:
+
+        rows = await run_query(
+            """
+            SELECT
+                sr.value,
+                sr.quality_status,
+                EXTRACT(
+                    EPOCH FROM (
+                        NOW() - sr.recorded_at
+                    )
+                )
+            FROM sensor_readings sr
+            JOIN sensors s
+                ON s.sensor_id = sr.sensor_id
+            WHERE s.sensor_type = %s
+              AND s.level_no = 0
+              AND s.status = 'ACTIVE'
+            ORDER BY sr.recorded_at DESC
+            LIMIT 1;
+            """,
+            (sensor_type,),
+        )
+
+        if not rows:
+            raise RuntimeError(f"No {sensor_type} sensor reading is available.")
+
+        row = rows[0]
+
+        value = row[0]
+        quality_status = row[1]
+        age_seconds = row[2]
+
+        if quality_status != "VALID":
+            raise RuntimeError(f"Latest {sensor_type} sensor reading is not valid.")
+
+        if value is None:
+            raise RuntimeError(f"Latest {sensor_type} sensor reading has no value.")
+
+        if age_seconds is None:
+            raise RuntimeError(f"Could not determine {sensor_type} sensor reading age.")
+
+        if float(age_seconds) > max_sensor_age_seconds:
+            raise RuntimeError(
+                f"Latest {sensor_type} sensor reading is too old for dosing."
+            )
+
+        return float(value)
 
     @staticmethod
     def _is_target_reached(
@@ -466,7 +557,6 @@ class FarmControls:
     ) -> bool:
 
         if direction == "UP":
-
             return target - tolerance <= value <= target
 
         return target <= value <= target + tolerance
@@ -479,111 +569,126 @@ class FarmControls:
     ) -> bool:
 
         if direction == "UP":
-
             return value > target
 
         return value < target
 
-    async def _get_sensor_value(
+    async def _create_critical_notification(
         self,
-        sensor_type: str,
-    ) -> float:
+        title: str,
+        message: str,
+        metadata: dict[str, Any],
+    ) -> None:
 
-        reading = self.sensors.latest.get(sensor_type)
-
-        if not isinstance(
-            reading,
-            dict,
-        ):
-
-            raise RuntimeError(f"Current {sensor_type} reading is unavailable.")
-
-        if not reading.get(
-            "valid",
-            False,
-        ):
-
-            raise RuntimeError(f"Current {sensor_type} reading is invalid.")
-
-        value = reading.get("value")
-
-        if value is None:
-
-            raise RuntimeError(f"Current {sensor_type} reading is unavailable.")
-
-        try:
-
-            return float(value)
-
-        except (
-            TypeError,
-            ValueError,
-        ) as error:
-
-            raise RuntimeError(f"Current {sensor_type} reading is invalid.") from error
+        await run_query(
+            """
+            INSERT INTO notifications (
+                notification_type,
+                severity,
+                title,
+                message,
+                entity_type,
+                metadata,
+                status
+            )
+            VALUES (
+                'FARM_CONTROL',
+                'CRITICAL',
+                %s,
+                %s,
+                'farm_control',
+                %s::jsonb,
+                'OPEN'
+            );
+            """,
+            (
+                title,
+                message,
+                json.dumps(metadata),
+            ),
+        )
 
     async def _dose_pulse(
         self,
-        enabled_handler: Callable[
-            [bool],
-            Awaitable[dict[str, Any]],
-        ],
-        dose_seconds: int,
-    ) -> dict[str, Any]:
+        equipment: str,
+        dose_seconds: float,
+    ) -> None:
 
-        await enabled_handler(True)
+        await self.set_equipment(
+            equipment=equipment,
+            enabled=True,
+        )
 
         try:
-
             await asyncio.sleep(dose_seconds)
 
         finally:
+            try:
+                await self.set_equipment(
+                    equipment=equipment,
+                    enabled=False,
+                )
 
-            await enabled_handler(False)
+            except Exception as error:
+                try:
+                    await self._create_critical_notification(
+                        title="Dosing pump state unconfirmed",
+                        message=(
+                            f"The {equipment} dosing pump could not be confirmed OFF "
+                            "after a dosing pulse."
+                        ),
+                        metadata={
+                            "equipment": equipment,
+                            "dose_seconds": dose_seconds,
+                            "error_type": type(error).__name__,
+                            "error": str(error),
+                        },
+                    )
+                except Exception as notification_error:
+                    print(
+                        f"Dosing pump OFF failure notification could not be created: "
+                        f"{notification_error}. Original error: {error}."
+                    )
 
-        return {
-            "dose_seconds": dose_seconds,
-        }
+                raise RuntimeError(
+                    f"Failed to confirm {equipment} dosing pump OFF. "
+                    "Physical pump state is uncertain."
+                ) from error
 
     async def _dose_to_target(
         self,
-        target: float,
         sensor_type: str,
+        equipment: str,
         setting_key: str,
-        enabled_handler: Callable[
-            [bool],
-            Awaitable[dict[str, Any]],
-        ],
+        target: float,
         action: str,
     ) -> dict[str, Any]:
 
         self._require_started()
 
-        configuration = self._get_dosing_settings(setting_key)
-
-        (
-            tolerance,
-            dose_seconds,
-            settle_seconds,
-            max_cycles,
-            max_total_dose_seconds,
-            direction,
-        ) = self._validate_dosing_settings(
-            configuration,
-            setting_key,
+        self._validate_target(
+            sensor_type=sensor_type,
+            target=target,
         )
 
-        if target <= 0:
+        configuration = self._validate_dosing_settings(setting_key)
 
-            raise ValueError(f"{sensor_type} target must be greater than zero.")
+        tolerance = configuration["target_tolerance"]
+        dose_seconds = configuration["dose_seconds"]
+        settle_seconds = configuration["settle_seconds"]
+        max_cycles = configuration["max_cycles"]
+        max_total_dose_seconds = configuration["max_total_dose_seconds"]
+        max_sensor_age_seconds = configuration["max_sensor_age_seconds"]
+        direction = configuration["direction"]
 
-        total_dose_seconds = 0
+        async with self.dosing_lock:
 
-        cycles = 0
+            current_value = await self._get_latest_sensor_value(
+                sensor_type=sensor_type,
+                max_sensor_age_seconds=max_sensor_age_seconds,
+            )
 
-        while cycles < max_cycles:
-
-            current_value = await self._get_sensor_value(sensor_type)
+            initial_value = current_value
 
             if self._is_target_reached(
                 value=current_value,
@@ -591,16 +696,15 @@ class FarmControls:
                 tolerance=tolerance,
                 direction=direction,
             ):
-
                 return {
                     "action": action,
-                    "status": "target_reached",
-                    "sensor_type": sensor_type,
-                    "target": target,
-                    "tolerance": tolerance,
-                    "current_value": current_value,
-                    "cycles": cycles,
-                    "total_dose_seconds": total_dose_seconds,
+                    "target_value": target,
+                    "initial_value": initial_value,
+                    "final_value": current_value,
+                    "direction": direction,
+                    "cycles": 0,
+                    "total_dose_seconds": 0.0,
+                    "target_reached": True,
                 }
 
             if self._has_overshot(
@@ -608,49 +712,65 @@ class FarmControls:
                 target=target,
                 direction=direction,
             ):
-
                 raise RuntimeError(
-                    f"{sensor_type} is already beyond the requested target."
+                    f"{sensor_type} is already beyond the target for configured "
+                    f"dosing direction {direction}."
                 )
 
-            if total_dose_seconds + dose_seconds > max_total_dose_seconds:
+            cycles = 0
+            total_dose_seconds = 0.0
 
-                raise RuntimeError(f"Maximum total {sensor_type} dosing limit reached.")
+            while cycles < max_cycles:
 
-            cycles += 1
+                if total_dose_seconds + dose_seconds > max_total_dose_seconds:
+                    break
 
-            await self._dose_pulse(
-                enabled_handler=enabled_handler,
-                dose_seconds=dose_seconds,
+                await self._dose_pulse(
+                    equipment=equipment,
+                    dose_seconds=dose_seconds,
+                )
+
+                cycles += 1
+                total_dose_seconds += dose_seconds
+
+                await asyncio.sleep(settle_seconds)
+
+                current_value = await self._get_latest_sensor_value(
+                    sensor_type=sensor_type,
+                    max_sensor_age_seconds=max_sensor_age_seconds,
+                )
+
+                if self._is_target_reached(
+                    value=current_value,
+                    target=target,
+                    tolerance=tolerance,
+                    direction=direction,
+                ):
+                    return {
+                        "action": action,
+                        "target_value": target,
+                        "initial_value": initial_value,
+                        "final_value": current_value,
+                        "direction": direction,
+                        "cycles": cycles,
+                        "total_dose_seconds": total_dose_seconds,
+                        "target_reached": True,
+                    }
+
+                if self._has_overshot(
+                    value=current_value,
+                    target=target,
+                    direction=direction,
+                ):
+                    raise RuntimeError(
+                        f"{sensor_type} passed the target during dosing."
+                    )
+
+            raise RuntimeError(
+                f"{sensor_type} target was not reached within dosing safety limits. "
+                f"Final value: {current_value}. Cycles: {cycles}. "
+                f"Total dose seconds: {total_dose_seconds}."
             )
-
-            total_dose_seconds += dose_seconds
-
-            await asyncio.sleep(settle_seconds)
-
-        current_value = await self._get_sensor_value(sensor_type)
-
-        if self._is_target_reached(
-            value=current_value,
-            target=target,
-            tolerance=tolerance,
-            direction=direction,
-        ):
-
-            return {
-                "action": action,
-                "status": "target_reached",
-                "sensor_type": sensor_type,
-                "target": target,
-                "tolerance": tolerance,
-                "current_value": current_value,
-                "cycles": cycles,
-                "total_dose_seconds": total_dose_seconds,
-            }
-
-        raise RuntimeError(
-            f"{sensor_type} target was not reached within the configured dosing limits."
-        )
 
     async def dose_ph_to_target(
         self,
@@ -658,10 +778,10 @@ class FarmControls:
     ) -> dict[str, Any]:
 
         return await self._dose_to_target(
-            target=target,
             sensor_type="ph",
+            equipment="dose_ph",
             setting_key="dosing_ph",
-            enabled_handler=self.dose_ph,
+            target=target,
             action="DOSE_PH",
         )
 
@@ -671,10 +791,10 @@ class FarmControls:
     ) -> dict[str, Any]:
 
         return await self._dose_to_target(
-            target=target,
             sensor_type="ec",
+            equipment="dose_ec",
             setting_key="dosing_ec",
-            enabled_handler=self.dose_ec,
+            target=target,
             action="DOSE_EC",
         )
 

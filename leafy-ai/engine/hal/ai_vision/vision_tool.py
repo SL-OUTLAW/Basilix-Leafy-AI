@@ -204,8 +204,8 @@ class VisionAnalysis:
                     created_at=created_at,
                 )
 
-            except Exception:
-                pass
+            except Exception as audit_error:
+                print(f"Vision success audit failed: {audit_error}.")
 
             return result
 
@@ -218,8 +218,11 @@ class VisionAnalysis:
                     error=error,
                 )
 
-            except Exception:
-                pass
+            except Exception as audit_error:
+                print(
+                    f"Vision failure audit failed: {audit_error}. "
+                    f"Original error: {error}."
+                )
 
             return {
                 "status": "error",
@@ -402,8 +405,6 @@ class VisionAnalysis:
 
         while self.loop:
 
-            print("hererer")
-
             try:
 
                 await self.analyse_latest_images()
@@ -427,8 +428,11 @@ class VisionAnalysis:
                             },
                         )
 
-                except Exception:
-                    pass
+                except Exception as audit_error:
+                    print(
+                        f"Vision loop error: {error}. "
+                        f"Audit logging also failed: {audit_error}."
+                    )
 
             polling_rate = settings.get(
                 "vision",
