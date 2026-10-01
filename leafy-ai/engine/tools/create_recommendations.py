@@ -132,6 +132,41 @@ def _validate_interval(
         raise ValueError("interval_seconds must be a positive integer")
 
 
+def _validate_dosing_schedule(
+    task_action: str,
+    action_data: dict[str, Any],
+) -> None:
+
+    if task_action not in {
+        "DOSE_PH",
+        "DOSE_EC",
+    }:
+        return
+
+    target_value = action_data.get("target_value")
+
+    if target_value is None:
+        raise ValueError(f"{task_action} schedule requires target_value")
+
+    if isinstance(
+        target_value,
+        bool,
+    ):
+        raise ValueError("target_value must be numeric")
+
+    try:
+        float(target_value)
+
+    except (
+        TypeError,
+        ValueError,
+    ) as error:
+        raise ValueError("target_value must be numeric") from error
+
+    if action_data.get("duration_seconds") is not None:
+        raise ValueError(f"{task_action} schedule does not use duration_seconds")
+
+
 def _validate_create_schedule(
     action_data: dict[str, Any],
 ) -> None:
@@ -191,6 +226,11 @@ def _validate_create_schedule(
     _validate_interval(action_data)
 
     _validate_duration(
+        task_action,
+        action_data,
+    )
+
+    _validate_dosing_schedule(
         task_action,
         action_data,
     )
@@ -256,7 +296,7 @@ def _validate_update_schedule(
 
         duration_seconds = action_data.get("duration_seconds")
 
-        if (
+        if duration_seconds is not None and (
             not isinstance(
                 duration_seconds,
                 int,
@@ -268,6 +308,37 @@ def _validate_update_schedule(
             or duration_seconds <= 0
         ):
             raise ValueError("duration_seconds must be a positive integer")
+
+    if "task_action" in action_data:
+
+        task_action = action_data.get("task_action")
+
+        if task_action in {
+            "DOSE_PH",
+            "DOSE_EC",
+        }:
+            if "target_value" in action_data:
+                target_value = action_data.get("target_value")
+
+                if target_value is None or isinstance(
+                    target_value,
+                    bool,
+                ):
+                    raise ValueError("target_value must be numeric")
+
+                try:
+                    float(target_value)
+
+                except (
+                    TypeError,
+                    ValueError,
+                ) as error:
+                    raise ValueError("target_value must be numeric") from error
+
+            if action_data.get("duration_seconds") is not None:
+                raise ValueError(
+                    f"{task_action} schedule does not use duration_seconds"
+                )
 
 
 def _validate_schedule_state_action(

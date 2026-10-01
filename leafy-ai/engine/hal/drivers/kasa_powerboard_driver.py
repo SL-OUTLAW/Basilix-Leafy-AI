@@ -266,7 +266,8 @@ class KasaPowerBoardDriver:
         for ip, dev in devices.items():
             try:
                 await dev.update()
-            except Exception:
+            except Exception as error:
+                print(f"Powerboard discovery could not update device {ip}: {error}")
                 continue
 
             device_alias = str(getattr(dev, "alias", "")).strip()

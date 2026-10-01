@@ -202,12 +202,52 @@ class Cameras:
             camera,
         )
 
+        try:
+            rows = await run_query(
+                """
+                INSERT INTO plant_images (
+                    camera_id,
+                    image_path,
+                    thumbnail_path,
+                    captured_at
+                )
+                VALUES (
+                    %s,
+                    %s,
+                    NULL,
+                    NOW()
+                )
+                RETURNING
+                    image_id,
+                    captured_at;
+                """,
+                (
+                    camera.camera_id,
+                    str(output_path),
+                ),
+            )
+
+            if not rows:
+                raise RuntimeError("Failed to create plant image record.")
+
+        except Exception:
+            try:
+                output_path.unlink(missing_ok=True)
+            except OSError as cleanup_error:
+                print(
+                    f"Could not remove unregistered camera image {output_path}: "
+                    f"{cleanup_error}"
+                )
+
+            raise
+
         self.latest_images[camera.camera_id] = {
+            "image_id": rows[0][0],
             "camera_id": camera.camera_id,
             "camera_name": camera.name,
             "level_no": camera.level,
             "image_path": str(output_path),
-            "captured_at": (datetime.now().astimezone().isoformat()),
+            "captured_at": rows[0][1].isoformat(),
         }
 
         return output_path
@@ -332,13 +372,11 @@ class Cameras:
 
         self.loop = True
 
-
         while self.loop:
 
             try:
 
                 await self.load_cameras()
-
 
                 await self.capture_all()
 
@@ -347,7 +385,6 @@ class Cameras:
                 raise
 
             except Exception as error:
-
 
                 try:
 
@@ -366,8 +403,11 @@ class Cameras:
                             },
                         )
 
-                except Exception:
-                    pass
+                except Exception as audit_error:
+                    print(
+                        f"Camera loop error: {error}. "
+                        f"Audit logging also failed: {audit_error}."
+                    )
 
             polling_rate = settings.get(
                 "cameras",
@@ -408,7 +448,6 @@ async def test():
 
     try:
         await cameras.load_cameras()
-
 
         for camera in cameras.cameras:
 

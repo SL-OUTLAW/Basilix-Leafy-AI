@@ -414,4 +414,41 @@ TOOLS = [
             },
         },
     },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_harvest_data",
+            "description": (
+                "Retrieve historical Sweet Basil grow cycles, user-recorded "
+                "harvest results, and the farm schedule configurations and "
+                "schedule changes used during those grow cycles. Use this when "
+                "comparing previous grow-cycle performance, evaluating historical "
+                "schedule patterns, or making evidence-based recommendations for "
+                "future grow cycles. Do not assume that a schedule difference "
+                "caused a harvest difference when multiple conditions changed."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "limit": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 50,
+                        "description": (
+                            "Maximum number of recent grow cycles to retrieve. "
+                            "Defaults to 10."
+                        ),
+                    },
+                    "include_active": {
+                        "type": "boolean",
+                        "description": (
+                            "Whether the current active grow cycle should be "
+                            "included. Defaults to true."
+                        ),
+                    },
+                },
+                "additionalProperties": False,
+            },
+        },
+    },
 ]

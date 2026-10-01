@@ -349,6 +349,7 @@ CREATE TABLE farm_schedule (
     unit VARCHAR(50),
     last_run_at TIMESTAMPTZ,
     next_run_at TIMESTAMPTZ,
+    active_until_at TIMESTAMPTZ,
     enabled BOOLEAN NOT NULL DEFAULT TRUE,
     status VARCHAR(30) NOT NULL DEFAULT 'ACTIVE',
     created_by BIGINT,
@@ -407,6 +408,13 @@ CREATE INDEX idx_farm_schedule_next_run
     )
     WHERE enabled = TRUE;
 
+CREATE INDEX idx_farm_schedule_active_until
+    ON farm_schedule (
+        active_until_at
+    )
+    WHERE active_until_at IS NOT NULL;
+
+
 CREATE INDEX idx_farm_schedule_status
     ON farm_schedule (
         status
@@ -415,6 +423,177 @@ CREATE INDEX idx_farm_schedule_status
 CREATE INDEX idx_farm_schedule_enabled
     ON farm_schedule (
         enabled
+    );
+
+
+CREATE TABLE grow_cycles (
+    grow_cycle_id BIGSERIAL PRIMARY KEY,
+    cycle_name VARCHAR(150) NOT NULL,
+    started_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    completed_at TIMESTAMPTZ,
+    status VARCHAR(30) NOT NULL DEFAULT 'ACTIVE',
+    notes TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+    CONSTRAINT chk_grow_cycle_status
+        CHECK (
+            status IN (
+                'ACTIVE',
+                'COMPLETED',
+                'CANCELLED'
+            )
+        )
+);
+
+
+CREATE UNIQUE INDEX uq_active_grow_cycle
+    ON grow_cycles (
+        status
+    )
+    WHERE status = 'ACTIVE';
+
+CREATE INDEX idx_grow_cycles_started_at
+    ON grow_cycles (
+        started_at DESC
+    );
+
+CREATE INDEX idx_grow_cycles_completed_at
+    ON grow_cycles (
+        completed_at DESC
+    );
+
+
+CREATE TABLE grow_cycle_schedule_history (
+    grow_cycle_schedule_id BIGSERIAL PRIMARY KEY,
+    grow_cycle_id BIGINT NOT NULL,
+    schedule_id BIGINT,
+    task_name VARCHAR(100),
+    description TEXT,
+    task_action VARCHAR(100) NOT NULL,
+    level_no INTEGER,
+    start_time TIME,
+    interval_seconds INTEGER,
+    duration_seconds INTEGER,
+    target_value NUMERIC,
+    unit VARCHAR(50),
+    enabled BOOLEAN NOT NULL,
+    status VARCHAR(30),
+    valid_from TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    valid_until TIMESTAMPTZ,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+    CONSTRAINT chk_grow_cycle_schedule_level_no
+        CHECK (
+            level_no IS NULL
+            OR level_no IN (
+                0,
+                1,
+                2
+            )
+        ),
+
+    CONSTRAINT chk_grow_cycle_schedule_interval
+        CHECK (
+            interval_seconds IS NULL
+            OR interval_seconds > 0
+        ),
+
+    CONSTRAINT chk_grow_cycle_schedule_duration
+        CHECK (
+            duration_seconds IS NULL
+            OR duration_seconds > 0
+        ),
+
+    CONSTRAINT fk_grow_cycle_schedule_history_cycle
+        FOREIGN KEY (
+            grow_cycle_id
+        )
+        REFERENCES grow_cycles (
+            grow_cycle_id
+        )
+        ON DELETE CASCADE,
+
+    CONSTRAINT fk_grow_cycle_schedule_history_schedule
+        FOREIGN KEY (
+            schedule_id
+        )
+        REFERENCES farm_schedule (
+            schedule_id
+        )
+        ON DELETE SET NULL
+);
+
+
+CREATE INDEX idx_grow_cycle_schedule_history_cycle
+    ON grow_cycle_schedule_history (
+        grow_cycle_id,
+        valid_from
+    );
+
+CREATE INDEX idx_grow_cycle_schedule_history_schedule
+    ON grow_cycle_schedule_history (
+        schedule_id
+    );
+
+CREATE INDEX idx_grow_cycle_schedule_history_open
+    ON grow_cycle_schedule_history (
+        grow_cycle_id,
+        schedule_id
+    )
+    WHERE valid_until IS NULL;
+
+
+CREATE TABLE harvest_records (
+    harvest_id BIGSERIAL PRIMARY KEY,
+    grow_cycle_id BIGINT NOT NULL,
+    harvested_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    harvest_weight_g NUMERIC NOT NULL,
+    plant_count_harvested INTEGER,
+    quality_score NUMERIC,
+    notes TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+    CONSTRAINT chk_harvest_weight
+        CHECK (
+            harvest_weight_g >= 0
+        ),
+
+    CONSTRAINT chk_harvest_plant_count
+        CHECK (
+            plant_count_harvested IS NULL
+            OR plant_count_harvested >= 0
+        ),
+
+    CONSTRAINT chk_harvest_quality
+        CHECK (
+            quality_score IS NULL
+            OR (
+                quality_score >= 0
+                AND quality_score <= 10
+            )
+        ),
+
+    CONSTRAINT fk_harvest_records_cycle
+        FOREIGN KEY (
+            grow_cycle_id
+        )
+        REFERENCES grow_cycles (
+            grow_cycle_id
+        )
+        ON DELETE CASCADE
+);
+
+
+CREATE INDEX idx_harvest_records_cycle_time
+    ON harvest_records (
+        grow_cycle_id,
+        harvested_at DESC
+    );
+
+CREATE INDEX idx_harvest_records_harvested_at
+    ON harvest_records (
+        harvested_at DESC
     );
 
 
@@ -772,67 +951,46 @@ CREATE TABLE system_settings (
 
 INSERT INTO system_settings (
     setting_key,
-    setting_value
+    setting_value,
+    updated_at
 )
 VALUES
 (
     'scheduler',
     '{
         "polling_rate": 5
-    }'::jsonb
-),
-(
-    'cameras',
-    '{
-        "polling_rate": 30
-    }'::jsonb
-),
-(
-    'sensors',
-    '{
-        "polling_rate": 5
-    }'::jsonb
-),
-(
-    'vision',
-    '{
-        "polling_rate": 1800
-    }'::jsonb
+    }'::jsonb,
+    '2026-09-20 16:21:59.619+10'::timestamptz
 ),
 (
     'security',
     '{
-        "sensor_check_interval_seconds": 5,
+        "ai_enabled": true,
         "emergency_stop": false,
-        "ai_enabled": true
-    }'::jsonb
+        "sensor_check_interval_seconds": 5
+    }'::jsonb,
+    '2026-09-20 16:21:59.619+10'::timestamptz
 ),
 (
     'risk',
     '{
-        "RUN_IRRIGATION": "HIGH",
-        "SET_LIGHTING": "LOW",
-        "SET_FAN": "LOW",
-        "DOSE_PH": "HIGH",
         "DOSE_EC": "HIGH",
+        "DOSE_PH": "HIGH",
+        "SET_FAN": "LOW",
+        "SET_LIGHTING": "LOW",
+        "RUN_IRRIGATION": "HIGH",
         "CREATE_SCHEDULE": "LOW",
-        "UPDATE_SCHEDULE": "LOW",
         "ENABLE_SCHEDULE": "LOW",
+        "RUN_AI_ANALYSIS": "LOW",
+        "UPDATE_SCHEDULE": "LOW",
         "DISABLE_SCHEDULE": "HIGH",
-        "RUN_VISION_ANALYSIS": "LOW",
-        "RUN_AI_ANALYSIS": "LOW"
-    }'::jsonb
+        "RUN_VISION_ANALYSIS": "LOW"
+    }'::jsonb,
+    '2026-09-20 16:21:59.619+10'::timestamptz
 ),
 (
     'sensor_security_thresholds',
     '{
-        "ph": {
-            "enabled": true,
-            "lower_limit": 5.5,
-            "upper_limit": 6.5,
-            "warning_distance": 0.3,
-            "critical_distance": 0.1
-        },
         "ec": {
             "enabled": true,
             "lower_limit": 1500,
@@ -840,19 +998,12 @@ VALUES
             "warning_distance": 250,
             "critical_distance": 100
         },
-        "water_temperature": {
+        "ph": {
             "enabled": true,
-            "lower_limit": 18,
-            "upper_limit": 28,
-            "warning_distance": 2,
-            "critical_distance": 0.5
-        },
-        "ambient_temperature": {
-            "enabled": true,
-            "lower_limit": 15,
-            "upper_limit": 32,
-            "warning_distance": 3,
-            "critical_distance": 1
+            "lower_limit": 5.5,
+            "upper_limit": 6.5,
+            "warning_distance": 0.3,
+            "critical_distance": 0.1
         },
         "humidity": {
             "enabled": true,
@@ -874,15 +1025,93 @@ VALUES
             "upper_limit": 100,
             "warning_distance": 10,
             "critical_distance": 5
+        },
+        "water_temperature": {
+            "enabled": true,
+            "lower_limit": 18,
+            "upper_limit": 28,
+            "warning_distance": 2,
+            "critical_distance": 0.5
+        },
+        "ambient_temperature": {
+            "enabled": true,
+            "lower_limit": 15,
+            "upper_limit": 32,
+            "warning_distance": 3,
+            "critical_distance": 1
         }
-    }'::jsonb
+    }'::jsonb,
+    '2026-09-20 16:21:59.619+10'::timestamptz
 ),
 (
     'notifications',
     '{
-        "sensor_alert_cooldown_seconds": 300,
-        "repeat_critical_notifications": false
-    }'::jsonb
+        "global_delivery": true,
+        "repeat_critical_notifications": false,
+        "sensor_alert_cooldown_seconds": 300
+    }'::jsonb,
+    '2026-09-20 16:21:59.619+10'::timestamptz
+),
+(
+    'vision',
+    '{
+        "polling_rate": 60
+    }'::jsonb,
+    '2026-09-28 06:42:49.471+10'::timestamptz
+),
+(
+    'cameras',
+    '{
+        "polling_rate": 10
+    }'::jsonb,
+    '2026-09-20 16:21:59.619+10'::timestamptz
+),
+(
+    'sensors',
+    '{
+        "polling_rate": 10
+    }'::jsonb,
+    '2026-09-20 16:21:59.619+10'::timestamptz
+),
+(
+    'farm_controls',
+    '{
+        "outlet_mapping": {
+            "fan": 5,
+            "dose_ec": 6,
+            "dose_ph": 3,
+            "irrigation": 2,
+            "lighting_level_1": 1,
+            "lighting_level_2": 4
+        }
+    }'::jsonb,
+    '2026-09-29 15:15:25.119+10'::timestamptz
+),
+(
+    'dosing_ph',
+    '{
+        "enabled": true,
+        "direction": "UP",
+        "max_cycles": 12,
+        "dose_seconds": 10,
+        "settle_seconds": 300,
+        "target_tolerance": 0.1,
+        "max_total_dose_seconds": 120
+    }'::jsonb,
+    '2026-10-01 14:44:33.042+10'::timestamptz
+),
+(
+    'dosing_ec',
+    '{
+        "enabled": true,
+        "direction": "UP",
+        "max_cycles": 12,
+        "dose_seconds": 10,
+        "settle_seconds": 300,
+        "target_tolerance": 100,
+        "max_total_dose_seconds": 120
+    }'::jsonb,
+    '2026-10-01 14:44:33.042+10'::timestamptz
 );
 
 

@@ -2,7 +2,7 @@ import os
 import dotenv
 import asyncio
 
-
+from psycopg import AsyncConnection
 from psycopg_pool import AsyncConnectionPool
 
 dotenv.load_dotenv()
@@ -45,25 +45,45 @@ async def close_pool():
     await pool.close()
 
 
-async def run_query(
+async def _run_query_on_connection(
+    conn: AsyncConnection,
     query,
     params=None,
 ):
-    async with get_connection() as conn:
-        async with conn.cursor() as cur:
+    async with conn.cursor() as cur:
 
-            if params is None:
-                await cur.execute(query)
-            else:
-                await cur.execute(
-                    query,
-                    params,
-                )
+        if params is None:
+            await cur.execute(query)
+        else:
+            await cur.execute(
+                query,
+                params,
+            )
 
-            if cur.description:
-                return await cur.fetchall()
+        if cur.description:
+            return await cur.fetchall()
 
-            return []
+        return []
+
+
+async def run_query(
+    query,
+    params=None,
+    conn: AsyncConnection | None = None,
+):
+    if conn is not None:
+        return await _run_query_on_connection(
+            conn=conn,
+            query=query,
+            params=params,
+        )
+
+    async with get_connection() as connection:
+        return await _run_query_on_connection(
+            conn=connection,
+            query=query,
+            params=params,
+        )
 
 
 async def test_connection():

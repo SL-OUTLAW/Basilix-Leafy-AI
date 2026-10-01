@@ -15,7 +15,6 @@ def create_farm_control_handlers(
             1,
             2,
         ):
-
             raise ValueError("SET_LIGHTING requires level_no 1 or 2.")
 
         enabled = task.get(
@@ -61,10 +60,20 @@ def create_farm_control_handlers(
         target = task.get("target_value")
 
         if target is None:
-
             raise ValueError("DOSE_PH requires target_value.")
 
-        return await hal.controls.dose_ph_to_target(target=float(target))
+        try:
+            target = float(target)
+
+        except (
+            TypeError,
+            ValueError,
+        ) as error:
+            raise ValueError("DOSE_PH target_value must be numeric.") from error
+
+        return await hal.controls.dose_ph_to_target(
+            target=target,
+        )
 
     async def dose_ec(
         task: dict[str, Any],
@@ -73,10 +82,20 @@ def create_farm_control_handlers(
         target = task.get("target_value")
 
         if target is None:
-
             raise ValueError("DOSE_EC requires target_value.")
 
-        return await hal.controls.dose_ec_to_target(target=float(target))
+        try:
+            target = float(target)
+
+        except (
+            TypeError,
+            ValueError,
+        ) as error:
+            raise ValueError("DOSE_EC target_value must be numeric.") from error
+
+        return await hal.controls.dose_ec_to_target(
+            target=target,
+        )
 
     return {
         "SET_LIGHTING": set_lighting,

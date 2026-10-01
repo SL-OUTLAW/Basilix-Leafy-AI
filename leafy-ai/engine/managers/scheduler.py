@@ -1,19 +1,32 @@
 import asyncio
+
 from datetime import datetime
+
 from typing import Any, Awaitable, Callable
 
+
+from psycopg import AsyncConnection
 from psycopg.types.json import Jsonb
 
+
 from engine.logger.logger import audit_log
+
 from engine.managers.db_manager import (
     get_connection,
     run_query,
 )
+
+from engine.managers.grow_cycle_manager import (
+    record_schedule_change,
+)
+
 from engine.managers.settings_manager import settings
 
 loop = False
 
+
 action_queue: asyncio.Queue = asyncio.Queue()
+
 
 ACTION_HANDLERS: dict[
     str,
@@ -23,12 +36,11 @@ ACTION_HANDLERS: dict[
     ],
 ] = {}
 
+
 TIMED_TASK_ACTIONS = {
     "SET_LIGHTING",
     "RUN_IRRIGATION",
     "SET_FAN",
-    "DOSE_PH",
-    "DOSE_EC",
 }
 
 
@@ -85,7 +97,7 @@ async def get_due_tasks():
           AND next_run_at <= NOW()
           AND active_until_at IS NULL
         ORDER BY next_run_at;
-        """)
+    """)
 
 
 async def get_due_timed_ends():
@@ -112,12 +124,10 @@ async def get_due_timed_ends():
           AND task_action IN (
               'SET_LIGHTING',
               'RUN_IRRIGATION',
-              'SET_FAN',
-              'DOSE_PH',
-              'DOSE_EC'
+              'SET_FAN'
           )
         ORDER BY active_until_at;
-        """)
+    """)
 
 
 def _validate_timing(
@@ -128,10 +138,13 @@ def _validate_timing(
 
     duration_seconds = action_data.get("duration_seconds")
 
+    task_action = action_data.get("task_action")
+
     if interval_seconds is not None:
 
         try:
             interval_seconds = int(interval_seconds)
+
         except (
             TypeError,
             ValueError,
@@ -147,6 +160,7 @@ def _validate_timing(
 
         try:
             duration_seconds = int(duration_seconds)
+
         except (
             TypeError,
             ValueError,
@@ -158,8 +172,12 @@ def _validate_timing(
 
             raise ValueError("duration_seconds must be greater than zero.")
 
+    if task_action in TIMED_TASK_ACTIONS and duration_seconds is None:
+
+        raise ValueError(f"{task_action} schedule requires duration_seconds.")
+
     if (
-        action_data.get("task_action") in TIMED_TASK_ACTIONS
+        task_action in TIMED_TASK_ACTIONS
         and interval_seconds is not None
         and duration_seconds is not None
         and duration_seconds >= interval_seconds
@@ -170,9 +188,23 @@ def _validate_timing(
             "for repeating timed schedules."
         )
 
+    if task_action in {
+        "DOSE_PH",
+        "DOSE_EC",
+    }:
+
+        if action_data.get("target_value") is None:
+
+            raise ValueError(f"{task_action} schedule requires target_value.")
+
+        if duration_seconds is not None:
+
+            raise ValueError(f"{task_action} schedule does not use duration_seconds.")
+
 
 async def _create_schedule(
     action_data: dict[str, Any],
+    conn: AsyncConnection | None = None,
 ) -> int:
 
     _validate_timing(action_data)
@@ -205,6 +237,7 @@ async def _create_schedule(
             interval_seconds,
             interval_seconds,
         ),
+        conn=conn,
     )
 
     if existing:
@@ -263,6 +296,7 @@ async def _create_schedule(
             action_data.get("start_time"),
             action_data.get("start_time"),
         ),
+        conn=conn,
     )
 
     if not rows:
@@ -274,96 +308,169 @@ async def _create_schedule(
 
 async def _update_schedule(
     action_data: dict[str, Any],
+    conn: AsyncConnection | None = None,
 ) -> int:
 
-    _validate_timing(action_data)
-
     schedule_id = action_data.get("schedule_id")
+
+    if schedule_id is None:
+
+        raise ValueError("UPDATE_SCHEDULE requires schedule_id.")
+
+    current_rows = await run_query(
+        """
+        SELECT
+            task_name,
+            description,
+            task_action,
+            level_no,
+            start_time,
+            interval_seconds,
+            duration_seconds,
+            target_value,
+            unit
+        FROM farm_schedule
+        WHERE schedule_id = %s;
+        """,
+        (schedule_id,),
+        conn=conn,
+    )
+
+    if not current_rows:
+
+        raise ValueError(f"Schedule {schedule_id} not found.")
+
+    current = current_rows[0]
+
+    merged = {
+        "task_name": current[0],
+        "task_description": current[1],
+        "task_action": current[2],
+        "level_no": current[3],
+        "start_time": current[4],
+        "interval_seconds": current[5],
+        "duration_seconds": current[6],
+        "target_value": current[7],
+        "unit": current[8],
+    }
+
+    for field in (
+        "task_name",
+        "task_description",
+        "task_action",
+        "level_no",
+        "start_time",
+        "interval_seconds",
+        "duration_seconds",
+        "target_value",
+        "unit",
+    ):
+
+        if field in action_data:
+
+            merged[field] = action_data[field]
+
+    if merged.get("task_name") is None:
+
+        raise ValueError("task_name cannot be null.")
+
+    if merged.get("task_action") is None:
+
+        raise ValueError("task_action cannot be null.")
+
+    if merged.get("level_no") is None:
+
+        raise ValueError("level_no cannot be null.")
+
+    if merged.get("start_time") is None:
+
+        raise ValueError("start_time cannot be null.")
+
+    _validate_timing(merged)
 
     rows = await run_query(
         """
         UPDATE farm_schedule
         SET
-            task_name = COALESCE(
-                %s,
-                task_name
-            ),
-            description = COALESCE(
-                %s,
-                description
-            ),
-            task_action = COALESCE(
-                %s,
-                task_action
-            ),
-            level_no = COALESCE(
-                %s,
-                level_no
-            ),
-            start_time = COALESCE(
-                %s::time,
-                start_time
-            ),
-            interval_seconds = COALESCE(
-                %s,
-                interval_seconds
-            ),
-            duration_seconds = COALESCE(
-                %s,
-                duration_seconds
-            ),
-            target_value = COALESCE(
-                %s,
-                target_value
-            ),
-            unit = COALESCE(
-                %s,
-                unit
-            ),
+            task_name = CASE
+                WHEN %s THEN %s
+                ELSE task_name
+            END,
+            description = CASE
+                WHEN %s THEN %s
+                ELSE description
+            END,
+            task_action = CASE
+                WHEN %s THEN %s
+                ELSE task_action
+            END,
+            level_no = CASE
+                WHEN %s THEN %s
+                ELSE level_no
+            END,
+            start_time = CASE
+                WHEN %s THEN %s::time
+                ELSE start_time
+            END,
+            interval_seconds = CASE
+                WHEN %s THEN %s
+                ELSE interval_seconds
+            END,
+            duration_seconds = CASE
+                WHEN %s THEN %s
+                ELSE duration_seconds
+            END,
+            target_value = CASE
+                WHEN %s THEN %s
+                ELSE target_value
+            END,
+            unit = CASE
+                WHEN %s THEN %s
+                ELSE unit
+            END,
             next_run_at =
                 CASE
-                    WHEN interval_seconds IS NOT NULL
+                    WHEN %s
                     THEN NOW()
                          + (
-                             interval_seconds
+                             %s
                              * INTERVAL '1 second'
                          )
-                    WHEN CURRENT_DATE
-                         + COALESCE(
-                             %s::time,
-                             start_time
-                         ) > NOW()
-                    THEN CURRENT_DATE
-                         + COALESCE(
-                             %s::time,
-                             start_time
-                         )
-                    ELSE CURRENT_DATE
-                         + COALESCE(
-                             %s::time,
-                             start_time
-                         )
-                         + INTERVAL '1 day'
+                    WHEN CURRENT_DATE + %s::time > NOW()
+                    THEN CURRENT_DATE + %s::time
+                    ELSE CURRENT_DATE + %s::time + INTERVAL '1 day'
                 END,
             updated_at = NOW()
         WHERE schedule_id = %s
         RETURNING schedule_id;
         """,
         (
+            "task_name" in action_data,
             action_data.get("task_name"),
+            "task_description" in action_data,
             action_data.get("task_description"),
+            "task_action" in action_data,
             action_data.get("task_action"),
+            "level_no" in action_data,
             action_data.get("level_no"),
+            "start_time" in action_data,
             action_data.get("start_time"),
+            "interval_seconds" in action_data,
             action_data.get("interval_seconds"),
+            "duration_seconds" in action_data,
             action_data.get("duration_seconds"),
+            "target_value" in action_data,
             action_data.get("target_value"),
+            "unit" in action_data,
             action_data.get("unit"),
-            action_data.get("start_time"),
-            action_data.get("start_time"),
-            action_data.get("start_time"),
+            merged.get("interval_seconds") is not None,
+            merged.get("interval_seconds"),
+            merged.get("start_time"),
+            merged.get("start_time"),
+            merged.get("start_time"),
             schedule_id,
         ),
+        conn=conn,
     )
 
     if not rows:
@@ -375,6 +482,7 @@ async def _update_schedule(
 
 async def _enable_schedule(
     action_data: dict[str, Any],
+    conn: AsyncConnection | None = None,
 ) -> int:
 
     schedule_id = action_data.get("schedule_id")
@@ -397,12 +505,12 @@ async def _enable_schedule(
                     THEN CURRENT_DATE + start_time
                     ELSE CURRENT_DATE + start_time + INTERVAL '1 day'
                 END,
-            active_until_at = NULL,
             updated_at = NOW()
         WHERE schedule_id = %s
         RETURNING schedule_id;
         """,
         (schedule_id,),
+        conn=conn,
     )
 
     if not rows:
@@ -414,6 +522,7 @@ async def _enable_schedule(
 
 async def _disable_schedule(
     action_data: dict[str, Any],
+    conn: AsyncConnection | None = None,
 ) -> int:
 
     schedule_id = action_data.get("schedule_id")
@@ -423,12 +532,12 @@ async def _disable_schedule(
         UPDATE farm_schedule
         SET
             enabled = FALSE,
-            active_until_at = NULL,
             updated_at = NOW()
         WHERE schedule_id = %s
         RETURNING schedule_id;
         """,
         (schedule_id,),
+        conn=conn,
     )
 
     if not rows:
@@ -449,23 +558,46 @@ async def _run_scheduler_action(
         {},
     )
 
-    if action_type == "CREATE_SCHEDULE":
+    async with get_connection() as conn:
+        async with conn.transaction():
 
-        return await _create_schedule(action_data)
+            if action_type == "CREATE_SCHEDULE":
 
-    if action_type == "UPDATE_SCHEDULE":
+                schedule_id = await _create_schedule(
+                    action_data,
+                    conn=conn,
+                )
 
-        return await _update_schedule(action_data)
+            elif action_type == "UPDATE_SCHEDULE":
 
-    if action_type == "ENABLE_SCHEDULE":
+                schedule_id = await _update_schedule(
+                    action_data,
+                    conn=conn,
+                )
 
-        return await _enable_schedule(action_data)
+            elif action_type == "ENABLE_SCHEDULE":
 
-    if action_type == "DISABLE_SCHEDULE":
+                schedule_id = await _enable_schedule(
+                    action_data,
+                    conn=conn,
+                )
 
-        return await _disable_schedule(action_data)
+            elif action_type == "DISABLE_SCHEDULE":
 
-    raise ValueError(f"Unsupported scheduler action: {action_type}")
+                schedule_id = await _disable_schedule(
+                    action_data,
+                    conn=conn,
+                )
+
+            else:
+                raise ValueError(f"Unsupported scheduler action: {action_type}")
+
+            await record_schedule_change(
+                schedule_id=schedule_id,
+                conn=conn,
+            )
+
+    return schedule_id
 
 
 async def _create_task_execution(
@@ -894,7 +1026,7 @@ async def run_scheduled_task(
 
                 active_until_at = await _start_timer(
                     schedule_id=task.get("schedule_id"),
-                    duration_seconds=duration_seconds,
+                    duration_seconds=(duration_seconds),
                 )
 
                 if isinstance(
@@ -926,8 +1058,13 @@ async def run_scheduled_task(
                 result=execution_result,
             )
 
-        except Exception:
-            pass
+        except Exception as audit_error:
+
+            await _report_scheduler_error(
+                error=audit_error,
+                action_type="SCHEDULER_AUDIT_FAILED",
+                task=task,
+            )
 
         return result
 
@@ -948,10 +1085,53 @@ async def run_scheduled_task(
                 error=error,
             )
 
-        except Exception:
-            pass
+        except Exception as audit_error:
+
+            await _report_scheduler_error(
+                error=audit_error,
+                action_type="SCHEDULER_AUDIT_FAILED",
+                task=task,
+            )
 
         raise
+
+
+async def _report_scheduler_error(
+    error: Exception,
+    action_type: str,
+    task: dict[str, Any] | None = None,
+) -> None:
+
+    metadata = {
+        "error_type": type(error).__name__,
+        "error": str(error),
+    }
+
+    if task is not None:
+        metadata.update(
+            {
+                "schedule_id": task.get("schedule_id"),
+                "task_name": task.get("task_name"),
+                "task_action": task.get("task_action"),
+                "scheduler_action": task.get("action_type"),
+            }
+        )
+
+    try:
+        async with get_connection() as conn:
+            await audit_log(
+                conn=conn,
+                action_type=action_type,
+                entity_type="scheduler",
+                entity_id=(task.get("schedule_id") if task is not None else None),
+                description="The scheduler encountered an unexpected error.",
+                metadata=metadata,
+            )
+
+    except Exception as audit_error:
+        print(
+            f"Scheduler error: {error}. " f"Audit logging also failed: {audit_error}."
+        )
 
 
 async def _run_background_task(
@@ -962,8 +1142,13 @@ async def _run_background_task(
 
         await run_scheduled_task(task)
 
-    except Exception:
-        pass
+    except Exception as error:
+
+        await _report_scheduler_error(
+            error=error,
+            action_type="SCHEDULER_BACKGROUND_TASK_FAILED",
+            task=task,
+        )
 
 
 async def _action_worker() -> None:
@@ -976,8 +1161,13 @@ async def _action_worker() -> None:
 
             await run_scheduled_task(task)
 
-        except Exception:
-            pass
+        except Exception as error:
+
+            await _report_scheduler_error(
+                error=error,
+                action_type="SCHEDULER_ACTION_FAILED",
+                task=task,
+            )
 
         finally:
 
@@ -1018,7 +1208,12 @@ async def start():
 
                 tasks = await get_due_tasks()
 
-            except Exception:
+            except Exception as error:
+
+                await _report_scheduler_error(
+                    error=error,
+                    action_type="SCHEDULER_LOOP_FAILED",
+                )
 
                 await asyncio.sleep(
                     settings.get(
@@ -1035,6 +1230,7 @@ async def start():
             for row in tasks:
 
                 schedule_id = row[0]
+
                 interval_seconds = row[5]
 
                 if await _schedule_has_active_execution(schedule_id):
