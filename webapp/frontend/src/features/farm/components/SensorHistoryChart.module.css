@@ -3,19 +3,19 @@
   height: 100%;
 
   min-width: 0;
-  min-height: 320px;
+  min-height: 240px;
 
   flex: 1;
 }
 
 @media (max-width: 767px) {
   .chart {
-    min-height: 260px;
+    min-height: 195px;
   }
 }
 
 @media (max-width: 520px) {
   .chart {
-    min-height: 220px;
+    min-height: 165px;
   }
 }

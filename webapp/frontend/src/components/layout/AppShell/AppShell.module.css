@@ -15,7 +15,7 @@
 }
 
 .sidebarCollapsed .main {
-  margin-left: 84px;
+  margin-left: 63px;
 }
 
 .content {
@@ -44,6 +44,6 @@
     padding:
       var(--page-padding)
       var(--page-padding)
-      calc(120px + env(safe-area-inset-bottom));
+      calc(90px + env(safe-area-inset-bottom));
   }
 }

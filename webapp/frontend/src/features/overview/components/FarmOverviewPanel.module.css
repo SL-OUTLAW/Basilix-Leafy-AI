@@ -1,8 +1,8 @@
 .panel {
-  --farm-camera-height: clamp(300px, 31vh, 340px);
+  --farm-camera-height: clamp(225px, 31vh, 255px);
 
   height: 100%;
-  padding: 16px;
+  padding: 12px;
 
   background: var(--color-bg-card);
   border: 1px solid var(--color-border);
@@ -10,10 +10,10 @@
 }
 
 .panel h2 {
-  margin: 0 0 12px;
+  margin: 0 0 9px;
 
   color: var(--color-text-primary);
-  font-size: 20px;
+  font-size: 15px;
   font-weight: 600;
 }
 
@@ -36,7 +36,7 @@
 
   height: var(--farm-camera-height);
   min-height: var(--farm-camera-height);
-  padding: 12px;
+  padding: 9px;
 
   pointer-events: none;
 
@@ -44,28 +44,28 @@
   flex-direction: column;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 12px;
+  gap: 9px;
 }
 
 .levelList {
-  width: min(100%, 320px);
+  width: min(100%, 240px);
 
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 
   pointer-events: auto;
 }
 
 @media (min-width: 768px) and (max-width: 1200px) {
   .levelList {
-    width: min(320px, calc(100% - 130px));
+    width: min(240px, calc(100% - 97.5px));
   }
 }
 
 .levelState {
-  min-height: 40px;
-  padding: 9px 12px;
+  min-height: 30px;
+  padding: 6.75px 9px;
 
   display: flex;
   align-items: center;
@@ -73,25 +73,25 @@
   color: var(--color-text-secondary);
   background: rgba(14, 18, 19, 0.78);
   border: 1px solid var(--color-border);
-  border-radius: 7px;
+  border-radius: 5.25px;
 
-  font-size: 13px;
+  font-size: 12px;
 }
 
 .level {
   width: 100%;
-  min-height: 40px;
-  padding: 9px 12px;
+  min-height: 30px;
+  padding: 6.75px 9px;
 
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 9px;
 
   color: var(--color-text-primary);
   background: rgba(14, 18, 19, 0.78);
   border: 1px solid var(--color-border);
-  border-radius: 7px;
+  border-radius: 5.25px;
 
   font: inherit;
   cursor: pointer;
@@ -111,7 +111,7 @@
 }
 
 .level span {
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 500;
 }
 
@@ -122,22 +122,22 @@
 }
 
 .farmButton {
-  min-height: 36px;
-  padding: 7px 12px;
+  min-height: 27px;
+  padding: 5.25px 9px;
 
   pointer-events: auto;
 
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 
   color: var(--color-green);
   background: rgba(14, 18, 19, 0.82);
   border: 1px solid var(--color-green);
-  border-radius: 7px;
+  border-radius: 5.25px;
 
   font: inherit;
-  font-size: 13px;
+  font-size: 12px;
   cursor: pointer;
 }
 
@@ -161,30 +161,30 @@
 
 @media (max-width: 1100px) {
   .panel {
-    --farm-camera-height: 320px;
+    --farm-camera-height: 240px;
   }
 }
 
 @media (max-width: 520px) {
   .panel {
-    --farm-camera-height: 290px;
+    --farm-camera-height: 217.5px;
   }
 
   .level,
   .levelState {
-    min-height: 44px;
+    min-height: 33px;
   }
 }
 
 @media (max-width: 767px) {
   .panel {
-    --farm-camera-height: 300px;
+    --farm-camera-height: 225px;
 
-    padding: 16px;
+    padding: 12px;
   }
 
   .panel h2 {
-    font-size: 18px;
+    font-size: 13.5px;
   }
 
   .content {
@@ -203,9 +203,9 @@
   .overlay {
     height: auto;
     min-height: 0;
-    padding: 12px 0 0;
+    padding: 9px 0 0;
 
-    gap: 8px;
+    gap: 6px;
     justify-content: flex-start;
 
     pointer-events: auto;
@@ -216,6 +216,6 @@
   }
 
   .farmButton {
-    margin-top: 4px;
+    margin-top: 3px;
   }
 }

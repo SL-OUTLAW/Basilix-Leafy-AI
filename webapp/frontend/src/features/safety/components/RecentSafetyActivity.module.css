@@ -1,14 +1,14 @@
 .panel {
-  height: 260px;
+  height: 195px;
   min-width: 0;
 
-  padding: 16px;
+  padding: 12px;
 
   display: flex;
   flex-direction: column;
 
   border: 1px solid #3a4344;
-  border-radius: 8px;
+  border-radius: 6px;
 
   background: #1E2527;
 }
@@ -18,19 +18,19 @@
 
   color: #FFFFF4;
 
-  font-size: 20px;
+  font-size: 15px;
 }
 
 .list {
   flex: 1;
   min-height: 0;
 
-  margin-top: 14px;
-  padding-right: 7px;
+  margin-top: 10.5px;
+  padding-right: 5.25px;
 
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 7.5px;
 
   overflow-y: auto;
   overflow-x: hidden;
@@ -40,24 +40,24 @@
 }
 
 .row {
-  min-height: 74px;
+  min-height: 55.5px;
 
-  padding: 10px 12px;
+  padding: 7.5px 9px;
 
   flex: 0 0 auto;
 
   display: grid;
   grid-template-columns:
-    76px
-    56px
+    57px
+    42px
     minmax(0, 1fr)
-    110px;
+    82.5px;
 
   align-items: center;
   column-gap: 0;
 
   border: 1px solid #3a4344;
-  border-radius: 14px;
+  border-radius: 10.5px;
 
   background: #293133;
 }
@@ -71,17 +71,17 @@
 
 .copy {
   min-width: 0;
-  padding-left: 27px;
+  padding-left: 20.25px;
 
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
 }
 
 .copy strong {
   color: #FFFFF4;
 
-  font-size: 14px;
+  font-size: 12px;
 }
 
 .copy span {
@@ -136,29 +136,29 @@
 
 @media (max-width: 600px) {
   .panel {
-    height: 310px;
+    height: 232.5px;
 
-    padding: 14px;
+    padding: 10.5px;
   }
 
   .panel h2 {
-    font-size: 18px;
+    font-size: 13.5px;
   }
 
   .row {
-    min-height: 88px;
+    min-height: 66px;
 
     grid-template-columns:
-      62px
-      56px
+      46.5px
+      42px
       minmax(0, 1fr);
 
-    padding: 10px 12px;
+    padding: 7.5px 9px;
 
     column-gap: 0;
-    row-gap: 6px;
+    row-gap: 4.5px;
 
-    border-radius: 9px;
+    border-radius: 6.75px;
   }
 
   .row time {
@@ -166,17 +166,17 @@
   }
 
   .copy {
-    padding-left: 16px;
+    padding-left: 12px;
   }
 
   .relative {
     grid-column: 3;
 
-    padding-left: 16px;
+    padding-left: 12px;
 
     text-align: left;
 
-    font-size: 11px;
+    font-size: 12px;
   }
 
   .copy span {

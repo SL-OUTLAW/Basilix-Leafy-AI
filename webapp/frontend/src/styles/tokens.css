@@ -52,17 +52,17 @@
   --icon-neutral-bg: rgba(143, 155, 150, 0.12);
   --icon-neutral-border: #566061;
 
-  --sidebar-width: 260px;
-  --header-height: 99px;
+  --sidebar-width: 195px;
+  --header-height: 74.25px;
 
-  --page-padding: 24px;
-  --section-gap: 16px;
-  --card-gap: 16px;
-  --card-padding: 16px;
+  --page-padding: 18px;
+  --section-gap: 12px;
+  --card-gap: 12px;
+  --card-padding: 12px;
 
-  --radius-small: 5px;
-  --radius-medium: 10px;
-  --radius-large: 12px;
+  --radius-small: 3.75px;
+  --radius-medium: 7.5px;
+  --radius-large: 9px;
 }
 
 [data-theme="light"] {
@@ -122,23 +122,23 @@
 
 @media (max-width: 1399px) {
   :root {
-    --sidebar-width: 220px;
-    --page-padding: 20px;
+    --sidebar-width: 165px;
+    --page-padding: 15px;
   }
 }
 
 @media (max-width: 1099px) {
   :root {
-    --sidebar-width: 88px;
-    --page-padding: 20px;
+    --sidebar-width: 66px;
+    --page-padding: 15px;
   }
 }
 
 @media (max-width: 767px) {
   :root {
-    --page-padding: 16px;
-    --section-gap: 14px;
-    --card-gap: 14px;
-    --card-padding: 14px;
+    --page-padding: 12px;
+    --section-gap: 10.5px;
+    --card-gap: 10.5px;
+    --card-padding: 10.5px;
   }
 }
