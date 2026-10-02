@@ -1,14 +1,14 @@
 .panel {
-  height: 348px;
+  height: 261px;
   min-width: 0;
 
-  padding: 16px;
+  padding: 12px;
 
   display: flex;
   flex-direction: column;
 
   border: 1px solid #3a4344;
-  border-radius: 8px;
+  border-radius: 6px;
 
   background: #1E2527;
 }
@@ -19,7 +19,7 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 12px;
+  gap: 9px;
 }
 
 .header h2 {
@@ -27,24 +27,24 @@
 
   color: #FFFFF4;
 
-  font-size: 20px;
+  font-size: 15px;
 }
 
 .header p {
-  margin: 5px 0 0;
+  margin: 3.75px 0 0;
 
   color: #A5B0AC;
 
-  font-size: 13px;
+  font-size: 12px;
 }
 
 .header button {
-  height: 34px;
+  height: 25.5px;
 
-  padding: 0 12px;
+  padding: 0 9px;
 
   border: 1px solid #00A8D2;
-  border-radius: 5px;
+  border-radius: 3.75px;
 
   background: transparent;
   color: #00A8D2;
@@ -57,20 +57,20 @@
 }
 
 .tableHeader {
-  height: 32px;
+  height: 24px;
 
-  margin-top: 10px;
-  margin-right: 16px;
+  margin-top: 7.5px;
+  margin-right: 12px;
 
   display: grid;
   grid-template-columns: 2.15fr 1fr;
-  gap: 24px;
+  gap: 18px;
   align-items: center;
 
   flex: 0 0 auto;
 
   border: 1px solid #3a4344;
-  border-radius: 7px;
+  border-radius: 5.25px;
 
   background: #293133;
 
@@ -100,7 +100,7 @@
   right: -12px;
 
   width: 1px;
-  height: 22px;
+  height: 16.5px;
 
   transform: translateY(-50%);
 
@@ -111,12 +111,12 @@
   flex: 1;
   min-height: 0;
 
-  margin-top: 8px;
-  padding-right: 7px;
+  margin-top: 6px;
+  padding-right: 5.25px;
 
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 
   overflow-y: auto;
   overflow-x: hidden;
@@ -126,19 +126,19 @@
 }
 
 .row {
-  min-height: 52px;
+  min-height: 39px;
 
   flex: 0 0 auto;
 
   display: grid;
   grid-template-columns: 2.15fr 1fr;
-  gap: 24px;
+  gap: 18px;
 }
 
 .action,
 .risk {
   border: 1px solid #3a4344;
-  border-radius: 8px;
+  border-radius: 6px;
 
   background: #293133;
 }
@@ -146,11 +146,11 @@
 .action {
   min-width: 0;
 
-  padding: 8px 16px;
+  padding: 6px 12px;
 
   display: flex;
   align-items: center;
-  gap: 32px;
+  gap: 24px;
 }
 
 .action > div {
@@ -158,13 +158,13 @@
 
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
 }
 
 .action strong {
   color: #FFFFF4;
 
-  font-size: 14px;
+  font-size: 12px;
 }
 
 .action > div > span {
@@ -179,7 +179,7 @@
 }
 
 .risk {
-  padding: 6px 12px;
+  padding: 4.5px 9px;
 
   display: flex;
   flex-direction: column;
@@ -189,12 +189,12 @@
 }
 
 .risk > span {
-  min-width: 130px;
+  min-width: 97.5px;
 
-  padding: 2px 12px;
+  padding: 2px 9px;
 
   border: 1px solid currentColor;
-  border-radius: 999px;
+  border-radius: 749.25px;
 
   font-size: 12px;
 
@@ -204,7 +204,7 @@
 .risk small {
   color: #FFFFF4;
 
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .state {
@@ -257,13 +257,13 @@
 
 @media (max-width: 600px) {
   .panel {
-    height: 430px;
+    height: 322.5px;
 
-    padding: 14px;
+    padding: 10.5px;
   }
 
   .header h2 {
-    font-size: 18px;
+    font-size: 13.5px;
   }
 
   .tableHeader {
@@ -271,25 +271,25 @@
   }
 
   .list {
-    margin-top: 12px;
+    margin-top: 9px;
 
-    gap: 10px;
+    gap: 7.5px;
   }
 
   .row {
     grid-template-columns: 1fr;
 
-    gap: 6px;
+    gap: 4.5px;
   }
 
   .action {
-    min-height: 72px;
+    min-height: 54px;
 
-    gap: 16px;
+    gap: 12px;
   }
 
   .risk {
-    min-height: 48px;
+    min-height: 36px;
 
     flex-direction: row;
     justify-content: space-between;
@@ -300,9 +300,9 @@
   }
 
   .risk small {
-    max-width: 150px;
+    max-width: 112.5px;
 
-    font-size: 11px;
+    font-size: 12px;
 
     text-align: right;
   }

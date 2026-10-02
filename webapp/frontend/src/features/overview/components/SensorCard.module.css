@@ -1,12 +1,12 @@
 .card {
   min-width: 0;
-  min-height: 104px;
-  padding: 16px 18px;
+  min-height: 78px;
+  padding: 12px 13.5px;
 
   display: grid;
-  grid-template-columns: 56px minmax(0, 1fr) minmax(92px, 132px);
+  grid-template-columns: 42px minmax(0, 1fr) minmax(69px, 99px);
   align-items: center;
-  gap: 16px;
+  gap: 12px;
 
   background: var(--color-bg-card-inner);
   border: 1px solid var(--color-border);
@@ -14,8 +14,8 @@
 }
 
 .iconArea {
-  width: 56px;
-  height: 56px;
+  width: 42px;
+  height: 42px;
 
   display: flex;
   align-items: center;
@@ -25,8 +25,8 @@
 }
 
 .iconGraphic {
-  width: 38px;
-  height: 38px;
+  width: 28.5px;
+  height: 28.5px;
   display: block;
 }
 
@@ -43,8 +43,8 @@
 }
 
 .waterIcon .iconGraphic {
-  width: 34px;
-  height: 50px;
+  width: 25.5px;
+  height: 37.5px;
 }
 
 .ecIcon {
@@ -64,7 +64,7 @@
   margin: 0;
 
   color: var(--color-text-primary);
-  font-size: 16px;
+  font-size: 12px;
   font-weight: 600;
   line-height: 1.2;
 }
@@ -73,7 +73,7 @@
   margin: 0;
 
   color: var(--color-text-primary);
-  font-size: 22px;
+  font-size: 16.5px;
   font-weight: 600;
   line-height: 1.15;
 
@@ -90,7 +90,7 @@
 
 .visual {
   min-width: 0;
-  height: 48px;
+  height: 36px;
 
   display: flex;
   align-items: center;
@@ -99,8 +99,8 @@
 
 .sparkline {
   width: 100%;
-  max-width: 120px;
-  height: 38px;
+  max-width: 90px;
+  height: 28.5px;
 
   overflow: visible;
 }
@@ -117,13 +117,13 @@
 .waterTrack {
   position: relative;
 
-  width: 86px;
-  height: 40px;
+  width: 64.5px;
+  height: 30px;
 
   overflow: hidden;
 
   background: #0a5a72;
-  border-radius: 10px;
+  border-radius: 7.5px;
 }
 
 .waterFill {
@@ -230,80 +230,80 @@
 
 @media (max-width: 1350px) {
   .card {
-    min-height: 116px;
-    grid-template-columns: 56px minmax(0, 1fr);
+    min-height: 87px;
+    grid-template-columns: 42px minmax(0, 1fr);
   }
 
   .visual {
     grid-column: 1 / -1;
     justify-content: flex-end;
-    height: 34px;
+    height: 25.5px;
   }
 
   .sparkline {
-    max-width: 140px;
-    height: 30px;
+    max-width: 105px;
+    height: 22.5px;
   }
 
   .waterTrack {
-    width: 96px;
-    height: 32px;
+    width: 72px;
+    height: 24px;
   }
 }
 
 @media (max-width: 1100px) {
   .card {
-    min-height: 118px;
+    min-height: 88.5px;
   }
 
   .visual {
-    height: 32px;
+    height: 24px;
   }
 }
 
 @media (max-width: 600px) {
   .card {
-    min-height: 110px;
-    padding: 14px 16px;
-    gap: 14px;
+    min-height: 82.5px;
+    padding: 10.5px 12px;
+    gap: 10.5px;
 
-    grid-template-columns: 52px minmax(0, 1fr);
+    grid-template-columns: 39px minmax(0, 1fr);
   }
 
   .iconArea {
-    width: 52px;
-    height: 52px;
+    width: 39px;
+    height: 39px;
   }
 
   .iconGraphic {
-    width: 34px;
-    height: 34px;
+    width: 25.5px;
+    height: 25.5px;
   }
 
   .waterIcon .iconGraphic {
-    width: 30px;
-    height: 44px;
+    width: 22.5px;
+    height: 33px;
   }
 
   .content h3 {
-    font-size: 15px;
+    font-size: 12px;
   }
 
   .value {
-    font-size: 20px;
+    font-size: 15px;
   }
 
   .status {
-    font-size: 11px;
+    font-size: 12px;
   }
 
   .sparkline {
-    max-width: 120px;
-    height: 28px;
+    max-width: 90px;
+    height: 21px;
   }
 
   .waterTrack {
-    width: 88px;
-    height: 30px;
+    width: 66px;
+    height: 22.5px;
   }
 }

@@ -9,17 +9,17 @@
   width: 100%;
   min-width: 0;
 
-  padding-top: 12px;
+  padding-top: 9px;
 }
 
 .fullPanel {
   width: 100%;
-  min-height: 360px;
+  min-height: 270px;
 
-  padding: 18px;
+  padding: 13.5px;
 
   border: 1px solid #3a4344;
-  border-radius: 8px;
+  border-radius: 6px;
 
   background: #1E2527;
 }
@@ -28,7 +28,7 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 20px;
+  gap: 15px;
 }
 
 .panelHeader h2 {
@@ -36,25 +36,25 @@
 
   color: #FFFFF4;
 
-  font-size: 22px;
+  font-size: 16.5px;
   line-height: 1.2;
 }
 
 .panelHeader p {
-  margin: 6px 0 0;
+  margin: 4.5px 0 0;
 
   color: #A5B0AC;
 
-  font-size: 13px;
+  font-size: 12px;
 }
 
 .panelHeader > span {
   flex: 0 0 auto;
 
-  padding: 6px 10px;
+  padding: 4.5px 7.5px;
 
   border: 1px solid #667170;
-  border-radius: 5px;
+  border-radius: 3.75px;
 
   color: #A5B0AC;
 
@@ -63,17 +63,17 @@
 }
 
 .fullEmptyState {
-  min-height: 250px;
+  min-height: 187.5px;
 
-  margin-top: 18px;
-  padding: 24px;
+  margin-top: 13.5px;
+  padding: 18px;
 
   display: flex;
   align-items: center;
   justify-content: center;
 
   border: 1px solid #3a4344;
-  border-radius: 8px;
+  border-radius: 6px;
 
   background: #293133;
 
@@ -85,17 +85,17 @@
 
   color: #FFFFF4;
 
-  font-size: 18px;
+  font-size: 13.5px;
 }
 
 .fullEmptyState p {
-  max-width: 460px;
+  max-width: 345px;
 
-  margin: 8px auto 0;
+  margin: 6px auto 0;
 
   color: #A5B0AC;
 
-  font-size: 13px;
+  font-size: 12px;
   line-height: 1.5;
 }
 
@@ -133,15 +133,15 @@
   .fullPanel {
     min-height: 0;
 
-    padding: 14px;
+    padding: 10.5px;
   }
 
   .panelHeader {
-    gap: 12px;
+    gap: 9px;
   }
 
   .panelHeader h2 {
-    font-size: 18px;
+    font-size: 13.5px;
   }
 
   .panelHeader p {
@@ -149,20 +149,20 @@
   }
 
   .panelHeader > span {
-    padding: 5px 8px;
+    padding: 3.75px 6px;
 
-    font-size: 11px;
+    font-size: 12px;
   }
 
   .fullEmptyState {
-    min-height: 200px;
+    min-height: 150px;
 
-    margin-top: 14px;
-    padding: 18px;
+    margin-top: 10.5px;
+    padding: 13.5px;
   }
 
   .fullEmptyState h3 {
-    font-size: 16px;
+    font-size: 12px;
   }
 
   .fullEmptyState p {
@@ -174,17 +174,17 @@
 .configurationList {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 16px;
+  gap: 7.5px;
+  padding: 12px;
 }
 
 .approvalRow,
 .configurationRow {
   display: grid;
   align-items: center;
-  gap: 14px;
+  gap: 10.5px;
 
-  padding: 14px;
+  padding: 10.5px;
 
   background: var(--color-bg-card-inner);
   border: 1px solid var(--color-border);
@@ -196,7 +196,7 @@
 }
 
 .configurationRow {
-  grid-template-columns: auto minmax(0, 1fr) 190px;
+  grid-template-columns: auto minmax(0, 1fr) 142.5px;
 }
 
 .approvalCopy,
@@ -208,22 +208,22 @@
 .approvalTitle {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 7.5px;
 }
 
 .approvalCopy p,
 .configurationCopy span {
   display: block;
-  margin: 4px 0 0;
+  margin: 3px 0 0;
 
   color: var(--color-text-secondary);
-  font-size: 13px;
+  font-size: 12px;
 }
 
 .approvalCopy small,
 .configurationMeta small {
   display: block;
-  margin-top: 6px;
+  margin-top: 4.5px;
 
   color: var(--color-text-secondary);
   font-size: 12px;
@@ -241,11 +241,11 @@
   align-items: center;
   justify-content: center;
 
-  min-width: 92px;
-  padding: 4px 10px;
+  min-width: 69px;
+  padding: 3px 7.5px;
 
   border: 1px solid;
-  border-radius: 999px;
+  border-radius: 749.25px;
 
   font-size: 12px;
   font-weight: 600;
@@ -257,7 +257,7 @@
   }
 
   .content {
-    padding-bottom: 96px;
+    padding-bottom: 72px;
   }
 
   .approvalRow,

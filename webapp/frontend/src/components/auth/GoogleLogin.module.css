@@ -3,8 +3,8 @@
   min-height: 100vh;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 20px;
-  padding: 20px;
+  gap: 15px;
+  padding: 15px;
   background: var(--color-bg-main);
   color: var(--color-text-primary);
 }
@@ -12,8 +12,8 @@
 .imagePanel,
 .loginPanel {
   min-width: 0;
-  min-height: calc(100vh - 40px);
-  border-radius: 16px;
+  min-height: calc(100vh - 30px);
+  border-radius: 12px;
 }
 
 .imagePanel {
@@ -44,23 +44,23 @@
 .imageText {
   position: absolute;
   z-index: 1;
-  left: 42px;
-  right: 42px;
-  bottom: 42px;
+  left: 31.5px;
+  right: 31.5px;
+  bottom: 31.5px;
 }
 
 .imageText span {
   color: var(--color-green);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   letter-spacing: 2px;
 }
 
 .imageText h2 {
-  max-width: 500px;
-  margin: 10px 0 0;
+  max-width: 375px;
+  margin: 7.5px 0 0;
   color: #ffffff;
-  font-size: 38px;
+  font-size: 28.5px;
   line-height: 1.1;
   font-weight: 600;
 }
@@ -69,27 +69,27 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 48px;
+  padding: 36px;
   border: 1px solid var(--color-border);
   background: var(--color-bg-card);
 }
 
 .loginContent {
   width: 100%;
-  max-width: 420px;
+  max-width: 315px;
   min-width: 0;
 }
 
 .brand {
   display: flex;
   align-items: center;
-  gap: 18px;
-  margin-bottom: 54px;
+  gap: 13.5px;
+  margin-bottom: 40.5px;
 }
 
 .brand img {
-  width: 76px;
-  height: 76px;
+  width: 57px;
+  height: 57px;
   object-fit: contain;
 }
 
@@ -101,37 +101,37 @@
 }
 
 .brand h1 {
-  font-size: 38px;
+  font-size: 28.5px;
 }
 
 .brand p {
-  margin: 5px 0 0;
+  margin: 3.75px 0 0;
   color: var(--color-green);
-  font-size: 15px;
+  font-size: 12px;
   font-weight: 600;
   letter-spacing: 2px;
 }
 
 .heading {
-  margin-bottom: 28px;
+  margin-bottom: 21px;
 }
 
 .heading h2 {
-  margin-bottom: 12px;
-  font-size: 42px;
+  margin-bottom: 9px;
+  font-size: 31.5px;
 }
 
 .heading p {
   margin: 0;
   color: var(--color-text-muted);
-  font-size: 16px;
+  font-size: 12px;
   line-height: 1.6;
 }
 
 .googleButton {
   width: 100%;
-  max-width: 400px;
-  min-height: 44px;
+  max-width: 300px;
+  min-height: 33px;
   display: flex;
   justify-content: center;
 }
@@ -140,16 +140,16 @@
   width: fit-content;
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-top: 20px;
+  gap: 7.5px;
+  margin-top: 15px;
   color: var(--color-text-muted);
-  font-size: 15px;
+  font-size: 12px;
   cursor: pointer;
 }
 
 .remember input {
-  width: 18px;
-  height: 18px;
+  width: 13.5px;
+  height: 13.5px;
   margin: 0;
   accent-color: var(--color-green);
 }
@@ -161,18 +161,18 @@
 .note,
 .loading,
 .error {
-  font-size: 14px;
+  font-size: 12px;
 }
 
 .note {
-  margin: 26px 0 0;
+  margin: 19.5px 0 0;
   color: var(--color-text-muted);
   line-height: 1.6;
 }
 
 .loading,
 .error {
-  margin: 16px 0 0;
+  margin: 12px 0 0;
 }
 
 .loading {
@@ -186,44 +186,44 @@
 
 @media (max-width: 1000px) {
   .page {
-    gap: 14px;
-    padding: 14px;
+    gap: 10.5px;
+    padding: 10.5px;
   }
 
   .imagePanel,
   .loginPanel {
-    min-height: calc(100vh - 28px);
+    min-height: calc(100vh - 21px);
   }
 
   .loginPanel {
-    padding: 32px;
+    padding: 24px;
   }
 
   .brand {
-    margin-bottom: 42px;
+    margin-bottom: 31.5px;
   }
 
   .brand img {
-    width: 66px;
-    height: 66px;
+    width: 49.5px;
+    height: 49.5px;
   }
 
   .brand h1 {
-    font-size: 32px;
+    font-size: 24px;
   }
 
   .heading h2 {
-    font-size: 36px;
+    font-size: 27px;
   }
 
   .imageText {
-    left: 30px;
-    right: 30px;
-    bottom: 30px;
+    left: 22.5px;
+    right: 22.5px;
+    bottom: 22.5px;
   }
 
   .imageText h2 {
-    font-size: 32px;
+    font-size: 24px;
   }
 }
 
@@ -232,16 +232,16 @@
     min-height: 100svh;
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    padding: 10px;
+    gap: 7.5px;
+    padding: 7.5px;
   }
 
   .imagePanel {
     width: 100%;
-    height: 240px;
-    min-height: 240px;
+    height: 180px;
+    min-height: 180px;
     flex-shrink: 0;
-    border-radius: 14px;
+    border-radius: 10.5px;
   }
 
   .imageText {
@@ -250,10 +250,10 @@
 
   .loginPanel {
     width: 100%;
-    min-height: calc(100svh - 270px);
+    min-height: calc(100svh - 202.5px);
     flex: 1;
-    padding: 36px 28px;
-    border-radius: 14px;
+    padding: 27px 21px;
+    border-radius: 10.5px;
   }
 
   .loginContent {
@@ -261,28 +261,28 @@
   }
 
   .brand {
-    margin-bottom: 38px;
+    margin-bottom: 28.5px;
   }
 
   .brand img {
-    width: 64px;
-    height: 64px;
+    width: 48px;
+    height: 48px;
   }
 
   .brand h1 {
-    font-size: 31px;
+    font-size: 23.25px;
   }
 
   .brand p {
-    font-size: 13px;
+    font-size: 12px;
   }
 
   .heading h2 {
-    font-size: 36px;
+    font-size: 27px;
   }
 
   .heading p {
-    font-size: 15px;
+    font-size: 12px;
   }
 
   .googleButton {
@@ -292,40 +292,40 @@
 
 @media (max-width: 400px) {
   .page {
-    gap: 8px;
-    padding: 8px;
+    gap: 6px;
+    padding: 6px;
   }
 
   .imagePanel {
-    height: 210px;
-    min-height: 210px;
+    height: 157.5px;
+    min-height: 157.5px;
     border-radius: var(--radius-large);
   }
 
   .loginPanel {
-    min-height: calc(100svh - 234px);
-    padding: 30px 22px;
+    min-height: calc(100svh - 175.5px);
+    padding: 22.5px 16.5px;
     border-radius: var(--radius-large);
   }
 
   .brand {
-    margin-bottom: 32px;
+    margin-bottom: 24px;
   }
 
   .brand img {
-    width: 58px;
-    height: 58px;
+    width: 43.5px;
+    height: 43.5px;
   }
 
   .brand h1 {
-    font-size: 28px;
+    font-size: 21px;
   }
 
   .heading h2 {
-    font-size: 32px;
+    font-size: 24px;
   }
 
   .heading p {
-    font-size: 14px;
+    font-size: 12px;
   }
 }

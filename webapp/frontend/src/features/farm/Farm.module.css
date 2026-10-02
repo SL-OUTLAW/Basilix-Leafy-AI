@@ -15,12 +15,12 @@
 
 .tabs {
   width: 100%;
-  height: 46px;
+  height: 34.5px;
   flex: 0 0 auto;
 
   display: flex;
   align-items: stretch;
-  gap: 8px;
+  gap: 6px;
 
   overflow-x: auto;
   overflow-y: hidden;
@@ -57,15 +57,15 @@
   position: relative;
 
   min-width: max-content;
-  height: 46px;
-  padding: 0 16px;
+  height: 34.5px;
+  padding: 0 12px;
 
   border: none;
 
   background: transparent;
   color: var(--color-text-secondary);
 
-  font-size: 18px;
+  font-size: 13.5px;
   font-weight: 600;
 
   cursor: pointer;
@@ -79,13 +79,13 @@
   content: "";
 
   position: absolute;
-  left: 10px;
-  right: 10px;
+  left: 7.5px;
+  right: 7.5px;
   bottom: 0;
 
   height: 3px;
 
-  border-radius: 999px 999px 0 0;
+  border-radius: 749.25px 749.25px 0 0;
   background: var(--color-green);
 }
 
@@ -101,20 +101,20 @@
   }
 
   .tabs {
-    height: 50px;
+    height: 37.5px;
     gap: 0;
   }
 
   .tabs button {
-    height: 50px;
-    padding: 0 12px;
-    font-size: 14px;
+    height: 37.5px;
+    padding: 0 9px;
+    font-size: 12px;
   }
 }
 
 @media (max-width: 520px) {
   .tabs button {
-    padding: 0 12px;
-    font-size: 13px;
+    padding: 0 9px;
+    font-size: 12px;
   }
 }

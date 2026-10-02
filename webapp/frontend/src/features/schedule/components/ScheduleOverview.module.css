@@ -4,23 +4,23 @@
 
   background: #1e2527;
   border: 1px solid #3a4344;
-  border-radius: 14px;
+  border-radius: 10.5px;
 }
 
 .calendarPanel {
-  padding: 14px 16px;
+  padding: 10.5px 12px;
 }
 
 .calendarPanel h2 {
-  margin: 0 0 14px;
+  margin: 0 0 10.5px;
 
   color: #f3efe8;
-  font-size: 18px;
+  font-size: 13.5px;
   font-weight: 600;
 }
 
 .calendarBody {
-  min-height: 118px;
+  min-height: 88.5px;
 
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -28,19 +28,19 @@
 }
 
 .today {
-  min-height: 94px;
+  min-height: 70.5px;
 
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 20px;
+  gap: 15px;
 
   border-right: 1px solid #3a4344;
 }
 
 .today > svg {
-  width: 42px;
-  height: 42px;
+  width: 31.5px;
+  height: 31.5px;
 
   color: #f3efe8;
 }
@@ -48,12 +48,12 @@
 .today div {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .today strong {
   color: #34d399;
-  font-size: 15px;
+  font-size: 12px;
   font-weight: 600;
 }
 
@@ -63,11 +63,11 @@
 }
 
 .facts {
-  padding-left: 24px;
+  padding-left: 18px;
 
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 9px;
 }
 
 .facts p {
@@ -79,40 +79,40 @@
 
 .calendarButton {
   width: 100%;
-  height: 38px;
-  margin-top: 10px;
+  height: 28.5px;
+  margin-top: 7.5px;
 
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 7.5px;
 
   color: #f3efe8;
   background: transparent;
 
   border: 1px solid #3a4344;
-  border-radius: 7px;
+  border-radius: 5.25px;
 
   font: inherit;
-  font-size: 13px;
+  font-size: 12px;
 
   cursor: pointer;
 }
 
 .summaryPanel {
-  padding: 10px;
+  padding: 7.5px;
 }
 
 .stats {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
+  gap: 7.5px;
 }
 
 .stats article {
   min-width: 0;
-  height: 100px;
-  padding: 12px;
+  height: 75px;
+  padding: 9px;
 
   display: flex;
   flex-direction: column;
@@ -122,7 +122,7 @@
   background: #293133;
 
   border: 1px solid #3a4344;
-  border-radius: 10px;
+  border-radius: 7.5px;
 
   text-align: center;
 }
@@ -131,16 +131,16 @@
   margin: 0;
 
   color: #f3efe8;
-  font-size: 32px;
+  font-size: 24px;
   font-weight: 600;
   line-height: 1;
 }
 
 .stats span {
-  margin-top: 7px;
+  margin-top: 5.25px;
 
   color: #f3efe8;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
 }
 
@@ -155,31 +155,31 @@
 }
 
 .cards {
-  margin-top: 10px;
+  margin-top: 7.5px;
 
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 10px;
+  gap: 7.5px;
 }
 
 .detailCard {
   position: relative;
 
   min-width: 0;
-  height: 126px;
-  padding: 13px 15px;
+  height: 94.5px;
+  padding: 9.75px 11.25px;
 
   background: #293133;
 
   border: 1px solid #3a4344;
-  border-radius: 10px;
+  border-radius: 7.5px;
 }
 
 .detailCard h3 {
-  margin: 0 0 11px;
+  margin: 0 0 8.25px;
 
   color: #f3efe8;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
 }
 
@@ -188,7 +188,7 @@
 
   display: flex;
   align-items: center;
-  gap: 13px;
+  gap: 9.75px;
 }
 
 .detailContent > div:last-child {
@@ -196,14 +196,14 @@
 
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
 }
 
 .detailContent strong {
   overflow: hidden;
 
   color: #f3efe8;
-  font-size: 15px;
+  font-size: 12px;
   font-weight: 600;
 
   text-overflow: ellipsis;
@@ -212,29 +212,29 @@
 
 .detailContent span {
   color: #c3cbc7;
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .upcomingBadge {
   position: absolute;
-  left: 15px;
-  bottom: 9px;
+  left: 11.25px;
+  bottom: 6.75px;
 
-  padding: 3px 8px;
+  padding: 3px 6px;
 
   color: #ff7b00;
   background: rgba(255, 123, 0, 0.1);
 
   border: 1px solid #ff7b00;
-  border-radius: 999px;
+  border-radius: 749.25px;
 
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 500;
 }
 
 .neutralIcon {
-  width: 50px;
-  height: 50px;
+  width: 37.5px;
+  height: 37.5px;
 
   display: flex;
   align-items: center;
@@ -328,7 +328,7 @@
   }
 
   .today {
-    padding-bottom: 16px;
+    padding-bottom: 12px;
 
     border-right: 0;
     border-bottom: 1px solid #3a4344;
@@ -339,7 +339,7 @@
   }
 
   .facts {
-    padding: 16px 0 0;
+    padding: 12px 0 0;
   }
 
   .stats {
@@ -349,6 +349,6 @@
   .stats article,
   .detailCard {
     height: auto;
-    min-height: 100px;
+    min-height: 75px;
   }
 }

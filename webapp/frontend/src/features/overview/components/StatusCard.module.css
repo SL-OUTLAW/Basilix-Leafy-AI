@@ -1,10 +1,10 @@
 .card {
-  min-height: 113px;
-  padding: 16px;
+  min-height: 84.75px;
+  padding: 12px;
 
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 10.5px;
 
   background: var(--color-bg-card-inner);
   border: 1px solid var(--color-border);
@@ -12,8 +12,8 @@
 }
 
 .iconArea {
-  width: 72px;
-  height: 72px;
+  width: 54px;
+  height: 54px;
 
   flex-shrink: 0;
 
@@ -26,8 +26,8 @@
 }
 
 .iconGraphic {
-  width: 46px;
-  height: 46px;
+  width: 34.5px;
+  height: 34.5px;
   display: block;
 }
 
@@ -66,14 +66,14 @@
 
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
 }
 
 .content h3 {
   margin: 0;
 
   color: var(--color-text-primary);
-  font-size: 18px;
+  font-size: 13.5px;
   font-weight: 600;
 
   white-space: nowrap;
@@ -82,13 +82,13 @@
 .value {
   margin: 0;
 
-  font-size: 30px;
+  font-size: 22.5px;
   font-weight: 600;
 }
 
 .content span {
   color: var(--color-text-secondary);
-  font-size: 14px;
+  font-size: 12px;
 }
 
 [data-theme="light"] .card {
@@ -127,24 +127,24 @@
 
 @media (max-width: 767px) {
   .card {
-    min-height: 96px;
+    min-height: 72px;
   }
 
   .iconArea {
-    width: 56px;
-    height: 56px;
+    width: 42px;
+    height: 42px;
   }
 
   .iconGraphic {
-    width: 38px;
-    height: 38px;
+    width: 28.5px;
+    height: 28.5px;
   }
 
   .content h3 {
-    font-size: 16px;
+    font-size: 12px;
   }
 
   .value {
-    font-size: 26px;
+    font-size: 19.5px;
   }
 }
