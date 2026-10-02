@@ -1,6 +1,14 @@
-CREATE DATABASE leafy_ai_backend;
+SELECT 'CREATE DATABASE leafy_ai_backend OWNER leafy_ai'
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM pg_database
+    WHERE datname = 'leafy_ai_backend'
+)\gexec
 
 \connect leafy_ai_backend
+
+BEGIN;
+
 CREATE TABLE IF NOT EXISTS users (
     user_id BIGSERIAL PRIMARY KEY,
     google_sub VARCHAR(255) NOT NULL UNIQUE,
@@ -74,6 +82,10 @@ CREATE INDEX IF NOT EXISTS idx_auth_sessions_user
 
 CREATE INDEX IF NOT EXISTS idx_auth_sessions_expires
     ON auth_sessions (expires_at);
+
+CREATE INDEX IF NOT EXISTS idx_auth_sessions_active_user
+    ON auth_sessions (user_id, expires_at)
+    WHERE revoked_at IS NULL;
 
 CREATE TABLE IF NOT EXISTS notifications (
     notification_id BIGSERIAL PRIMARY KEY,
@@ -155,3 +167,5 @@ CREATE INDEX IF NOT EXISTS idx_user_notifications_status
 
 CREATE INDEX IF NOT EXISTS idx_user_notifications_created
     ON user_notifications (created_at DESC);
+
+COMMIT;
