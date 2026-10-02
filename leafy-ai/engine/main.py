@@ -1,10 +1,13 @@
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from slowapi.errors import RateLimitExceeded
+from slowapi import _rate_limit_exceeded_handler
 
 import asyncio
 
 from engine.api.engine_api import router
+from engine.api.rate_limit import limiter
 from engine.hal.main import Hal
 from engine.managers import scheduler
 from engine.managers.db_manager import (
@@ -19,10 +22,6 @@ from engine.actions.register_actions import (
 )
 
 from engine.security import security_monitor
-
-from engine.managers import (
-    scheduler,
-)
 
 
 @asynccontextmanager
@@ -79,6 +78,12 @@ async def lifespan(
 app = FastAPI(
     title="Leafy Engine",
     lifespan=lifespan,
+)
+
+app.state.limiter = limiter
+app.add_exception_handler(
+    RateLimitExceeded,
+    _rate_limit_exceeded_handler,
 )
 
 app.include_router(router)

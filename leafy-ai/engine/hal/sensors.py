@@ -1,6 +1,7 @@
 import asyncio
 import socket
 
+from datetime import datetime, timezone
 from typing import Any
 
 import httpx
@@ -19,6 +20,8 @@ class Sensors:
         self.as_base_url = "Leafy-AI.local:8080"
 
         self.latest: dict[str, Any] = {}
+
+        self.subscribers: set[asyncio.Queue] = set()
 
         self.loop = False
 
@@ -60,6 +63,8 @@ class Sensors:
             self.handle_water_sensors(ws_result),
             self.handle_ambient_sensors(as_result),
         )
+
+        self.publish_latest()
 
     async def handle_water_sensors(
         self,
@@ -485,8 +490,71 @@ class Sensors:
                 },
             )
 
+    def _build_stream_snapshot(
+        self,
+    ) -> dict[str, Any]:
+
+        sensors = {}
+
+        for sensor_type, reading in self.latest.items():
+            sensors[sensor_type] = {
+                "sensor_type": sensor_type,
+                "value": reading.get("value"),
+                "unit": reading.get("unit"),
+                "quality_status": (
+                    "VALID" if reading.get("valid") is True else "INVALID"
+                ),
+            }
+
+        return {
+            "recorded_at": datetime.now(timezone.utc).isoformat(),
+            "sensors": sensors,
+        }
+
+    def subscribe(
+        self,
+    ) -> asyncio.Queue:
+
+        queue = asyncio.Queue(maxsize=1)
+
+        self.subscribers.add(queue)
+
+        if self.latest:
+            queue.put_nowait(self._build_stream_snapshot())
+
+        return queue
+
+    def unsubscribe(
+        self,
+        queue: asyncio.Queue,
+    ) -> None:
+
+        self.subscribers.discard(queue)
+
+    def publish_latest(
+        self,
+    ) -> None:
+
+        if not self.subscribers:
+            return
+
+        payload = self._build_stream_snapshot()
+
+        for queue in tuple(self.subscribers):
+
+            if queue.full():
+                try:
+                    queue.get_nowait()
+                except asyncio.QueueEmpty:
+                    pass
+
+            try:
+                queue.put_nowait(payload)
+            except asyncio.QueueFull:
+                pass
+
     async def get_latest(self) -> dict[str, Any]:
-        return await self.latest.copy()
+        return self.latest.copy()
 
     async def start(
         self,
