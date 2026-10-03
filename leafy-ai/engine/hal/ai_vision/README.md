@@ -1,141 +1,89 @@
 # Basilix AI Vision
 
-Vision module for whole-camera basil monitoring.
+Vision module for whole-camera sweet basil monitoring.
 
 ## Active Pipeline
 
-The pipeline uses:
-- basil_segmentation_yolo26s_final.pt for canopy segmentation
-- basil_health_yolo26s_final.pt for healthy/downy-mildew classification and embeddings
-- basil_camera_baseline_v1.npz for camera-specific visual anomaly detection
+The active Vision path uses one deployed AI model:
+- Gemini 3.8 Flash for whole-camera visual assessment
 
-Database pipeline identifier: basil_vision_pipeline_v1
+The model receives the current farm image together with fixed same-camera early, middle, and mature reference images.
+
+Database pipeline identifier: `basil_vision_gemini_v4_5`
+
+Existing local YOLO/OpenCV Vision files are kept in the repository but are not used by the active Gemini path.
 
 ## Outputs
 
-Vision currently provides:
-- camera and image dimensions
+Vision provides:
+- relative plant size
 - canopy coverage
-- image-space size evidence
-- crowding evidence
-- canopy appearance measurements
-- health classification
-- visual anomaly detection
-- water-stress evidence
-- nutrient-stress evidence
-- growth evidence
-- harvest-readiness evidence
+- crowding state
+- overall visual health
+- dryness / wilt signs
+- overwatering-like signs
+- nutrient-deficiency-like signs
+- disease-like visual signs when supported
+- growth / maturity stage
+- same-camera historical canopy-change evidence
+- image quality
+- human-review flags
+
+Vision does not make irrigation, dosing, spacing, move, or harvest-control decisions.
 
 ## Health
 
-Supported classifier conditions:
-- healthy
-- downy_mildew
-- review_unknown for low-confidence predictions
+Health is reported from visible RGB evidence.
 
-Other diseases are marked not_evaluated.
+Dryness / wilt, overwatering-like signs, and nutrient-deficiency-like signs are treated as visual observations rather than confirmed root causes.
 
-External healthy/downy validation:
-- downy mildew: 5/6 correct
-- healthy: 3/3 correct
+Named disease output is best-effort. The system should prefer a broad stress result or review flag when the visible evidence does not support a specific disease-like type.
 
-A separate four-class disease model was rejected after only 46.2 percent external accuracy.
+## Growth
 
-## Visual Anomaly
+Visual growth stage comes from the Gemini assessment using same-camera stage references.
 
-Camera 1 and Camera 2 use separate normal-image baselines.
+Historical growth evidence is calculated separately from previous analyses from the same camera using canopy coverage. Captures less than six hours apart are not treated as biological growth evidence.
 
-Possible results:
-- normal_visual
-- abnormal_visual
-
-This detects unusual farm-camera appearance. It does not identify the biological cause.
-
-Held-out anomaly validation:
-- Camera 1: 18 held-out, 0 false alarms
-- Camera 2: 18 held-out, 0 false alarms
-
-## Water and Nutrient Stress
-
-Vision does not make exact RGB-only water or nutrient diagnoses.
-
-Water and nutrient outputs require sensor context such as:
-- EC
-- pH
-- temperature
-- irrigation history
-- dosing history
-- previous readings
-
-The AI Core can combine those signals with Vision evidence.
-
-## Growth and Harvest Readiness
-
-Canopy coverage alone was not reliable enough to classify growth stage.
-
-Growth and harvest readiness therefore require historical context.
+The historical calculation reports measured canopy change and, when enough history exists, a regression slope, fit value, and history span. It does not replace the Gemini visual stage with the older hard-coded Camera 1 / Camera 2 stage thresholds.
 
 ## Validation
 
-Final pipeline validation:
-- schema check passed
-- integration test passed
-- 179 unique Level 1 farm images processed successfully
-- 179/179 returned required fields
-- 36 held-out farm images
-- 0 pipeline failures
-- 0 anomaly false alarms
-- average GPU runtime: 96.23 ms/image
-- peak allocated VRAM: 591.67 MB
+Frozen Vision version: 4.5
 
-Development GPU: NVIDIA GeForce RTX 5080.
+Farm evaluation on 12 reviewed farm images:
+- growth stage: 12/12
+- relative plant size: 12/12
+- crowding state: 12/12
+- healthy false alerts: 0/12
+- canopy coverage MAE: 9.44 percentage points
 
-Deployment-computer performance is still unknown.
+Representative health spot-checks were also run for healthy, wilt/dryness, downy-mildew-like, and powdery-mildew-like examples. Broad health state matched all four representative cases. The downy-mildew-like example was detected as stressed but the exact subtype was not matched.
+
+The four health examples are a functional spot-check, not an accuracy benchmark.
 
 ## Limitations
 
-Vision does not currently claim:
-- complete disease identification
-- physical plant count
-- centimetre measurements
-- individual plant spacing
-- exact crowding classification
-- exact plant age
-- RGB-only drought diagnosis
-- RGB-only overwatering diagnosis
-- RGB-only nutrient deficiency diagnosis
-- RGB-only nutrient excess diagnosis
-- image-only harvest readiness
-
-Camera identity is currently inferred from the filename.
-
-The visual anomaly system is specific to the known farm-camera domain.
+- canopy percentage is an approximate RGB estimate
+- exact disease subtype is not guaranteed
+- positive overwatering-like cases have not yet been independently validated
+- positive nutrient-deficiency-like cases have not yet been independently validated
+- physical centimetre measurements require camera calibration or another physical reference
+- exact plant count is not produced
+- RGB appearance alone does not prove the root cause of water or nutrient stress
 
 ## Integration
 
-Public function:
+Official Vision interface:
 
-analyse_camera_images(image_paths)
+`analyse_camera_images(image_paths)`
 
-Successful results are stored in plant_image_analysis.
+`detector.py` is the internal image-analysis layer used by the Vision tool and can also be run directly for debugging.
 
-The camera/HAL layer remains responsible for creating plant_images.
+Successful results are stored in `plant_image_analysis`.
 
-## Additional Notes
+The camera/HAL layer remains responsible for creating `plant_images`.
 
-- `get_latest_analysis()` returns the latest fully successful batch.
-- Each stored analysis is associated with the supplied `image_id`.
-- Vision does not create `cameras` or `plant_images` records itself.
-- Canopy coverage is full-image basil coverage, not model confidence or segmentation accuracy.
-- Physical measurements require camera calibration or another known physical reference.
-- Dense and overlapping canopy may affect segmentation performance.
+`get_latest_analysis()` returns the latest fully successful batch.
 
-## Run
-
-From leafy-ai:
-
-python -m engine.hal.ai_vision.detector path/to/image.jpg
-
-Integration test:
-
-python -m engine.hal.ai_vision.test_integration path/to/image.jpg
+Vision does not create camera or plant-image records itself.

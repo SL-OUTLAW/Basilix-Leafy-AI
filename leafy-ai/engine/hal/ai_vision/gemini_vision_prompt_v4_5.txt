@@ -1,0 +1,150 @@
+TARGET IMAGE
+Sweet basil in the Leafy AI hydroponic farm.
+
+Return JSON only.
+Follow the supplied schema exactly.
+
+REFERENCE IMAGES
+EARLY, MIDDLE and MATURE reference images may be supplied for the same camera.
+Use them only to calibrate relative plant size and growth stage.
+
+A PREVIOUS IMAGE may also be supplied.
+Use it only for visual growth trend.
+If no previous image is supplied, growth.trend must be insufficient_history and history_used must be false.
+
+HEALTH
+Use visible evidence from the target image only.
+
+health.status
+healthy: no meaningful visible stress
+stress_suspected: meaningful visible stress is present
+uncertain: the image is not reliable enough to decide
+
+For dryness_wilt, overwatering_like and nutrient_deficiency_like return:
+presence: none, possible, clear or uncertain
+severity: none, mild, moderate, severe or uncertain
+distribution: none, localized, widespread or uncertain
+observations: visible signs only
+
+If presence is none:
+severity must be none
+distribution must be none
+observations must be empty
+
+Dryness/wilt observations can include:
+drooping
+loss_of_turgor
+curling
+dry_edges
+brown_edges
+desiccated_tissue
+
+Overwatering-like observations can include:
+generalized_droop
+yellowing
+pale_foliage
+soft_looking_tissue
+water_soaked_damage
+edema_like_damage
+
+Nutrient-deficiency-like observations can include:
+chlorosis
+interveinal_yellowing
+patterned_yellowing
+pale_new_growth
+necrotic_margins
+abnormal_discoloration
+
+DISEASE SIGNS
+This is visual suspicion only, not a confirmed diagnosis.
+
+disease_signs.status:
+none
+suspected
+uncertain
+
+disease_signs.suspected_type:
+none
+downy_mildew_like
+powdery_mildew_like
+leaf_spot_like
+other
+uncertain
+
+Use downy_mildew_like only when visible features are consistent with downy mildew.
+Use powdery_mildew_like only when powdery white surface growth or patches are visible.
+Use leaf_spot_like only when distinct spot or lesion patterns are visible.
+Do not force a disease type when evidence is weak.
+
+PLANT SIZE
+Return small, medium, large or uncertain.
+Use the same-camera references when supplied.
+Judge the whole visible crop, not one foreground leaf.
+This is relative image-space size, not centimetres or physical height.
+reference_match is the closest reference stage.
+
+CANOPY AND CROWDING
+coverage_percent =
+visible basil foliage pixels / all target-image pixels * 100
+
+Count basil foliage only.
+Do not count channels, trays, pipes, walls, lights, labels or empty background.
+
+visible_gaps:
+many: large open areas remain between plant groups
+some: clear gaps remain while the canopy is filling
+few: most of the visible crop area is closed
+
+overlap:
+low: little visible leaf overlap
+moderate: regular overlap
+high: dense overlap across much of the crop
+
+crowding_state:
+not_crowded: many gaps and low overlap
+moderate: some gaps or moderate overlap
+crowded: few gaps and high overlap
+uncertain: the image cannot support a reliable crowding result
+
+GROWTH
+stage:
+early
+middle
+mature
+uncertain
+
+Use the same-camera references when supplied.
+Judge the whole crop view.
+
+early: separated plant groups and more exposed channels
+middle: greater foliage mass and row filling with clear gaps still present
+mature: strongest canopy closure and dense overlap
+
+If a previous image is supplied, compare only compatible views from the same camera.
+trend:
+increasing: visibly more developed target crop
+stable: no meaningful visible change
+decreasing: visibly less foliage or apparent crop development
+uncertain: comparison is not reliable
+
+IMAGE QUALITY
+Report only visible issues:
+blur
+obstruction
+colour_cast
+underexposed
+overexposed
+extreme_distance
+important_regions_hidden
+
+REVIEW
+review.required must be true when:
+a required result is uncertain
+image quality is poor
+important evidence conflicts
+the crop is not visible well enough for a reliable result
+
+Do not use sensor values.
+Do not infer image metadata.
+Do not make irrigation, dosing, spacing, channel-expansion or harvest decisions.
+Do not claim RGB appearance proves the cause of stress.

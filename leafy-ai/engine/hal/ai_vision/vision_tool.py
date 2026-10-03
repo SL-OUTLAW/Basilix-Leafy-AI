@@ -3,12 +3,14 @@ import json
 from copy import deepcopy
 
 from engine.hal.ai_vision.detector import analyse_image
+from engine.hal.ai_vision.features.growth_history import get_growth_history
 from engine.managers.db_manager import run_query
 
 
-MODEL_NAME = "basil_vision_pipeline_v1"
+MODEL_NAME = "basil_vision_gemini_v4_5"
 
 _latest_analysis = None
+
 
 def _build_public_analysis(analysis, image_id):
     return {
@@ -17,41 +19,24 @@ def _build_public_analysis(analysis, image_id):
         "image_id": image_id,
         "camera": analysis.get("camera"),
         "image": analysis.get("image"),
+        "vision_version": analysis.get("vision_version"),
+        "schema_version": analysis.get("schema_version"),
+        "source_sha256": analysis.get("source_sha256"),
+        "model": analysis.get("model"),
+        "thinking_level": analysis.get("thinking_level"),
+        "prompt_sha256": analysis.get("prompt_sha256"),
+        "schema_sha256": analysis.get("schema_sha256"),
         "health": analysis.get("health"),
-        "visual_anomaly": analysis.get("visual_anomaly"),
+        "plant_size": analysis.get("plant_size"),
         "canopy": analysis.get("canopy"),
-        "size": analysis.get("size"),
-        "crowding": analysis.get("crowding"),
-        "appearance": analysis.get("appearance"),
-        "water_stress": analysis.get("water_stress"),
-        "nutrient_stress": analysis.get("nutrient_stress"),
         "growth": analysis.get("growth"),
-        "harvest_readiness": analysis.get("harvest_readiness"),
+        "growth_history": analysis.get("growth_history"),
+        "image_quality": analysis.get("image_quality"),
+        "review": analysis.get("review"),
     }
+
 
 async def analyse_camera_images(image_paths):
-    """
-    Analyse camera images supplied as either:
-
-    {
-        image_id: image_path,
-        ...
-    }
-
-    or:
-
-    {
-        image_id: {
-            "image_path": image_path,
-            "camera_name": camera_name,
-        },
-        ...
-    }
-
-    Successful analyses are stored in plant_image_analysis.
-    A compact whole-camera analysis is returned as a JSON-compatible dictionary.
-    """
-
     global _latest_analysis
 
     if not isinstance(image_paths, dict) or not image_paths:
@@ -67,7 +52,6 @@ async def analyse_camera_images(image_paths):
     successful = 0
 
     for image_id, image_data in image_paths.items():
-
         try:
             image_id = int(image_id)
         except (TypeError, ValueError):
@@ -109,12 +93,19 @@ async def analyse_camera_images(image_paths):
             results[str(image_id)] = analysis
             continue
 
-        analysis = _build_public_analysis(
-            analysis,
-            image_id,
-        )
-
         try:
+            analysis["growth_history"] = await get_growth_history(
+                image_id,
+                analysis,
+                MODEL_NAME,
+                run_query,
+            )
+
+            analysis = _build_public_analysis(
+                analysis,
+                image_id,
+            )
+
             rows = await run_query(
                 """
                 INSERT INTO plant_image_analysis (

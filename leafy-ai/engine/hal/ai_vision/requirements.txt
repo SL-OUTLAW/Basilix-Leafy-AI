@@ -2,3 +2,5 @@ ultralytics==8.4.121
 torch>=2.2.0
 opencv-python
 numpy
+
+google-genai==2.27.0
