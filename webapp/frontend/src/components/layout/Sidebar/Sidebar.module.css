@@ -59,10 +59,10 @@
   align-items: center !important;
   justify-content: center !important;
 
-  border: 1px solid var(--color-border) !important;
+  border: None !important;
   border-radius: 6px !important;
 
-  background: var(--color-bg-card) !important;
+  background: None !important;
   color: var(--color-text-primary) !important;
 
   cursor: pointer;
@@ -117,8 +117,7 @@
 }
 
 .sidebar .active img {
-  filter: brightness(0) saturate(100%)
-    invert(75%) sepia(55%) saturate(650%)
+  filter: brightness(0) saturate(100%) invert(75%) sepia(55%) saturate(650%)
     hue-rotate(100deg) brightness(94%) contrast(90%);
 }
 
@@ -219,8 +218,14 @@
 }
 
 .collapsed button:not(.toggleButton) img {
-  width: 18.75px;
-  height: 18.75px;
+  width: 25.5px;
+  height: 25.5px;
+}
+
+.collapsed button:not(.toggleButton) > svg {
+  width: 25.5px;
+  height: 25.5px;
+  flex-shrink: 0;
 }
 
 .collapsed .emergency {
@@ -228,8 +233,8 @@
 }
 
 .collapsed .emergency img {
-  width: 18.75px !important;
-  height: 18.75px !important;
+  width: 25.5px !important;
+  height: 25.5px !important;
 }
 
 .collapsed .bottom {
@@ -241,8 +246,8 @@
 }
 
 .collapsed .bottom button img {
-  width: 18.75px !important;
-  height: 18.75px !important;
+  width: 25.5px !important;
+  height: 25.5px !important;
 }
 
 @media (max-width: 1399px) and (min-width: 1100px) {
@@ -377,15 +382,14 @@
 }
 
 [data-theme="light"] .sidebar .active img {
-  filter: brightness(0) saturate(100%)
-    invert(63%) sepia(66%) saturate(600%)
+  filter: brightness(0) saturate(100%) invert(63%) sepia(66%) saturate(600%)
     hue-rotate(105deg) brightness(90%) contrast(88%);
 }
 
 [data-theme="light"] .toggleButton {
-  background: var(--color-green-dark) !important;
+  background: none !important;
   color: #ffffff !important;
-  border-color: rgba(255, 255, 255, 0.22) !important;
+  border-color: None !important;
 }
 
 [data-theme="light"] .bottom button {
@@ -419,6 +423,18 @@
   height: 25.5px;
   flex-shrink: 0;
 }
-.sidebar .active > svg { color: var(--color-green); }
-@media (max-width: 1399px) and (min-width: 1100px) { .sidebar nav button > svg { width: 22.5px; height: 22.5px; } }
-@media (max-width: 1099px) and (min-width: 768px) { .sidebar nav button > svg { width: 21px; height: 21px; } }
+.sidebar .active > svg {
+  color: var(--color-green);
+}
+@media (max-width: 1399px) and (min-width: 1100px) {
+  .sidebar nav button > svg {
+    width: 22.5px;
+    height: 22.5px;
+  }
+}
+@media (max-width: 1099px) and (min-width: 768px) {
+  .sidebar nav button > svg {
+    width: 21px;
+    height: 21px;
+  }
+}

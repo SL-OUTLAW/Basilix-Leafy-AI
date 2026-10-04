@@ -84,3 +84,15 @@ export function recordHarvest(
     }
   );
 }
+
+export function updateGrowCycle(token, onTokenRefresh, growCycleId, changes) {
+  return apiRequest(`/api/grow-cycles/${growCycleId}`, token, onTokenRefresh, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(changes)
+  });
+}
+
+export function deleteGrowCycle(token, onTokenRefresh, growCycleId) {
+  return apiRequest(`/api/grow-cycles/${growCycleId}`, token, onTokenRefresh, { method: "DELETE" });
+}

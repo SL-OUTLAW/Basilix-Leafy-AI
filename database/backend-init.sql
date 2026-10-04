@@ -95,7 +95,7 @@ CREATE TABLE IF NOT EXISTS feature_permissions (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
     CONSTRAINT chk_feature_permissions_access
-        CHECK (access_level IN ('ALL', 'OPERATOR', 'ADMIN'))
+        CHECK (access_level IN ('OPERATOR', 'ADMIN'))
 );
 
 INSERT INTO feature_permissions (permission_key, access_level, description)
@@ -111,5 +111,19 @@ VALUES
     ('HARVEST_RECORD', 'OPERATOR', 'Record harvest data'),
     ('SETTINGS_MANAGE', 'ADMIN', 'Edit Engine settings')
 ON CONFLICT (permission_key) DO NOTHING;
+
+CREATE TABLE IF NOT EXISTS notification_reads (
+    user_id BIGINT NOT NULL,
+    notification_id BIGINT NOT NULL,
+    read_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    PRIMARY KEY (user_id, notification_id),
+    CONSTRAINT fk_notification_reads_user
+        FOREIGN KEY (user_id)
+        REFERENCES users(user_id)
+        ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_notification_reads_user
+    ON notification_reads (user_id, read_at DESC);
 
 COMMIT;

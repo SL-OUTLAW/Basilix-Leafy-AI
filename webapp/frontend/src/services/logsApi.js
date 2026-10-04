@@ -83,17 +83,9 @@ function mapLog(log) {
   };
 }
 
-export async function getLogsData(
-  token,
-  onTokenRefresh
-) {
-  const data = await apiRequest(
-    "/api/logs?limit=500",
-    token,
-    onTokenRefresh
-  );
-
-  return Array.isArray(data.logs)
-    ? data.logs.map(mapLog)
-    : [];
+export async function getLogsData(token, onTokenRefresh, options = {}) {
+  const limit = options.limit || 50;
+  const offset = options.offset || 0;
+  const data = await apiRequest(`/api/logs?limit=${limit}&offset=${offset}`, token, onTokenRefresh);
+  return Array.isArray(data.logs) ? data.logs.map(mapLog) : [];
 }

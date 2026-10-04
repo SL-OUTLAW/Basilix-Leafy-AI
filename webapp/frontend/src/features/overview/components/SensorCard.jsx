@@ -1,21 +1,16 @@
-import {
-  Droplets,
-  FlaskConical,
-  Gauge,
-  Thermometer
-} from "lucide-react";
+import { getSystemIcon } from "../../../components/common/ActionIcon/ActionIcon";
 
 import styles from "./SensorCard.module.css";
 
-const sensorIcons = {
-  ph: FlaskConical,
-  temperature: Thermometer,
-  water: Droplets,
-  ec: Gauge
-};
-
 function SensorIcon({ type }) {
-  const Icon = sensorIcons[type] || FlaskConical;
+  const sensorType =
+    type === "temperature"
+      ? "ambient_temperature"
+      : type === "water"
+        ? "water_level"
+        : type;
+
+  const Icon = getSystemIcon({ sensorType });
 
   return (
     <Icon

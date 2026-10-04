@@ -37,3 +37,23 @@ export function updateEngineSettings(
     }
   );
 }
+
+export function resetEngineSettings(token, onTokenRefresh, settingKey = null) {
+  return apiRequest("/api/settings/reset", token, onTokenRefresh, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ setting_key: settingKey })
+  });
+}
+
+export function addCamera(token, onTokenRefresh, camera) {
+  return apiRequest("/api/farm/cameras", token, onTokenRefresh, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(camera)
+  });
+}
+
+export function getCameras(token, onTokenRefresh) {
+  return apiRequest("/api/farm/cameras", token, onTokenRefresh);
+}

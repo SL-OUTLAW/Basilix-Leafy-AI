@@ -9,9 +9,9 @@ import {
 
 import StatusCard from "./components/StatusCard";
 import SensorCard from "./components/SensorCard";
-import FarmOverviewPanel from "./components/FarmOverviewPanel";
 import RecommendationsPanel from "./components/RecommendationsPanel";
-import NotificationsPanel from "./components/NotificationsPanel";
+import RecentApprovalsPanel from "./components/RecentApprovalsPanel";
+import RecentTaskActivityPanel from "./components/RecentTaskActivityPanel";
 
 import styles from "./Overview.module.css";
 
@@ -20,7 +20,8 @@ function Overview({
   loading = false,
   error = "",
   onGoToFarm,
-  onViewNotifications
+  onOpenSafety,
+  onOpenSchedule
 }) {
   const summary = data?.summary ?? {};
   const sensors = data?.sensors ?? {};
@@ -28,11 +29,6 @@ function Overview({
   const recommendations =
     Array.isArray(data?.recommendations)
       ? data.recommendations
-      : [];
-
-  const notifications =
-    Array.isArray(data?.notifications)
-      ? data.notifications
       : [];
 
   const hasError = Boolean(error);
@@ -106,10 +102,10 @@ function Overview({
         />
 
         <StatusCard
-          title="Auto Executed"
-          value={summary.autoExecuted?.value}
+          title="Task Runs · 24h"
+          value={summary.taskRuns?.value}
           note={
-            summary.autoExecuted?.note ||
+            summary.taskRuns?.note ||
             unavailableNote
           }
           icon={Zap}
@@ -129,20 +125,26 @@ function Overview({
       </section>
 
       <div className={styles.mainRow}>
-        <FarmOverviewPanel
-          data={data?.farmOverview}
+        <RecentApprovalsPanel
+          approvals={data?.recentApprovals || []}
           loading={loading}
-          error={
-            hasError ||
-            Boolean(sectionErrors.farmOverview)
-          }
-          onGoToFarm={onGoToFarm}
+          error={hasError || Boolean(sectionErrors.approvals)}
+          onOpenSafety={onOpenSafety}
         />
 
         <RecommendationsPanel
           recommendations={recommendations}
           loading={loading}
           error={hasError}
+        />
+      </div>
+
+      <div className={styles.activityRow}>
+        <RecentTaskActivityPanel
+          executions={data?.recentExecutions || []}
+          loading={loading}
+          error={hasError || Boolean(sectionErrors.executions)}
+          onOpenSchedule={onOpenSchedule}
         />
       </div>
 
@@ -157,54 +159,60 @@ function Overview({
         />
 
         <SensorCard
-          type="temperature"
-          title="Temperature"
-          value={sensors.temperature?.value}
-          status={
-            sensors.temperature?.status ||
-            unavailableNote
-          }
-          tone={
-            sensors.temperature?.tone ||
-            "neutral"
-          }
-          trend={sensors.temperature?.trend}
+          type="ec"
+          title="EC"
+          value={sensors.ec?.value}
+          status={sensors.ec?.status || unavailableNote}
+          tone={sensors.ec?.tone || "neutral"}
+          trend={sensors.ec?.trend}
+        />
+
+        <SensorCard
+          type="ambient_temperature"
+          title="Ambient Temperature"
+          value={sensors.ambientTemperature?.value}
+          status={sensors.ambientTemperature?.status || unavailableNote}
+          tone={sensors.ambientTemperature?.tone || "neutral"}
+          trend={sensors.ambientTemperature?.trend}
+        />
+
+        <SensorCard
+          type="water_temperature"
+          title="Water Temperature"
+          value={sensors.waterTemperature?.value}
+          status={sensors.waterTemperature?.status || unavailableNote}
+          tone={sensors.waterTemperature?.tone || "neutral"}
+          trend={sensors.waterTemperature?.trend}
+        />
+
+        <SensorCard
+          type="humidity"
+          title="Humidity"
+          value={sensors.humidity?.value}
+          status={sensors.humidity?.status || unavailableNote}
+          tone={sensors.humidity?.tone || "neutral"}
+          trend={sensors.humidity?.trend}
+        />
+
+        <SensorCard
+          type="dew_point"
+          title="Dew Point"
+          value={sensors.dewPoint?.value}
+          status={sensors.dewPoint?.status || unavailableNote}
+          tone={sensors.dewPoint?.tone || "neutral"}
+          trend={sensors.dewPoint?.trend}
         />
 
         <SensorCard
           type="water"
           title="Water Level"
           value={sensors.waterLevel?.value}
-          status={
-            sensors.waterLevel?.status ||
-            unavailableNote
-          }
-          tone={
-            sensors.waterLevel?.tone ||
-            "neutral"
-          }
+          status={sensors.waterLevel?.status || unavailableNote}
+          tone={sensors.waterLevel?.tone || "neutral"}
+          trend={sensors.waterLevel?.trend}
           percentage={sensors.waterLevel?.percentage}
         />
-
-        <SensorCard
-          type="ec"
-          title="EC Level"
-          value={sensors.ec?.value}
-          status={sensors.ec?.status || unavailableNote}
-          tone={sensors.ec?.tone || "neutral"}
-          trend={sensors.ec?.trend}
-        />
       </section>
-
-      <NotificationsPanel
-        notifications={notifications}
-        loading={loading}
-        error={
-          hasError ||
-          Boolean(sectionErrors.notifications)
-        }
-        onViewAll={onViewNotifications}
-      />
     </div>
   );
 }

@@ -1,4 +1,5 @@
-import ActionIcon from "./ActionIcon";
+import ActionIcon from "../../../components/common/ActionIcon/ActionIcon";
+import StateMessage from "../../../components/common/StateMessage/StateMessage";
 
 import styles from "./RecentSafetyActivity.module.css";
 
@@ -15,17 +16,11 @@ function RecentSafetyActivity({
 
       <div className={styles.list}>
         {loading ? (
-          <div className={styles.state}>
-            Loading safety activity...
-          </div>
+          <StateMessage compact message="Loading safety activity..." />
         ) : error ? (
-          <div className={styles.state}>
-            Safety activity unavailable.
-          </div>
+          <StateMessage compact tone="error" message="Safety activity unavailable." />
         ) : items.length === 0 ? (
-          <div className={styles.state}>
-            No recent safety activity available.
-          </div>
+          <StateMessage compact message="No recent safety activity available." />
         ) : (
           items.map((item) => (
             <article
@@ -34,7 +29,7 @@ function RecentSafetyActivity({
             >
               <time>{item.time || "—"}</time>
 
-              <ActionIcon type={item.type} size="activity" />
+              <ActionIcon type={item.type} variant="activity" size={17} />
 
               <div className={styles.copy}>
                 <strong>{item.command || "Activity"}</strong>

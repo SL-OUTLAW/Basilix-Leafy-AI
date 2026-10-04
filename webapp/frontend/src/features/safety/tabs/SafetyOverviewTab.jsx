@@ -1,6 +1,5 @@
 import SafetySummary from "../components/SafetySummary";
 import PendingApprovals from "../components/PendingApprovals";
-import RiskAssessment from "../components/RiskAssessment";
 import RecentSafetyActivity from "../components/RecentSafetyActivity";
 
 import styles from "./SafetyOverviewTab.module.css";
@@ -31,13 +30,6 @@ function SafetyOverviewTab({
           loading={loading}
           error={error}
           onViewAll={onOpenApprovals}
-        />
-
-        <RiskAssessment
-          data={data?.riskAssessment}
-          loading={loading}
-          error={error}
-          onConfigure={onOpenConfiguration}
         />
       </div>
 

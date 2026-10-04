@@ -1,15 +1,26 @@
 .icon {
-  width: 37.5px;
-  height: 37.5px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  flex-shrink: 0;
+  display: inline-grid;
+  place-items: center;
+  justify-self: center;
+  flex: 0 0 auto;
 
   border: 1px solid currentColor;
   border-radius: 50%;
+}
+
+.task {
+  width: 37.5px;
+  height: 37.5px;
+}
+
+.compact {
+  width: 28.5px;
+  height: 28.5px;
+}
+
+.activity {
+  width: 31.5px;
+  height: 31.5px;
 }
 
 .green {

@@ -1,41 +1,15 @@
-import styles from "./ExpandModal.module.css";
+import Modal from "../../../components/common/Modal/Modal";
 
-function ExpandModal({
-  title,
-  children,
-  onClose,
-  fullScreen = false
-}) {
+function ExpandModal({ title, children, onClose, fullScreen = false }) {
   return (
-    <div
-      className={`${styles.overlay} ${
-        fullScreen ? styles.fullScreenOverlay : ""
-      }`}
-      onClick={onClose}
+    <Modal
+      title={title}
+      onClose={onClose}
+      fullScreen={fullScreen}
+      size="medium"
     >
-      <div
-        className={`${styles.modal} ${
-          fullScreen ? styles.fullScreen : ""
-        }`}
-        onClick={(event) => event.stopPropagation()}
-      >
-        <div className={styles.header}>
-          <h2>{title}</h2>
-
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Close"
-          >
-            ×
-          </button>
-        </div>
-
-        <div className={styles.content}>
-          {children}
-        </div>
-      </div>
-    </div>
+      {children}
+    </Modal>
   );
 }
 

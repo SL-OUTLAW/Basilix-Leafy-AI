@@ -149,6 +149,11 @@ router.get(
   ...proxyJson("GET", "/farm/cameras")
 );
 
+router.post(
+  "/cameras",
+  ...proxyJson("POST", "/farm/cameras", [...adminAccess, requirePermission("SETTINGS_MANAGE")])
+);
+
 router.get(
   "/cameras/:cameraId/image",
   ...userAccess,

@@ -10,11 +10,15 @@ const DEFAULT_PERMISSIONS = {
   SCHEDULE_MANAGE: "OPERATOR",
   GROW_CYCLE_MANAGE: "OPERATOR",
   HARVEST_RECORD: "OPERATOR",
-  SETTINGS_MANAGE: "ADMIN"
+  SETTINGS_MANAGE: "ADMIN",
 };
 
+const ACCESS_LEVELS = new Set(["OPERATOR", "ADMIN"]);
+
 async function ensureAccessControlDefaults() {
-  for (const [permissionKey, accessLevel] of Object.entries(DEFAULT_PERMISSIONS)) {
+  for (const [permissionKey, accessLevel] of Object.entries(
+    DEFAULT_PERMISSIONS,
+  )) {
     await backendQuery(
       `
       INSERT INTO feature_permissions (
@@ -31,8 +35,8 @@ async function ensureAccessControlDefaults() {
         permissionKey
           .toLowerCase()
           .replaceAll("_", " ")
-          .replace(/\b\w/g, (letter) => letter.toUpperCase())
-      ]
+          .replace(/\b\w/g, (letter) => letter.toUpperCase()),
+      ],
     );
   }
 }
@@ -57,20 +61,20 @@ async function getPermissionMap() {
   const rows = await getPermissions();
 
   return Object.fromEntries(
-    rows.map((row) => [row.permission_key, row.access_level])
+    rows.map((row) => [row.permission_key, row.access_level]),
   );
 }
 
 function roleAllowed(role, accessLevel) {
-  if (accessLevel === "ALL") {
-    return role === "OPERATOR" || role === "ADMIN";
-  }
-
   if (accessLevel === "OPERATOR") {
     return role === "OPERATOR" || role === "ADMIN";
   }
 
-  return role === "ADMIN";
+  if (accessLevel === "ADMIN") {
+    return role === "ADMIN";
+  }
+
+  return false;
 }
 
 function requirePermission(permissionKey) {
@@ -85,7 +89,7 @@ function requirePermission(permissionKey) {
         WHERE permission_key = $1
         LIMIT 1;
         `,
-        [permissionKey]
+        [permissionKey],
       );
 
       const accessLevel =
@@ -93,11 +97,19 @@ function requirePermission(permissionKey) {
         DEFAULT_PERMISSIONS[permissionKey] ||
         "ADMIN";
 
+      if (!ACCESS_LEVELS.has(accessLevel)) {
+        return res.status(500).json({
+          authenticated: true,
+          error: "Invalid feature permission configuration",
+          permission: permissionKey,
+        });
+      }
+
       if (!roleAllowed(req.user?.role, accessLevel)) {
         return res.status(403).json({
           authenticated: true,
           error: "You do not have permission to perform this action",
-          permission: permissionKey
+          permission: permissionKey,
         });
       }
 
@@ -107,17 +119,18 @@ function requirePermission(permissionKey) {
 
       return res.status(500).json({
         authenticated: true,
-        error: "Permission authorization failed"
+        error: "Permission authorization failed",
       });
     }
   };
 }
 
 module.exports = {
+  ACCESS_LEVELS,
   DEFAULT_PERMISSIONS,
   ensureAccessControlDefaults,
   getPermissions,
   getPermissionMap,
   requirePermission,
-  roleAllowed
+  roleAllowed,
 };

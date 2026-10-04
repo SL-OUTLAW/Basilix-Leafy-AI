@@ -31,7 +31,7 @@ export async function apiRequest(
     }
 
     activeToken = refreshed.token;
-    onTokenRefresh?.(activeToken);
+    onTokenRefresh?.(activeToken, refreshed.user || null);
 
     response = await sendRequest(
       path,

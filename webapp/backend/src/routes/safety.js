@@ -44,6 +44,15 @@ router.get("/configuration", ...readAccess, (req, res) => {
   return proxy(req, res, "GET", "/safety/configuration");
 });
 
+router.get("/activity", ...readAccess, async (req, res) => {
+  try {
+    const response = await engineRequest({ req, method: "GET", path: "/safety/activity", params: req.query });
+    return sendEngineResponse(res, response);
+  } catch (error) {
+    return sendEngineFailure(res, error);
+  }
+});
+
 router.post("/emergency-stop", ...readAccess, requirePermission("EMERGENCY_STOP"), (req, res) => {
   return proxy(req, res, "POST", "/safety/emergency-stop");
 });

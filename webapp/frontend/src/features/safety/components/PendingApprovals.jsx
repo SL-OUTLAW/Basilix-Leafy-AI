@@ -1,4 +1,5 @@
-import ActionIcon from "./ActionIcon";
+import ActionIcon from "../../../components/common/ActionIcon/ActionIcon";
+import StateMessage from "../../../components/common/StateMessage/StateMessage";
 
 import styles from "./PendingApprovals.module.css";
 
@@ -28,17 +29,11 @@ function PendingApprovals({
 
       <div className={styles.list}>
         {loading ? (
-          <div className={styles.state}>
-            Loading pending approvals...
-          </div>
+          <StateMessage compact message="Loading pending approvals..." />
         ) : error ? (
-          <div className={styles.state}>
-            Pending approvals unavailable.
-          </div>
+          <StateMessage compact tone="error" message="Pending approvals unavailable." />
         ) : items.length === 0 ? (
-          <div className={styles.state}>
-            No pending approvals available.
-          </div>
+          <StateMessage compact message="No pending approvals available." />
         ) : (
           items.map((item) => (
             <article
@@ -47,7 +42,7 @@ function PendingApprovals({
             >
               <time>{item.time || "—"}</time>
 
-              <ActionIcon type={item.type} size="compact" />
+              <ActionIcon type={item.type} variant="compact" size={16} />
 
               <div className={styles.copy}>
                 <strong>{item.command || "Command"}</strong>

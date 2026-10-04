@@ -1,0 +1,158 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+
+  padding: 18px;
+
+  display: grid;
+  place-items: center;
+
+  background: rgba(0, 0, 0, 0.65);
+}
+
+.modal {
+  width: min(100%, 675px);
+  max-height: calc(100dvh - 36px);
+
+  display: flex;
+  flex-direction: column;
+
+  overflow: hidden;
+
+  background: var(--color-bg-card);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-large, 12px);
+  box-shadow: 0 15px 45px rgba(0, 0, 0, 0.3);
+}
+
+.small {
+  max-width: 540px;
+}
+
+.medium {
+  max-width: 675px;
+}
+
+.large {
+  max-width: 720px;
+}
+
+.header {
+  min-height: 48px;
+  padding: 12px 15px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  flex: 0 0 auto;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.heading {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.heading > div {
+  min-width: 0;
+}
+
+.headerIcon {
+  width: 21px;
+  height: 21px;
+  flex: 0 0 auto;
+  color: var(--color-green);
+}
+
+.header h2,
+.header p {
+  margin: 0;
+}
+
+.header h2 {
+  color: var(--color-text-primary);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.header p {
+  margin-top: 3px;
+  color: var(--color-text-muted);
+  font-size: 12px;
+}
+
+.closeButton {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+
+  display: inline-grid;
+  place-items: center;
+
+  flex: 0 0 auto;
+
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-bg-card-inner);
+  color: var(--color-text-primary);
+}
+
+.content {
+  min-height: 0;
+  padding: 15px;
+  overflow: auto;
+}
+
+.footer {
+  padding: 13px 15px;
+  flex: 0 0 auto;
+  border-top: 1px solid var(--color-border);
+}
+
+.fullScreenOverlay {
+  padding: 15px;
+}
+
+.fullScreen {
+  width: 100%;
+  max-width: none;
+  height: calc(100dvh - 30px);
+  max-height: none;
+}
+
+.fullScreen .content {
+  flex: 1;
+}
+
+@media (max-width: 767px) {
+  .overlay {
+    padding: 9px;
+  }
+
+  .header {
+    padding: 10.5px 12px;
+  }
+
+  .content {
+    padding: 12px;
+  }
+
+  .footer {
+    padding: 12px;
+  }
+
+  .fullScreenOverlay {
+    padding: 0;
+  }
+
+  .fullScreen {
+    height: 100dvh;
+    border-radius: 0;
+  }
+}

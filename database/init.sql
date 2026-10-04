@@ -120,7 +120,6 @@ CREATE TABLE cameras (
     camera_name VARCHAR(100) NOT NULL,
     level_no INTEGER NOT NULL,
     ip_address VARCHAR(45),
-    stream_url VARCHAR(500),
     rtsp_path VARCHAR(500),
     status VARCHAR(30) NOT NULL DEFAULT 'ACTIVE',
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),

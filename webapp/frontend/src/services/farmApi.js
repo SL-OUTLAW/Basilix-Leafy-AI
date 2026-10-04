@@ -9,6 +9,7 @@ const HISTORY_TYPES = [
   "water_temperature",
   "ambient_temperature",
   "humidity",
+  "dew_point",
   "water_level"
 ];
 
@@ -137,7 +138,7 @@ export async function getFarmData(
     apiRequest("/api/grow-cycles/active", token, onTokenRefresh),
     apiRequest("/api/harvest/history?limit=5&include_active=true", token, onTokenRefresh),
     apiRequest("/api/farm/controls", token, onTokenRefresh),
-    apiRequest("/api/ai/recommendations?limit=20", token, onTokenRefresh)
+    apiRequest("/api/task-executions?task_action=RUN_AI_ANALYSIS&limit=10&offset=0", token, onTokenRefresh)
   ];
 
   const historyRequests = HISTORY_TYPES.map((sensorType) =>
@@ -154,7 +155,7 @@ export async function getFarmData(
     activeCycleResult,
     harvestResult,
     controlsResult,
-    recommendationsResult,
+    analysisResult,
     ...historyResults
   ] = await Promise.allSettled([
     ...baseRequests,
@@ -205,10 +206,9 @@ export async function getFarmData(
       ? harvestResult.value.history
       : null;
 
-  const recommendations =
-    recommendationsResult.status === "fulfilled" &&
-    Array.isArray(recommendationsResult.value.recommendations)
-      ? recommendationsResult.value.recommendations
+  const analyses =
+    analysisResult.status === "fulfilled" && Array.isArray(analysisResult.value.executions)
+      ? analysisResult.value.executions
       : [];
 
   const controls =
@@ -230,6 +230,7 @@ export async function getFarmData(
           histories.water_temperature
         ),
         humidity: mapSensor(sensorByType.humidity, histories.humidity),
+        dewPoint: mapSensor(sensorByType.dew_point, histories.dew_point),
         waterLevel: mapSensor(
           sensorByType.water_level,
           histories.water_level
@@ -245,7 +246,7 @@ export async function getFarmData(
       harvest: buildHarvest(harvestHistory, activeCycle)
     },
     insight: {
-      recommendations
+      analyses
     },
     routine: {
       activeCycle,
@@ -363,7 +364,7 @@ export function setEcTarget(token, onTokenRefresh, targetValue) {
 
 export function mergeFarmSensorSnapshot(data, payload) {
   if (!data?.monitoring?.sensors || !payload?.sensors) return data;
-  const keyByType = { ph: "ph", ec: "ec", water_temperature: "waterTemperature", ambient_temperature: "temperature", humidity: "humidity", water_level: "waterLevel" };
+  const keyByType = { ph: "ph", ec: "ec", water_temperature: "waterTemperature", ambient_temperature: "temperature", humidity: "humidity", dew_point: "dewPoint", water_level: "waterLevel" };
   const sensors = { ...data.monitoring.sensors };
   Object.entries(payload.sensors).forEach(([type, reading]) => {
     const key = keyByType[type]; if (!key) return;

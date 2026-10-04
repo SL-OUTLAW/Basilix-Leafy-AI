@@ -4,58 +4,11 @@ import {
   X
 } from "lucide-react";
 
-import TaskIcon from "./TaskIcon";
+import ActionIcon from "../../../components/common/ActionIcon/ActionIcon";
+import { formatAction, formatClockTime, formatLevel } from "../../../utils/formatters";
 
 import styles from "./TaskDetails.module.css";
 
-function formatTime(value) {
-  if (!value) {
-    return "—";
-  }
-
-  if (/^\d{2}:\d{2}/.test(value)) {
-    const [hourValue, minute] = value.split(":");
-    const hour = Number(hourValue);
-    const suffix = hour >= 12 ? "PM" : "AM";
-    const displayHour = hour % 12 || 12;
-
-    return `${displayHour}:${minute} ${suffix}`;
-  }
-
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return String(value);
-  }
-
-  return date.toLocaleTimeString([], {
-    hour: "2-digit",
-    minute: "2-digit"
-  });
-}
-
-function formatLevel(level) {
-  if (level === 0) {
-    return "All";
-  }
-
-  if (level === null || level === undefined) {
-    return "—";
-  }
-
-  return `Level ${level}`;
-}
-
-function formatAction(value) {
-  if (!value) {
-    return "—";
-  }
-
-  return value
-    .toLowerCase()
-    .replaceAll("_", " ")
-    .replace(/\b\w/g, (letter) => letter.toUpperCase());
-}
 
 function getStatus(task) {
   if (!task.enabled) {
@@ -115,7 +68,7 @@ function TaskDetails({
       </div>
 
       <div className={styles.taskHeading}>
-        <TaskIcon
+        <ActionIcon
           iconName={task.icon_name}
           iconKey={task.icon_key}
           tone={task.icon_tone}
@@ -135,12 +88,12 @@ function TaskDetails({
       <dl className={styles.information}>
         <div>
           <dt>Time</dt>
-          <dd>{formatTime(task.start_time)}</dd>
+          <dd>{formatClockTime(task.start_time)}</dd>
         </div>
 
         <div>
           <dt>Level</dt>
-          <dd>{formatLevel(task.level_no)}</dd>
+          <dd>{formatLevel(task.level_no, "All")}</dd>
         </div>
 
         <div>

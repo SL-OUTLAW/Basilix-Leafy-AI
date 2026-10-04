@@ -1,4 +1,4 @@
-import ActionIcon from "../components/ActionIcon";
+import ActionIcon from "../../../components/common/ActionIcon/ActionIcon";
 
 import styles from "../Safety.module.css";
 
@@ -8,7 +8,10 @@ function ApprovalsTab({
   error = false,
   canReview = false,
   onApprove,
-  onReject
+  onReject,
+  hasMore = false,
+  loadingMore = false,
+  onLoadMore
 }) {
   const items = Array.isArray(data) ? data : [];
 
@@ -53,7 +56,7 @@ function ApprovalsTab({
             >
               <ActionIcon
                 type={item.type}
-                size="activity"
+                variant="activity" size={17}
               />
 
               <div className={styles.approvalCopy}>
@@ -106,6 +109,7 @@ function ApprovalsTab({
           ))}
         </div>
       )}
+      {hasMore && !loading && <button type="button" className={styles.aiToggle} onClick={onLoadMore} disabled={loadingMore}>{loadingMore ? "Loading..." : "Load more approvals"}</button>}
     </section>
   );
 }

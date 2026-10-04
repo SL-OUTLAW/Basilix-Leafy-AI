@@ -4,7 +4,9 @@ import {
   useState
 } from "react";
 
-import { Droplets, Expand, FlaskConical, Gauge, Thermometer, Waves } from "lucide-react";
+import { Expand } from "lucide-react";
+
+import { getSystemIcon } from "../../../components/common/ActionIcon/ActionIcon";
 
 import ExpandModal from "./ExpandModal";
 
@@ -72,8 +74,10 @@ function WaterGauge({ percentage }) {
 
 
 function SensorTypeIcon({ sensorType, title }) {
-  const key = String(sensorType || title || "").toLowerCase();
-  const Icon = key.includes("ph") ? FlaskConical : key.includes("ec") ? Gauge : key.includes("water level") ? Waves : key.includes("temperature") ? Thermometer : key.includes("humidity") ? Droplets : Gauge;
+  const Icon = getSystemIcon({
+    sensorType: sensorType || title
+  });
+
   return <Icon size={18} aria-hidden="true" />;
 }
 

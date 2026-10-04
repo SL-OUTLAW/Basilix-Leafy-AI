@@ -41,6 +41,10 @@
   min-width: 0;
 }
 
+.activityRow {
+  margin-top: 12px;
+}
+
 .sensorSection {
   margin-top: 12px;
   padding: 12px;

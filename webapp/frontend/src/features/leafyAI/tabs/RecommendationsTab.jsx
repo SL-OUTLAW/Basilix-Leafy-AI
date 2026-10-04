@@ -5,7 +5,10 @@ import styles from "./RecommendationsTab.module.css";
 function RecommendationsTab({
   data = null,
   loading = false,
-  error = false
+  error = false,
+  hasMore = false,
+  loadingMore = false,
+  onLoadMore
 }) {
   const recommendations =
     !loading && !error && Array.isArray(data)
@@ -291,6 +294,7 @@ function RecommendationsTab({
 
         {renderDetails()}
       </section>
+      {hasMore && !loading && <button type="button" className={styles.loadMore} onClick={onLoadMore} disabled={loadingMore}>{loadingMore ? "Loading..." : "Load more recommendations"}</button>}
     </div>
   );
 }

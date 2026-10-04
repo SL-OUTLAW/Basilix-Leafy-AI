@@ -16,7 +16,9 @@ function AppShell({
   safetyState,
   access,
   onClearEmergency,
-  onEmergencyStop
+  onEmergencyStop,
+  token,
+  onTokenRefresh
 }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const emergency = Boolean(safetyState?.emergency_stop);
@@ -36,7 +38,14 @@ function AppShell({
       />
 
       <div className={styles.main}>
-        <Header title={title} subtitle={subtitle} />
+        <Header
+          title={title}
+          subtitle={subtitle}
+          profileImage={user?.avatar_url}
+          profileName={user?.full_name || user?.email || "User"}
+          token={token}
+          onTokenRefresh={onTokenRefresh}
+        />
 
         {aiDisabled && !emergency && (
           <button

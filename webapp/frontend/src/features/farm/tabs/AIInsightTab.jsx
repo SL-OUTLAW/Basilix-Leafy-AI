@@ -1,52 +1,25 @@
+import { BrainCircuit, CheckCircle2, CircleAlert } from "lucide-react";
 import styles from "./AIInsightTab.module.css";
 
-function AIInsightTab({
-  data = null,
-  loading = false,
-  error = false
-}) {
-  const recommendations = Array.isArray(data?.recommendations)
-    ? data.recommendations
-    : [];
+function extractContent(result) {
+  return result?.content || result?.result?.content || result?.response?.content || (typeof result === "string" ? result : null);
+}
 
+function AIInsightTab({ data = null, loading = false, error = false }) {
+  const analyses = Array.isArray(data?.analyses) ? data.analyses : [];
   return (
     <section className={styles.insight}>
-      <h2>AI Insight</h2>
-
-      {loading ? (
-        <p>Loading AI recommendations...</p>
-      ) : error ? (
-        <p>AI insight data is unavailable.</p>
-      ) : recommendations.length === 0 ? (
-        <p>No AI recommendations are currently available.</p>
-      ) : (
-        <div className={styles.list}>
-          {recommendations.map((item) => (
-            <article
-              key={item.recommendation_id}
-              className={styles.item}
-            >
-              <div className={styles.itemHeader}>
-                <strong>{item.recommendation_message}</strong>
-                <span>{item.status}</span>
-              </div>
-
-              <p>{item.recommendation_reason}</p>
-
-              <small>
-                {item.level_no === 0
-                  ? "Global"
-                  : `Level ${item.level_no}`}
-                {item.risk_level
-                  ? ` • ${item.risk_level} risk`
-                  : ""}
-              </small>
-            </article>
-          ))}
-        </div>
+      <div className={styles.heading}><div><h2>Farm AI Analysis</h2><p>Results from scheduled whole-farm Leafy AI analysis tasks. Recommendations created by Leafy AI are managed in the Leafy AI → Recommendations screen.</p></div><BrainCircuit size={24}/></div>
+      {loading ? <p>Loading AI analysis results...</p> : error ? <p>AI analysis data is unavailable.</p> : analyses.length === 0 ? <p>No farm AI analysis has run yet.</p> : (
+        <div className={styles.list}>{analyses.map((item) => (
+          <article key={item.execution_id} className={styles.item}>
+            <div className={styles.itemHeader}><strong>{item.task_name || `Farm analysis #${item.execution_id}`}</strong><span>{item.status === "COMPLETED" ? <CheckCircle2 size={15}/> : <CircleAlert size={15}/>} {item.status}</span></div>
+            <p>{extractContent(item.result) || item.error_message || "The analysis completed without a text result."}</p>
+            <small>{new Date(item.completed_at || item.started_at || item.created_at).toLocaleString()}</small>
+          </article>
+        ))}</div>
       )}
     </section>
   );
 }
-
 export default AIInsightTab;

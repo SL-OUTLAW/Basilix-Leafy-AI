@@ -32,13 +32,15 @@ from engine.managers.grow_cycle_manager import (
     get_active_grow_cycle,
     get_harvest_data,
     record_harvest,
+    update_grow_cycle,
+    delete_grow_cycle,
 )
 from engine.managers.notifications_manager import (
     get_notification,
     get_notifications,
     resolve_notification,
 )
-from engine.managers.settings_manager import manage_settings
+from engine.managers.settings_manager import manage_settings, reset_settings
 from engine.managers.tool_manager import execute_tools as run_tools
 from engine.security.approval_manager import (
     approve_request,
@@ -107,6 +109,22 @@ class ReviewRequest(BaseModel):
 class GrowCycleCreate(BaseModel):
     cycle_name: str
     notes: str | None = None
+
+
+class GrowCycleUpdate(BaseModel):
+    cycle_name: str | None = None
+    notes: str | None = None
+
+
+class CameraCreate(BaseModel):
+    camera_name: str
+    level_no: int = Field(ge=1, le=2)
+    ip_address: str
+    rtsp_path: str | None = None
+
+
+class SettingsReset(BaseModel):
+    setting_key: str | None = None
 
 
 class HarvestCreate(BaseModel):
@@ -574,6 +592,38 @@ async def get_farm_cameras(
     }
 
 
+@router.post("/farm/cameras", status_code=201)
+@limiter.limit("20/minute")
+async def create_camera(
+    request: Request,
+    body: CameraCreate,
+    authorization: str | None = Header(default=None),
+    x_user_id: str | None = Header(default=None, alias="X-User-ID"),
+    x_user_role: str | None = Header(default=None, alias="X-User-Role"),
+):
+    _require_webapp_token(authorization)
+    _user_context(x_user_id, x_user_role, {"ADMIN"})
+
+    if not body.camera_name.strip():
+        raise HTTPException(status_code=400, detail="camera_name is required")
+
+    rows = await run_query(
+        """
+        INSERT INTO cameras (camera_name, level_no, ip_address, rtsp_path, status)
+        VALUES (%s, %s, %s, %s, 'ACTIVE')
+        RETURNING camera_id, camera_name, level_no, ip_address, rtsp_path, status, created_at;
+        """,
+        (body.camera_name.strip(), body.level_no, body.ip_address, body.rtsp_path),
+    )
+    await request.app.state.hal.cameras.load_cameras()
+    row = rows[0]
+    return {"success": True, "camera": {
+        "camera_id": row[0], "camera_name": row[1], "level_no": row[2],
+        "ip_address": row[3], "rtsp_path": row[4],
+        "status": row[5], "created_at": row[6].isoformat(),
+    }}
+
+
 @router.get("/farm/cameras/{camera_id}/image")
 @limiter.limit("60/minute")
 async def get_camera_image(
@@ -985,7 +1035,8 @@ async def list_notifications(
     request: Request,
     status_filter: str | None = Query(default=None, alias="status"),
     severity: str | None = Query(default=None),
-    limit: int = Query(default=100, ge=1, le=500),
+    limit: int = Query(default=50, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
     authorization: str | None = Header(default=None),
 ):
     _require_webapp_token(authorization)
@@ -995,11 +1046,23 @@ async def list_notifications(
             status=status_filter,
             severity=severity,
             limit=limit,
+            offset=offset,
         )
     except ValueError as error:
         _raise_bad_request(error)
 
     return {"success": True, "notifications": notifications}
+
+
+@router.get("/notifications/count")
+@limiter.limit("60/minute")
+async def notification_count(
+    request: Request,
+    authorization: str | None = Header(default=None),
+):
+    _require_webapp_token(authorization)
+    rows = await run_query("SELECT COUNT(*) FROM notifications;")
+    return {"success": True, "count": rows[0][0] if rows else 0}
 
 
 @router.get("/notifications/{notification_id}")
@@ -1111,42 +1174,60 @@ async def get_recommendations(
 async def get_ai_activity(
     request: Request,
     limit: int = Query(default=50, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
+    hours: int | None = Query(default=None, ge=1, le=720),
     authorization: str | None = Header(default=None),
 ):
     _require_webapp_token(authorization)
 
     rows = await run_query(
         """
-        SELECT
-            'RECOMMENDATION' AS activity_type,
-            recommendation_id AS entity_id,
-            status,
-            recommendation_message AS message,
-            created_at AS occurred_at
-        FROM ai_recommendations
-        UNION ALL
-        SELECT
-            'TASK_EXECUTION' AS activity_type,
-            execution_id AS entity_id,
-            status,
-            COALESCE(error_message, 'Scheduled task execution') AS message,
-            COALESCE(completed_at, started_at, created_at) AS occurred_at
-        FROM task_executions
-        ORDER BY occurred_at DESC
-        LIMIT %s;
+        SELECT * FROM (
+            SELECT
+                'RECOMMENDATION' AS activity_type,
+                ar.recommendation_id AS entity_id,
+                ar.status,
+                ar.recommendation_message AS message,
+                ar.created_at AS occurred_at,
+                NULL::jsonb AS result,
+                NULL::bigint AS schedule_id,
+                NULL::varchar AS task_name,
+                NULL::varchar AS task_action
+            FROM ai_recommendations ar
+            UNION ALL
+            SELECT
+                'TASK_EXECUTION' AS activity_type,
+                te.execution_id AS entity_id,
+                te.status,
+                COALESCE(
+                    te.error_message,
+                    te.result->>'content',
+                    te.result->'result'->>'content',
+                    fs.task_name,
+                    'Scheduled task execution'
+                ) AS message,
+                COALESCE(te.completed_at, te.started_at, te.created_at) AS occurred_at,
+                te.result,
+                te.schedule_id,
+                fs.task_name,
+                fs.task_action
+            FROM task_executions te
+            JOIN farm_schedule fs ON fs.schedule_id = te.schedule_id
+        ) activity
+        WHERE (%s::integer IS NULL OR occurred_at >= NOW() - make_interval(hours => %s))
+        ORDER BY occurred_at DESC, entity_id DESC
+        LIMIT %s OFFSET %s;
         """,
-        (limit,),
+        (hours, hours, limit, offset),
     )
 
     return {
         "success": True,
         "activity": [
             {
-                "activity_type": row[0],
-                "entity_id": row[1],
-                "status": row[2],
-                "message": row[3],
-                "occurred_at": row[4].isoformat(),
+                "activity_type": row[0], "entity_id": row[1], "status": row[2],
+                "message": row[3], "occurred_at": row[4].isoformat(), "result": row[5],
+                "schedule_id": row[6], "task_name": row[7], "task_action": row[8],
             }
             for row in rows
         ],
@@ -1280,6 +1361,8 @@ async def approve_approval(
         )
     except ValueError as error:
         _raise_bad_request(error)
+    async with get_connection() as conn:
+        await audit_log(conn=conn, user_id=user_id, action_type="APPROVAL_APPROVED", entity_type="approval", entity_id=approval_id, description="A protected action was approved.", metadata={"status": "APPROVED"})
 
     return {"success": True, "approval": result}
 
@@ -1305,8 +1388,62 @@ async def reject_approval(
         )
     except ValueError as error:
         _raise_bad_request(error)
+    async with get_connection() as conn:
+        await audit_log(conn=conn, user_id=user_id, action_type="APPROVAL_REJECTED", entity_type="approval", entity_id=approval_id, description="A protected action was rejected.", metadata={"status": "REJECTED"})
 
     return {"success": True, "approval": result}
+
+
+@router.get("/safety/activity")
+@limiter.limit("60/minute")
+async def get_safety_activity(
+    request: Request,
+    limit: int = Query(default=50, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
+    hours: int = Query(default=24, ge=1, le=720),
+    authorization: str | None = Header(default=None),
+):
+    _require_webapp_token(authorization)
+    rows = await run_query(
+        """
+        SELECT * FROM (
+            SELECT 'APPROVAL' AS source, approval_id AS entity_id, status, action_type AS action,
+                   COALESCE(review_note, 'Approval request ' || lower(status)) AS description,
+                   COALESCE(reviewed_at, requested_at) AS occurred_at, risk_level, action_data AS details
+            FROM approval_requests
+            WHERE status IN ('APPROVED', 'REJECTED')
+            UNION ALL
+            SELECT 'EXECUTION', te.execution_id, te.status, fs.task_action,
+                   COALESCE(te.error_message, fs.task_name || ' ' || lower(te.status)),
+                   COALESCE(te.completed_at, te.started_at, te.created_at),
+                   NULL::varchar, te.result
+            FROM task_executions te
+            JOIN farm_schedule fs ON fs.schedule_id = te.schedule_id
+            WHERE te.status IN ('FAILED', 'SKIPPED', 'BLOCKED', 'AWAITING_APPROVAL')
+               OR (
+                    te.status = 'COMPLETED'
+                    AND COALESCE((SELECT setting_value->>fs.task_action FROM system_settings WHERE setting_key = 'risk'), 'LOW') = 'HIGH'
+               )
+            UNION ALL
+            SELECT 'AUDIT', log_id, COALESCE(metadata->>'status', 'RECORDED'), action_type, description,
+                   created_at, NULL::varchar, metadata
+            FROM audit_logs
+            WHERE action_type LIKE 'SECURITY_%%'
+               OR action_type LIKE 'EMERGENCY_%%'
+               OR action_type LIKE 'AI_%%'
+               OR action_type LIKE '%%BLOCK%%'
+        ) safety_activity
+        WHERE occurred_at >= NOW() - make_interval(hours => %s)
+        ORDER BY occurred_at DESC, entity_id DESC
+        LIMIT %s OFFSET %s;
+        """,
+        (hours, limit, offset),
+    )
+    return {"success": True, "activity": [
+        {"source": r[0], "entity_id": r[1], "status": r[2], "action": r[3],
+         "description": r[4], "occurred_at": r[5].isoformat(), "risk_level": r[6], "details": r[7]}
+        for r in rows
+    ]}
 
 
 @router.get("/safety/state")
@@ -1357,8 +1494,10 @@ async def emergency_stop_route(
     x_user_role: str | None = Header(default=None, alias="X-User-Role"),
 ):
     _require_webapp_token(authorization)
-    _user_context(x_user_id, x_user_role, {"OPERATOR", "ADMIN"})
+    user_id, _ = _user_context(x_user_id, x_user_role, {"OPERATOR", "ADMIN"})
     await activate_emergency_stop()
+    async with get_connection() as conn:
+        await audit_log(conn=conn, user_id=user_id, action_type="EMERGENCY_STOP_ACTIVATED", entity_type="safety", description="Emergency stop was activated.", metadata={"status": "EXECUTED"})
 
     return {"success": True, "emergency_stop": True, "ai_enabled": False}
 
@@ -1372,8 +1511,10 @@ async def clear_emergency_stop_route(
     x_user_role: str | None = Header(default=None, alias="X-User-Role"),
 ):
     _require_webapp_token(authorization)
-    _user_context(x_user_id, x_user_role, {"OPERATOR", "ADMIN"})
+    user_id, _ = _user_context(x_user_id, x_user_role, {"OPERATOR", "ADMIN"})
     await clear_emergency_stop()
+    async with get_connection() as conn:
+        await audit_log(conn=conn, user_id=user_id, action_type="EMERGENCY_STOP_CLEARED", entity_type="safety", description="Emergency stop was cleared.", metadata={"status": "EXECUTED"})
 
     return {"success": True, "emergency_stop": False, "ai_enabled": False}
 
@@ -1387,7 +1528,7 @@ async def enable_ai_route(
     x_user_role: str | None = Header(default=None, alias="X-User-Role"),
 ):
     _require_webapp_token(authorization)
-    _user_context(x_user_id, x_user_role, {"OPERATOR", "ADMIN"})
+    user_id, _ = _user_context(x_user_id, x_user_role, {"OPERATOR", "ADMIN"})
     await enable_ai()
 
     current = (await manage_settings()).get("security", {})
@@ -1398,6 +1539,8 @@ async def enable_ai_route(
             detail="AI cannot be enabled while emergency stop is active",
         )
 
+    async with get_connection() as conn:
+        await audit_log(conn=conn, user_id=user_id, action_type="AI_ENABLED", entity_type="safety", description="Leafy AI was enabled.", metadata={"status": "EXECUTED"})
     return {"success": True, "ai_enabled": True}
 
 
@@ -1410,8 +1553,10 @@ async def disable_ai_route(
     x_user_role: str | None = Header(default=None, alias="X-User-Role"),
 ):
     _require_webapp_token(authorization)
-    _user_context(x_user_id, x_user_role, {"OPERATOR", "ADMIN"})
+    user_id, _ = _user_context(x_user_id, x_user_role, {"OPERATOR", "ADMIN"})
     await disable_ai()
+    async with get_connection() as conn:
+        await audit_log(conn=conn, user_id=user_id, action_type="AI_DISABLED", entity_type="safety", description="Leafy AI was disabled.", metadata={"status": "EXECUTED"})
 
     return {"success": True, "ai_enabled": False}
 
@@ -1633,6 +1778,38 @@ async def get_grow_cycle(
     }
 
 
+@router.patch("/grow-cycles/{grow_cycle_id}")
+@limiter.limit("20/minute")
+async def update_grow_cycle_route(
+    request: Request, grow_cycle_id: int, body: GrowCycleUpdate,
+    authorization: str | None = Header(default=None),
+    x_user_id: str | None = Header(default=None, alias="X-User-ID"),
+    x_user_role: str | None = Header(default=None, alias="X-User-Role"),
+):
+    _require_webapp_token(authorization)
+    _user_context(x_user_id, x_user_role, {"OPERATOR", "ADMIN"})
+    try:
+        result = await update_grow_cycle(grow_cycle_id, body.cycle_name, body.notes)
+    except ValueError as error:
+        _raise_bad_request(error)
+    return {"success": True, "grow_cycle": result}
+
+
+@router.delete("/grow-cycles/{grow_cycle_id}")
+@limiter.limit("10/minute")
+async def delete_grow_cycle_route(
+    request: Request, grow_cycle_id: int,
+    authorization: str | None = Header(default=None),
+    x_user_id: str | None = Header(default=None, alias="X-User-ID"),
+    x_user_role: str | None = Header(default=None, alias="X-User-Role"),
+):
+    _require_webapp_token(authorization)
+    _user_context(x_user_id, x_user_role, {"OPERATOR", "ADMIN"})
+    if not await delete_grow_cycle(grow_cycle_id):
+        raise HTTPException(status_code=404, detail="Grow cycle not found")
+    return {"success": True, "deleted": True}
+
+
 @router.post("/grow-cycles/{grow_cycle_id}/complete")
 @limiter.limit("10/minute")
 async def complete_grow_cycle_route(
@@ -1771,12 +1948,50 @@ async def harvest_history(
     }
 
 
+@router.get("/task-executions/summary")
+@limiter.limit("60/minute")
+async def get_task_execution_summary(
+    request: Request,
+    hours: int = Query(default=24, ge=1, le=720),
+    authorization: str | None = Header(default=None),
+):
+    _require_webapp_token(authorization)
+
+    rows = await run_query(
+        """
+        SELECT
+            COUNT(*) AS total,
+            COUNT(*) FILTER (WHERE status = 'COMPLETED') AS completed,
+            COUNT(*) FILTER (WHERE status IN ('FAILED', 'BLOCKED', 'SKIPPED')) AS failed,
+            COUNT(*) FILTER (WHERE status IN ('PENDING', 'RUNNING', 'AWAITING_APPROVAL')) AS active
+        FROM task_executions
+        WHERE COALESCE(completed_at, started_at, created_at)
+            >= NOW() - make_interval(hours => %s);
+        """,
+        (hours,),
+    )
+
+    row = rows[0] if rows else (0, 0, 0, 0)
+
+    return {
+        "success": True,
+        "summary": {
+            "hours": hours,
+            "total": row[0],
+            "completed": row[1],
+            "failed": row[2],
+            "active": row[3],
+        },
+    }
+
+
 @router.get("/task-executions")
 @limiter.limit("60/minute")
 async def list_task_executions(
     request: Request,
     status_filter: str | None = Query(default=None, alias="status"),
     schedule_id: int | None = Query(default=None),
+    task_action: str | None = Query(default=None),
     limit: int = Query(default=100, ge=1, le=500),
     offset: int = Query(default=0, ge=0),
     authorization: str | None = Header(default=None),
@@ -1786,19 +2001,23 @@ async def list_task_executions(
     rows = await run_query(
         """
         SELECT
-            execution_id,
-            schedule_id,
-            scheduled_for,
-            started_at,
-            completed_at,
-            status,
-            result,
-            error_message,
-            created_at
-        FROM task_executions
-        WHERE (%s::varchar IS NULL OR status = %s)
-          AND (%s::bigint IS NULL OR schedule_id = %s)
-        ORDER BY scheduled_for DESC, execution_id DESC
+            te.execution_id,
+            te.schedule_id,
+            te.scheduled_for,
+            te.started_at,
+            te.completed_at,
+            te.status,
+            te.result,
+            te.error_message,
+            te.created_at,
+            fs.task_name,
+            fs.task_action
+        FROM task_executions te
+        JOIN farm_schedule fs ON fs.schedule_id = te.schedule_id
+        WHERE (%s::varchar IS NULL OR te.status = %s)
+          AND (%s::bigint IS NULL OR te.schedule_id = %s)
+          AND (%s::varchar IS NULL OR fs.task_action = %s)
+        ORDER BY te.scheduled_for DESC, te.execution_id DESC
         LIMIT %s OFFSET %s;
         """,
         (
@@ -1806,6 +2025,8 @@ async def list_task_executions(
             status_filter,
             schedule_id,
             schedule_id,
+            task_action,
+            task_action,
             limit,
             offset,
         ),
@@ -1824,6 +2045,8 @@ async def list_task_executions(
                 "result": row[6],
                 "error_message": row[7],
                 "created_at": row[8].isoformat(),
+                "task_name": row[9],
+                "task_action": row[10],
             }
             for row in rows
         ],
@@ -1910,6 +2133,23 @@ async def reload_system_settings(
         "success": True,
         "settings": await manage_settings(),
     }
+
+
+@router.post("/settings/reset")
+@limiter.limit("10/minute")
+async def reset_system_settings(
+    request: Request, body: SettingsReset,
+    authorization: str | None = Header(default=None),
+    x_user_id: str | None = Header(default=None, alias="X-User-ID"),
+    x_user_role: str | None = Header(default=None, alias="X-User-Role"),
+):
+    _require_webapp_token(authorization)
+    _user_context(x_user_id, x_user_role, {"ADMIN"})
+    try:
+        result = await reset_settings(body.setting_key)
+    except ValueError as error:
+        _raise_bad_request(error)
+    return {"success": True, "settings": result}
 
 
 @router.patch("/settings/update")

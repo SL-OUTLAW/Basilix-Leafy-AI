@@ -1,4 +1,4 @@
-import ActionIcon from "../components/ActionIcon";
+import ActionIcon from "../../../components/common/ActionIcon/ActionIcon";
 
 import styles from "../Safety.module.css";
 
@@ -64,7 +64,7 @@ function ConfigurationTab({
             >
               <ActionIcon
                 type={item.type}
-                size="activity"
+                variant="activity" size={17}
               />
 
               <div className={styles.configurationCopy}>
@@ -77,7 +77,7 @@ function ConfigurationTab({
               <div className={styles.configurationMeta}>
                 <span
                   className={
-                    item.risk === "Low Risk"
+                    item.risk === "Low Risk" || item.risk === "Monitored" || item.risk === "Enabled"
                       ? styles.lowBadge
                       : item.risk === "Medium Risk"
                         ? styles.mediumBadge

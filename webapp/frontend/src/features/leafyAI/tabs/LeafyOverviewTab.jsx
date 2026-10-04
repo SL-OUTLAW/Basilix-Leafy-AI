@@ -165,7 +165,7 @@ function LeafyOverviewTab({
           <div className={styles.highlightHeader}>
             <div>
               <span className={styles.eyebrow}>
-                Recent activity
+                Recent AI activity
               </span>
 
               <h2>
@@ -211,9 +211,9 @@ function LeafyOverviewTab({
       <section className={styles.aiFeed}>
         <div className={styles.sectionHeader}>
           <div>
-            <h2>AI Feed</h2>
+            <h2>Recent AI Activity — 24 Hours</h2>
             <p>
-              Recent Leafy AI analysis and system activity.
+              Recommendations and task activity recorded during the last 24 hours.
             </p>
           </div>
 
@@ -306,7 +306,7 @@ function LeafyOverviewTab({
 
         <article className={styles.smallSummaryCard}>
           <span className={styles.eyebrow}>
-            Recent activity
+            Recent AI activity
           </span>
 
           <strong>

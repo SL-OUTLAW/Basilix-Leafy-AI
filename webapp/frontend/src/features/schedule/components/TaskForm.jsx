@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { X } from "lucide-react";
-import TaskIcon from "./TaskIcon";
+
+import ActionIcon from "../../../components/common/ActionIcon/ActionIcon";
+import Modal from "../../../components/common/Modal/Modal";
 import styles from "./TaskForm.module.css";
 
 const ACTIONS = [
@@ -28,7 +29,11 @@ function initialValues(task) {
 
 function TaskForm({ task, onClose, onSave, busy }) {
   const [form, setForm] = useState(() => initialValues(task));
-  useEffect(() => setForm(initialValues(task)), [task]);
+
+  useEffect(() => {
+    setForm(initialValues(task));
+  }, [task]);
+
   const action = form.task_action;
   const isLighting = action === "SET_LIGHTING";
   const isDosing = action === "DOSE_PH" || action === "DOSE_EC";
@@ -40,37 +45,144 @@ function TaskForm({ task, onClose, onSave, busy }) {
 
   function submit(event) {
     event.preventDefault();
-    const payload = {
+
+    onSave({
       ...form,
       level_no: isLighting ? Number(form.level_no) : 0,
-      interval_seconds: form.interval_seconds === "" ? null : Number(form.interval_seconds),
-      duration_seconds: isTimed && form.duration_seconds !== "" ? Number(form.duration_seconds) : null,
-      target_value: isDosing && form.target_value !== "" ? Number(form.target_value) : null,
-      unit: isDosing ? form.unit || (action === "DOSE_PH" ? "pH" : "uS/cm") : null
-    };
-    onSave(payload);
+      interval_seconds:
+        form.interval_seconds === "" ? null : Number(form.interval_seconds),
+      duration_seconds:
+        isTimed && form.duration_seconds !== ""
+          ? Number(form.duration_seconds)
+          : null,
+      target_value:
+        isDosing && form.target_value !== ""
+          ? Number(form.target_value)
+          : null,
+      unit: isDosing
+        ? form.unit || (action === "DOSE_PH" ? "pH" : "uS/cm")
+        : null
+    });
   }
 
-  return (
-    <div className={styles.backdrop}>
-      <form className={styles.modal} onSubmit={submit}>
-        <div className={styles.header}>
-          <div className={styles.heading}><TaskIcon action={action} /><div><h2>{task ? "Edit Task" : "Add Task"}</h2><p>Configure a farm schedule task.</p></div></div>
-          <button type="button" onClick={onClose} aria-label="Close"><X size={19} /></button>
-        </div>
-        <div className={styles.grid}>
-          <label>Task name<input value={form.task_name} onChange={(e) => update("task_name", e.target.value)} required /></label>
-          <label>Action<select value={action} onChange={(e) => update("task_action", e.target.value)}>{ACTIONS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
-          <label>Start time<input type="time" value={form.start_time?.slice(0,5)} onChange={(e) => update("start_time", e.target.value)} required /></label>
-          {isLighting && <label>Level<select value={form.level_no} onChange={(e) => update("level_no", e.target.value)}><option value="1">Level 1</option><option value="2">Level 2</option></select></label>}
-          <label>Repeat interval (seconds)<input type="number" min="1" value={form.interval_seconds} onChange={(e) => update("interval_seconds", e.target.value)} placeholder="Optional" /></label>
-          {isTimed && <label>Duration (seconds)<input type="number" min="1" value={form.duration_seconds} onChange={(e) => update("duration_seconds", e.target.value)} placeholder="Optional" /></label>}
-          {isDosing && <label>Target value<input type="number" step="any" value={form.target_value} onChange={(e) => update("target_value", e.target.value)} required /></label>}
-          <label className={styles.full}>Description<textarea value={form.task_description} onChange={(e) => update("task_description", e.target.value)} rows="3" /></label>
-        </div>
-        <div className={styles.actions}><button type="button" onClick={onClose}>Cancel</button><button type="submit" disabled={busy}>{busy ? "Saving..." : task ? "Save Changes" : "Create Task"}</button></div>
-      </form>
+  const footer = (
+    <div className={styles.actions}>
+      <button type="button" onClick={onClose} disabled={busy}>
+        Cancel
+      </button>
+      <button type="submit" form="schedule-task-form" disabled={busy}>
+        {busy ? "Saving..." : task ? "Save Changes" : "Create Task"}
+      </button>
     </div>
+  );
+
+  return (
+    <Modal
+      title={task ? "Edit Task" : "Add Task"}
+      subtitle="Configure a farm schedule task."
+      onClose={busy ? undefined : onClose}
+      size="large"
+      footer={footer}
+    >
+      <form id="schedule-task-form" className={styles.form} onSubmit={submit}>
+        <div className={styles.actionPreview}>
+          <ActionIcon action={action} size={21} />
+          <span>{ACTIONS.find(([value]) => value === action)?.[1] || action}</span>
+        </div>
+
+        <div className={styles.grid}>
+          <label>
+            Task name
+            <input
+              value={form.task_name}
+              onChange={(event) => update("task_name", event.target.value)}
+              required
+            />
+          </label>
+
+          <label>
+            Action
+            <select
+              value={action}
+              onChange={(event) => update("task_action", event.target.value)}
+            >
+              {ACTIONS.map(([value, label]) => (
+                <option key={value} value={value}>{label}</option>
+              ))}
+            </select>
+          </label>
+
+          <label>
+            Start time
+            <input
+              type="time"
+              value={form.start_time?.slice(0, 5)}
+              onChange={(event) => update("start_time", event.target.value)}
+              required
+            />
+          </label>
+
+          {isLighting && (
+            <label>
+              Level
+              <select
+                value={form.level_no}
+                onChange={(event) => update("level_no", event.target.value)}
+              >
+                <option value="1">Level 1</option>
+                <option value="2">Level 2</option>
+              </select>
+            </label>
+          )}
+
+          <label>
+            Repeat interval (seconds)
+            <input
+              type="number"
+              min="1"
+              value={form.interval_seconds}
+              onChange={(event) => update("interval_seconds", event.target.value)}
+              placeholder="Optional"
+            />
+          </label>
+
+          {isTimed && (
+            <label>
+              Duration (seconds)
+              <input
+                type="number"
+                min="1"
+                value={form.duration_seconds}
+                onChange={(event) => update("duration_seconds", event.target.value)}
+                placeholder="Optional"
+              />
+            </label>
+          )}
+
+          {isDosing && (
+            <label>
+              Target value
+              <input
+                type="number"
+                step="any"
+                value={form.target_value}
+                onChange={(event) => update("target_value", event.target.value)}
+                required
+              />
+            </label>
+          )}
+
+          <label className={styles.full}>
+            Description
+            <textarea
+              value={form.task_description}
+              onChange={(event) => update("task_description", event.target.value)}
+              rows="3"
+            />
+          </label>
+        </div>
+      </form>
+    </Modal>
   );
 }
 

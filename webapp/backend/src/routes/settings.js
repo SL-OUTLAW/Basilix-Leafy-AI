@@ -43,4 +43,8 @@ router.patch("/", requirePermission("SETTINGS_MANAGE"), (req, res) => {
   return proxy(req, res, "PATCH", "/settings/update", true);
 });
 
+router.post("/reset", requirePermission("SETTINGS_MANAGE"), (req, res) => {
+  return proxy(req, res, "POST", "/settings/reset", true);
+});
+
 module.exports = router;

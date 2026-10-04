@@ -58,6 +58,14 @@ router.get("/:growCycleId", ...userAccess, (req, res) => {
   );
 });
 
+router.patch("/:growCycleId", ...userAccess, requirePermission("GROW_CYCLE_MANAGE"), (req, res) => {
+  return proxy(req, res, "PATCH", `/grow-cycles/${encodeURIComponent(req.params.growCycleId)}`, true);
+});
+
+router.delete("/:growCycleId", ...userAccess, requirePermission("GROW_CYCLE_MANAGE"), (req, res) => {
+  return proxy(req, res, "DELETE", `/grow-cycles/${encodeURIComponent(req.params.growCycleId)}`);
+});
+
 router.post("/:growCycleId/complete", ...userAccess, requirePermission("GROW_CYCLE_MANAGE"), (req, res) => {
   return proxy(
     req,

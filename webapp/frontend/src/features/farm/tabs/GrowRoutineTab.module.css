@@ -71,3 +71,7 @@
   }
 }
 .cycleCard button,.actionForm button{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--color-border);border-radius:7px;padding:8px 11px;background:var(--color-bg-card-inner);color:var(--color-text-primary)}.actionForm{display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) auto;gap:9px;padding:14px;border:1px solid var(--color-border);border-radius:10px;background:var(--color-bg-card)}.actionForm h3{grid-column:1/-1;display:flex;align-items:center;gap:7px;margin:0}.actionForm input{border:1px solid var(--color-border);border-radius:7px;padding:9px;background:var(--color-bg-card-inner);color:var(--color-text-primary)}@media(max-width:800px){.actionForm{grid-template-columns:1fr}}
+.actionRow, .editForm > div { display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
+.actionRow button, .editForm button { display:flex; align-items:center; gap:5px; }
+.danger { color:var(--color-red) !important; }
+.editForm { display:grid; gap:8px; margin-top:10px; } .editForm input, .editForm textarea { width:100%; padding:9px; border:1px solid var(--color-border); border-radius:6px; background:var(--color-bg-card); color:var(--color-text-primary); }

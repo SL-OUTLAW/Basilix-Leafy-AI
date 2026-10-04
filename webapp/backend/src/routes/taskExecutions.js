@@ -30,6 +30,21 @@ router.get("/", async (req, res) => {
   }
 });
 
+router.get("/summary", async (req, res) => {
+  try {
+    const response = await engineRequest({
+      req,
+      method: "GET",
+      path: "/task-executions/summary",
+      params: req.query
+    });
+
+    return sendEngineResponse(res, response);
+  } catch (error) {
+    return sendEngineFailure(res, error);
+  }
+});
+
 router.get("/:executionId", async (req, res) => {
   try {
     const response = await engineRequest({

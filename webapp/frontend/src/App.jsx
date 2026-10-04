@@ -71,7 +71,13 @@ function App() {
   const [safety, setSafety] = useState(emptyPageState);
   const [logs, setLogs] = useState(emptyPageState);
 
-  const handleTokenRefresh = useCallback((nextToken) => setToken(nextToken), []);
+  const handleTokenRefresh = useCallback((nextToken, refreshedUser = null) => {
+    setToken(nextToken);
+
+    if (refreshedUser) {
+      setUser(refreshedUser);
+    }
+  }, []);
   const navigatePath = useCallback((path, replace = false) => {
     if (replace) window.history.replaceState({}, "", path);
     else window.history.pushState({}, "", path);
@@ -214,17 +220,19 @@ function App() {
       access={access}
       onEmergencyStop={handleEmergencyStop}
       onClearEmergency={handleClearEmergency}
+      token={token}
+      onTokenRefresh={handleTokenRefresh}
     >
       {activePage === "overview" ? (
-        <Overview data={overview.data} loading={overview.loading} error={overview.error} onGoToFarm={() => handleNavigate("farm")} onViewNotifications={() => handleNavigate("logs")} />
+        <Overview data={overview.data} loading={overview.loading} error={overview.error} onGoToFarm={() => handleNavigate("farm")} onOpenSafety={() => handleNavigate("safety")} onOpenSchedule={() => handleNavigate("schedule")} />
       ) : activePage === "farm" ? (
         <Farm data={farm.data} loading={farm.loading} error={farm.error} token={token} onTokenRefresh={handleTokenRefresh} user={user} access={access} />
       ) : activePage === "leafyAI" ? (
-        <LeafyAI data={leafyAI.data} loading={leafyAI.loading} error={leafyAI.error} />
+        <LeafyAI data={leafyAI.data} loading={leafyAI.loading} error={leafyAI.error} token={token} onTokenRefresh={handleTokenRefresh} />
       ) : activePage === "safety" ? (
         <Safety data={safety.data} loading={safety.loading} error={safety.error} token={token} onTokenRefresh={handleTokenRefresh} user={user} access={access} onDataChange={(data) => { setSafety({ data, loading: false, error: "" }); setGlobalSafety(data?.state || globalSafety); }} />
       ) : activePage === "logs" ? (
-        <Logs data={logs.data} loading={logs.loading} error={logs.error} />
+        <Logs data={logs.data} loading={logs.loading} error={logs.error} token={token} onTokenRefresh={handleTokenRefresh} />
       ) : activePage === "schedule" ? (
         <Schedule token={token} onTokenRefresh={handleTokenRefresh} access={access} />
       ) : activePage === "admin" ? (

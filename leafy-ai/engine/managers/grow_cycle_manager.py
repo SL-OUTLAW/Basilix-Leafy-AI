@@ -122,6 +122,58 @@ async def create_grow_cycle(
     }
 
 
+async def update_grow_cycle(
+    grow_cycle_id: int,
+    cycle_name: str | None = None,
+    notes: str | None = None,
+) -> dict[str, Any]:
+
+    if cycle_name is not None and not cycle_name.strip():
+        raise ValueError("cycle_name cannot be empty.")
+
+    rows = await run_query(
+        """
+        UPDATE grow_cycles
+        SET
+            cycle_name = COALESCE(%s, cycle_name),
+            notes = %s,
+            updated_at = NOW()
+        WHERE grow_cycle_id = %s
+        RETURNING
+            grow_cycle_id, cycle_name, started_at, completed_at,
+            status, notes, created_at, updated_at;
+        """,
+        (cycle_name.strip() if cycle_name is not None else None, notes, grow_cycle_id),
+    )
+
+    if not rows:
+        raise ValueError("Grow cycle not found.")
+
+    row = rows[0]
+    return {
+        "grow_cycle_id": row[0],
+        "cycle_name": row[1],
+        "started_at": row[2].isoformat() if row[2] is not None else None,
+        "completed_at": row[3].isoformat() if row[3] is not None else None,
+        "status": row[4],
+        "notes": row[5],
+        "created_at": row[6].isoformat() if row[6] is not None else None,
+        "updated_at": row[7].isoformat() if row[7] is not None else None,
+    }
+
+
+async def delete_grow_cycle(grow_cycle_id: int) -> bool:
+    rows = await run_query(
+        """
+        DELETE FROM grow_cycles
+        WHERE grow_cycle_id = %s
+        RETURNING grow_cycle_id;
+        """,
+        (grow_cycle_id,),
+    )
+    return bool(rows)
+
+
 async def snapshot_current_schedules(
     grow_cycle_id: int,
     conn: AsyncConnection | None = None,
