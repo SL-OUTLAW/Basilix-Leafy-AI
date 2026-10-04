@@ -1,9 +1,18 @@
 import { useRef } from "react";
-import { CalendarDays, Download, ListFilter } from "lucide-react";
+import {
+  CalendarDays,
+  Download,
+  ListFilter
+} from "lucide-react";
 
 import styles from "../Logs.module.css";
 
-function DateField({ id, label, value, onChange }) {
+function DateField({
+  id,
+  label,
+  value,
+  onChange
+}) {
   const inputRef = useRef(null);
 
   function openDatePicker() {
@@ -25,7 +34,9 @@ function DateField({ id, label, value, onChange }) {
           id={id}
           type="date"
           value={value}
-          onChange={(event) => onChange(event.target.value)}
+          onChange={(event) =>
+            onChange(event.target.value)
+          }
           autoComplete="off"
         />
 
@@ -48,7 +59,7 @@ function LogsToolbar({
   onFromDateChange,
   onToDateChange,
   showFilters,
-  onToggleFilters,
+  onToggleFilters
 }) {
   return (
     <section className={styles.toolbar}>
@@ -80,6 +91,15 @@ function LogsToolbar({
         >
           <ListFilter size={18} />
           Filter
+        </button>
+
+        <button
+          type="button"
+          className={styles.toolbarButton}
+          disabled
+        >
+          <Download size={18} />
+          Export
         </button>
       </div>
     </section>

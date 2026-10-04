@@ -105,6 +105,14 @@ function RecommendationsTab({
                   </span>
                 )}
 
+                {item.status && (
+                  <span
+                    className={`${styles.chip} ${styles[`status${item.status}`] || ""}`}
+                  >
+                    {item.status}
+                  </span>
+                )}
+
                 {item.type && (
                   <span className={styles.chip}>
                     {item.type}
@@ -187,6 +195,14 @@ function RecommendationsTab({
             {selectedRecommendation.priority && (
               <span className={styles.chip}>
                 {selectedRecommendation.priority}
+              </span>
+            )}
+
+            {selectedRecommendation.status && (
+              <span
+                className={`${styles.chip} ${styles[`status${selectedRecommendation.status}`] || ""}`}
+              >
+                {selectedRecommendation.status}
               </span>
             )}
 

@@ -205,7 +205,14 @@ function SummaryOverview({ tasks }) {
 
       <div className={styles.cards}>
         <article className={styles.detailCard}>
-          <h3>Next Scheduled Task</h3>
+          <div className={styles.detailHeader}>
+            <h3>Next Scheduled Task</h3>
+            {nextTask && (
+              <span className={styles.upcomingBadge}>
+                Upcoming
+              </span>
+            )}
+          </div>
 
           <div className={styles.detailContent}>
             {nextTask ? (
@@ -237,11 +244,6 @@ function SummaryOverview({ tasks }) {
             </div>
           </div>
 
-          {nextTask && (
-            <span className={styles.upcomingBadge}>
-              Upcoming
-            </span>
-          )}
         </article>
 
         <article className={styles.detailCard}>

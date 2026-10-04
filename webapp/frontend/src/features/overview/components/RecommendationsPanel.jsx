@@ -41,7 +41,14 @@ function RecommendationsPanel({
   return (
     <section className={styles.panel}>
       <div className={styles.header}>
-        <h2>Leafy AI Recommendations · 24h</h2>
+        <div>
+          <h2>Pending Leafy AI Recommendations</h2>
+          <p>Recommendations still waiting for review or action.</p>
+        </div>
+
+        {!loading && !error && (
+          <span className={styles.count}>{items.length}</span>
+        )}
       </div>
 
       {loading ? (
@@ -54,7 +61,7 @@ function RecommendationsPanel({
         </div>
       ) : items.length === 0 ? (
         <div className={styles.state}>
-          No recommendations available.
+          No pending recommendations.
         </div>
       ) : (
         <div className={styles.grid}>
@@ -79,9 +86,10 @@ function RecommendationsPanel({
                 </div>
 
                 <div className={styles.content}>
-                  <h3>
-                    {item.title || "Recommendation"}
-                  </h3>
+                  <div className={styles.cardTop}>
+                    <h3>{item.title || "Recommendation"}</h3>
+                    <span className={styles.pending}>PENDING</span>
+                  </div>
 
                   <p>
                     {item.description ||

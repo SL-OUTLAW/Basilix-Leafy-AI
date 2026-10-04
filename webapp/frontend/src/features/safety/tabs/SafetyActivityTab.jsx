@@ -5,7 +5,7 @@ function SafetyActivityTab({ data = [], loading = false, error = false, hasMore 
   const items = Array.isArray(data) ? data : [];
   return (
     <section className={styles.fullPanel}>
-      <div className={styles.panelHeader}><div><h2>Safety Activity • Last 24 Hours</h2><p>Safety-related approvals, rejected or blocked actions, and executed protected tasks.</p></div><span>Read only</span></div>
+      <div className={styles.panelHeader}><div><h2>Safety Activity — Last 24 Hours</h2><p>Safety-related approvals, rejected or blocked actions, and executed protected tasks.</p></div><span>Read only</span></div>
       {loading ? <div className={styles.fullEmptyState}>Loading safety activity...</div> : error ? <div className={styles.fullEmptyState}>Safety activity unavailable.</div> : items.length === 0 ? <div className={styles.fullEmptyState}>No safety activity in the last 24 hours.</div> : (
         <div className={styles.configurationList}>{items.map((item) => (
           <article key={item.id} className={styles.configurationRow}>

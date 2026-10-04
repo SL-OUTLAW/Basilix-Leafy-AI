@@ -1,7 +1,7 @@
 import {
   CircleCheck,
+  Camera,
   Clock3,
-  Gauge,
   HeartPulse,
   TriangleAlert,
   Zap
@@ -69,13 +69,13 @@ function Overview({
         />
 
         <StatusCard
-          title="Active Sensors"
-          value={summary.activeSensors?.value}
+          title="Active Cameras"
+          value={summary.activeCameras?.value}
           note={
-            summary.activeSensors?.note ||
+            summary.activeCameras?.note ||
             unavailableNote
           }
-          icon={Gauge}
+          icon={Camera}
           tone="green"
         />
 

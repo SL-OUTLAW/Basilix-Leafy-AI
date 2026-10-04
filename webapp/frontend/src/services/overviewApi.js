@@ -124,9 +124,9 @@ export async function getOverviewData(token, onTokenRefresh) {
         value: farm.emergency_stop ? "Stopped" : farm.critical_notifications > 0 ? "Attention" : "Online",
         note: `${farm.active_sensors ?? 0}/${farm.sensors ?? 0} sensors online`
       },
-      activeSensors: {
-        value: farm.active_sensors ?? 0,
-        note: `${farm.active_sensors ?? 0}/${farm.sensors ?? 0} sensors online`
+      activeCameras: {
+        value: farm.active_cameras ?? 0,
+        note: `${farm.active_cameras ?? 0}/${farm.cameras ?? 0} cameras active`
       },
       alerts: {
         value: farm.open_notifications ?? 0,
@@ -154,7 +154,9 @@ export async function getOverviewData(token, onTokenRefresh) {
       dewPoint: sensorDisplay(sensorByType.dew_point),
       waterLevel: sensorDisplay(sensorByType.water_level)
     },
-    recommendations: recommendations.map(mapRecommendation),
+    recommendations: recommendations
+      .filter((item) => item.status === "PENDING")
+      .map(mapRecommendation),
     recentApprovals: approvals.map(mapApproval),
     recentExecutions: executions.map(mapExecution),
     errors: {

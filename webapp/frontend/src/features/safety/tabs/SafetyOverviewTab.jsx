@@ -11,7 +11,7 @@ function SafetyOverviewTab({
   onOpenApprovals,
   onOpenConfiguration,
   canAdmin = false,
-  onEmergencyStop
+  onEmergencyStop,
 }) {
   return (
     <div className={styles.overview}>
@@ -24,20 +24,20 @@ function SafetyOverviewTab({
         onEmergencyStop={onEmergencyStop}
       />
 
-      <div className={styles.middle}>
+      <div className={styles.activityGrid}>
         <PendingApprovals
           data={data?.pendingApprovals}
           loading={loading}
           error={error}
           onViewAll={onOpenApprovals}
         />
-      </div>
 
-      <RecentSafetyActivity
-        data={data?.recentActivity}
-        loading={loading}
-        error={error}
-      />
+        <RecentSafetyActivity
+          data={data?.recentActivity}
+          loading={loading}
+          error={error}
+        />
+      </div>
     </div>
   );
 }
