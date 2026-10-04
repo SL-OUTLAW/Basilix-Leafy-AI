@@ -30,7 +30,10 @@ function MetricCard({
 function SafetySummary({
   data = null,
   loading = false,
-  error = false
+  error = false,
+  emergencyStop = false,
+  canAdmin = false,
+  onEmergencyStop
 }) {
   const value = (item) => {
     if (loading) return "…";
@@ -52,36 +55,44 @@ function SafetySummary({
           tasks. Requires manual reset.
         </p>
 
-        <button type="button" disabled>
+        <button
+          type="button"
+          disabled={!canAdmin || loading || !onEmergencyStop}
+          onClick={onEmergencyStop}
+        >
           <TriangleAlert size={19} strokeWidth={1.9} />
-          <span>Emergency Stop</span>
+          <span>
+            {emergencyStop
+              ? "Clear Emergency Stop"
+              : "Emergency Stop"}
+          </span>
         </button>
       </article>
 
       <MetricCard
         label="Commands"
         value={value(data?.commands)}
-        footer="Total • 24h"
+        footer="Total • recent"
       />
 
       <MetricCard
         label="Commands blocked / Rejected"
         value={value(data?.blocked)}
-        footer="High risk • 24h"
+        footer="Recent executions"
         tone="red"
       />
 
       <MetricCard
         label="Commands auto executed"
         value={value(data?.autoExecuted)}
-        footer="Low/Medium risk • 24h"
+        footer="Completed executions"
         tone="green"
       />
 
       <MetricCard
         label="Commands pending approval"
         value={value(data?.pending)}
-        footer="24h"
+        footer="Pending approvals"
         tone="orange"
       />
     </section>

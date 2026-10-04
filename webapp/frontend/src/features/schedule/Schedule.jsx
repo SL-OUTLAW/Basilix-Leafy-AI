@@ -1,136 +1,83 @@
 import { useEffect, useMemo, useState } from "react";
-
-import { getFarmSchedule } from "../../services/scheduleApi";
-
+import { createSchedule, getFarmSchedule, setScheduleEnabled, updateSchedule } from "../../services/scheduleApi";
+import { getTaskExecutions } from "../../services/taskExecutionApi";
 import FullCalendar from "./components/FullCalendar";
 import ScheduleOverview from "./components/ScheduleOverview";
 import TaskDetails from "./components/TaskDetails";
 import TaskList from "./components/TaskList";
-
+import TaskForm from "./components/TaskForm";
+import ExecutionLog from "./components/ExecutionLog";
 import styles from "./Schedule.module.css";
 
-function Schedule({ token }) {
+function Schedule({ token, onTokenRefresh, access }) {
   const [tasks, setTasks] = useState([]);
+  const [executions, setExecutions] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
   const [calendarOpen, setCalendarOpen] = useState(false);
+  const [formTask, setFormTask] = useState(undefined);
+  const [formOpen, setFormOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("tasks");
   const [loading, setLoading] = useState(true);
+  const [logLoading, setLogLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [logError, setLogError] = useState("");
+  const canManage = Boolean(access?.allowed?.SCHEDULE_MANAGE);
 
-  useEffect(() => {
-    let active = true;
+  async function loadSchedule() {
+    setLoading(true); setError("");
+    try { setTasks(await getFarmSchedule(token, onTokenRefresh)); }
+    catch (err) { setTasks([]); setError(err.message || "Failed to load farm schedule"); }
+    finally { setLoading(false); }
+  }
 
-    async function loadSchedule() {
-      setLoading(true);
-      setError("");
+  async function loadExecutions() {
+    setLogLoading(true); setLogError("");
+    try { setExecutions(await getTaskExecutions(token, onTokenRefresh, { limit: 200 })); }
+    catch (err) { setExecutions([]); setLogError(err.message || "Failed to load task execution log"); }
+    finally { setLogLoading(false); }
+  }
 
-      try {
-        const data = await getFarmSchedule(token);
+  useEffect(() => { if (token) { loadSchedule(); loadExecutions(); } }, [token, onTokenRefresh]);
 
-        if (!active) {
-          return;
-        }
+  const sortedTasks = useMemo(() => [...tasks].sort((a,b) => String(a.start_time || "").localeCompare(String(b.start_time || ""))), [tasks]);
+  const selectedTask = useMemo(() => tasks.find((task) => String(task.schedule_id) === String(selectedId)) || null, [tasks, selectedId]);
 
-        if (!Array.isArray(data)) {
-          throw new Error("Invalid schedule response");
-        }
+  async function handleToggleEnabled(task) {
+    setError("");
+    try {
+      const updated = await setScheduleEnabled(token, onTokenRefresh, task.schedule_id, !task.enabled);
+      setTasks((current) => current.map((item) => item.schedule_id === updated.schedule_id ? updated : item));
+    } catch (err) { setError(err.message || "Failed to update schedule state"); }
+  }
 
-        setTasks(data);
-      } catch (err) {
-        if (!active) {
-          return;
-        }
-
-        setTasks([]);
-        setError(
-          err instanceof Error
-            ? err.message
-            : "Failed to load farm schedule"
-        );
-      } finally {
-        if (active) {
-          setLoading(false);
-        }
-      }
-    }
-
-    if (token) {
-      loadSchedule();
-    } else {
-      setTasks([]);
-      setError("Authentication required");
-      setLoading(false);
-    }
-
-    return () => {
-      active = false;
-    };
-  }, [token]);
-
-  const sortedTasks = useMemo(() => {
-    return [...tasks].sort((a, b) => {
-      return String(a.start_time || "").localeCompare(
-        String(b.start_time || "")
-      );
-    });
-  }, [tasks]);
-
-  const selectedTask = useMemo(() => {
-    return (
-      tasks.find(
-        (task) =>
-          String(task.schedule_id) === String(selectedId)
-      ) || null
-    );
-  }, [tasks, selectedId]);
-
-  function handleSelectTask(id) {
-    setSelectedId((current) =>
-      String(current) === String(id) ? null : id
-    );
+  async function handleSave(payload) {
+    setSaving(true); setError("");
+    try {
+      if (formTask?.schedule_id) await updateSchedule(token, onTokenRefresh, formTask.schedule_id, payload);
+      else await createSchedule(token, onTokenRefresh, payload);
+      setFormOpen(false); setFormTask(undefined); await loadSchedule();
+    } catch (err) { setError(err.message || "Failed to save task"); }
+    finally { setSaving(false); }
   }
 
   return (
     <div className={styles.schedule}>
-      <div
-        className={`${styles.topGrid} ${
-          selectedTask ? styles.withDetails : styles.listOnly
-        }`}
-      >
-        <TaskList
-          tasks={sortedTasks}
-          selectedId={selectedId}
-          onSelect={handleSelectTask}
-          loading={loading}
-          error={error}
-        />
-
-        {selectedTask && (
-          <TaskDetails
-            task={selectedTask}
-            onClose={() => setSelectedId(null)}
-          />
-        )}
+      <div className={styles.viewTabs}>
+        <button type="button" className={activeTab === "tasks" ? styles.activeView : ""} onClick={() => setActiveTab("tasks")}>Tasks</button>
+        <button type="button" className={activeTab === "log" ? styles.activeView : ""} onClick={() => { setActiveTab("log"); loadExecutions(); }}>Execution Log</button>
       </div>
 
-      <div className={styles.bottomGrid}>
-        <ScheduleOverview
-          tasks={tasks}
-          mode="calendar"
-          onOpenCalendar={() => setCalendarOpen(true)}
-        />
+      {activeTab === "tasks" ? <>
+        <div className={`${styles.topGrid} ${selectedTask ? styles.withDetails : styles.listOnly}`}>
+          <TaskList tasks={sortedTasks} selectedId={selectedId} onSelect={(id) => setSelectedId((current) => String(current) === String(id) ? null : id)} onAdd={canManage ? () => { setFormTask(undefined); setFormOpen(true); } : undefined} loading={loading} error={error} />
+          {selectedTask && <TaskDetails task={selectedTask} onClose={() => setSelectedId(null)} onToggleEnabled={canManage ? () => handleToggleEnabled(selectedTask) : undefined} onEdit={canManage ? () => { setFormTask(selectedTask); setFormOpen(true); } : undefined} />}
+        </div>
+        <div className={styles.bottomGrid}><ScheduleOverview tasks={tasks} mode="calendar" onOpenCalendar={() => setCalendarOpen(true)} /><ScheduleOverview tasks={tasks} mode="summary" /></div>
+      </> : <ExecutionLog executions={executions} tasks={tasks} loading={logLoading} error={logError} />}
 
-        <ScheduleOverview
-          tasks={tasks}
-          mode="summary"
-        />
-      </div>
-
-      {calendarOpen && (
-        <FullCalendar
-          tasks={sortedTasks}
-          onClose={() => setCalendarOpen(false)}
-        />
-      )}
+      {calendarOpen && <FullCalendar tasks={sortedTasks} onClose={() => setCalendarOpen(false)} />}
+      {formOpen && <TaskForm task={formTask} busy={saving} onClose={() => { if (!saving) setFormOpen(false); }} onSave={handleSave} />}
     </div>
   );
 }

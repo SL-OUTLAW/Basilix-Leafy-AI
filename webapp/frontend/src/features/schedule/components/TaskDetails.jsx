@@ -1,6 +1,4 @@
 import {
-  CalendarClock,
-  Check,
   Pencil,
   Power,
   X
@@ -172,15 +170,6 @@ function TaskDetails({
       <div className={styles.actions}>
         <button
           type="button"
-          className={styles.completeButton}
-          disabled
-        >
-          Mark Complete
-          <Check size={17} />
-        </button>
-
-        <button
-          type="button"
           className={styles.cancelButton}
           onClick={onToggleEnabled}
           disabled={!onToggleEnabled}
@@ -199,14 +188,7 @@ function TaskDetails({
           <Pencil size={17} />
         </button>
 
-        <button
-          type="button"
-          className={styles.secondaryButton}
-          disabled
-        >
-          Reschedule
-          <CalendarClock size={17} />
-        </button>
+
       </div>
     </section>
   );

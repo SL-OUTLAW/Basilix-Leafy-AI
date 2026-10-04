@@ -1,4 +1,4 @@
-const { query } = require("./database");
+const { engineServiceRequest } = require("./engineClient");
 
 async function logAuditEvent(
   actionType,
@@ -8,27 +8,29 @@ async function logAuditEvent(
   entityType = null,
   entityId = null
 ) {
-  await query(
-    `
-    INSERT INTO audit_logs (
-      user_id,
-      action_type,
-      entity_id,
-      entity_type,
+  const response = await engineServiceRequest({
+    method: "POST",
+    path: "/audit-logs",
+    data: {
+      action_type: actionType,
       description,
-      metadata
-    )
-    VALUES ($1, $2, $3, $4, $5, $6::jsonb);
-    `,
-    [
-      userId,
-      actionType,
-      entityId,
-      entityType,
-      description,
-      metadata ? JSON.stringify(metadata) : null
-    ]
-  );
+      user_id: userId,
+      metadata,
+      entity_type: entityType,
+      entity_id: entityId
+    }
+  });
+
+  if (response.status < 200 || response.status >= 300) {
+    const detail =
+      response.data?.detail ||
+      response.data?.error ||
+      "Engine audit request failed";
+
+    throw new Error(detail);
+  }
+
+  return response.data?.log_id;
 }
 
 module.exports = {

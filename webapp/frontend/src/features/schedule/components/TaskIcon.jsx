@@ -208,11 +208,11 @@ function getFallbackIcon(action) {
     return "Fan";
   }
 
-  if (action === "ANALYSE_FARM") {
+  if (action === "RUN_AI_ANALYSIS" || action === "RUN_VISION_ANALYSIS") {
     return "ScanLine";
   }
 
-  if (action === "CHECK_LIGHTING") {
+  if (action === "SET_LIGHTING") {
     return "Lightbulb";
   }
 

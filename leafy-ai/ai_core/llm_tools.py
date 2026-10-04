@@ -339,7 +339,7 @@ TOOLS = [
                                                         "SET_FAN",
                                                         "DOSE_PH",
                                                         "DOSE_EC",
-                                                        "ANALYSE_FARM",
+                                                        "RUN_AI_ANALYSIS",
                                                     ],
                                                 },
                                                 "interval_seconds": {

@@ -3,10 +3,7 @@ from typing import Any
 from psycopg.types.json import Jsonb
 
 from engine.managers.db_manager import get_connection
-from engine.security.risk_checker import (
-    get_action_risk,
-    requires_approval,
-)
+from engine.security.risk_checker import get_action_risk
 from engine.managers.scheduler import queue_scheduler_action
 
 VALID_RECOMMENDATION_TYPES = {
@@ -38,8 +35,34 @@ VALID_TASK_ACTIONS = {
     "SET_FAN",
     "DOSE_PH",
     "DOSE_EC",
-    "ANALYSE_FARM",
+    "RUN_AI_ANALYSIS",
 }
+
+
+async def _get_schedule_task_action(schedule_id: int) -> str:
+    async with get_connection() as conn:
+        async with conn.cursor() as cur:
+            await cur.execute(
+                "SELECT task_action FROM farm_schedule WHERE schedule_id = %s;",
+                (schedule_id,),
+            )
+            row = await cur.fetchone()
+    if row is None:
+        raise ValueError("Schedule not found")
+    return row[0]
+
+
+async def _get_effective_risk(action_type: str, action_data: dict[str, Any]) -> str:
+    if get_action_risk(action_type) == "HIGH":
+        return "HIGH"
+    task_action = action_data.get("task_action")
+    if action_type in {"UPDATE_SCHEDULE", "ENABLE_SCHEDULE", "DISABLE_SCHEDULE"}:
+        schedule_id = action_data.get("schedule_id")
+        if task_action is None and isinstance(schedule_id, int):
+            task_action = await _get_schedule_task_action(schedule_id)
+    if isinstance(task_action, str) and get_action_risk(task_action) == "HIGH":
+        return "HIGH"
+    return "LOW"
 
 
 def _validate_level(
@@ -72,6 +95,7 @@ def _validate_task_scope(
             "SET_FAN",
             "DOSE_PH",
             "DOSE_EC",
+            "RUN_AI_ANALYSIS",
         }
         and level_no != 0
     ):
@@ -534,9 +558,9 @@ async def create_recommendations(
                 "action_data": action_data,
             }
 
-            risk_level = get_action_risk(action_type)
+            risk_level = await _get_effective_risk(action_type, action_data)
 
-            approval_required = requires_approval(action_type)
+            approval_required = risk_level == "HIGH"
 
             if risk_level == "LOW":
                 recommendation_status = "APPROVED"

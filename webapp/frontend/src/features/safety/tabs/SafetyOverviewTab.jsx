@@ -10,7 +10,9 @@ function SafetyOverviewTab({
   loading = false,
   error = false,
   onOpenApprovals,
-  onOpenConfiguration
+  onOpenConfiguration,
+  canAdmin = false,
+  onEmergencyStop
 }) {
   return (
     <div className={styles.overview}>
@@ -18,6 +20,9 @@ function SafetyOverviewTab({
         data={data?.summary}
         loading={loading}
         error={error}
+        emergencyStop={Boolean(data?.state?.emergency_stop)}
+        canAdmin={canAdmin}
+        onEmergencyStop={onEmergencyStop}
       />
 
       <div className={styles.middle}>

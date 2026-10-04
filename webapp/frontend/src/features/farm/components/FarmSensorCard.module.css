@@ -326,3 +326,4 @@
   width: 12.75px;
   height: 12.75px;
 }
+.title { display:flex; align-items:center; gap:7px; }.title svg { flex:0 0 auto; color:currentColor; }

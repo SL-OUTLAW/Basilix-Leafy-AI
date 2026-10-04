@@ -1,4 +1,5 @@
 import { Plus } from "lucide-react";
+import TaskIcon from "./TaskIcon";
 
 import styles from "./TaskList.module.css";
 
@@ -114,6 +115,14 @@ function TaskList({
                 }`}
                 onClick={() => onSelect(task.schedule_id)}
               >
+                <TaskIcon
+                  iconName={task.icon_name}
+                  iconKey={task.icon_key}
+                  tone={task.icon_tone}
+                  action={task.task_action}
+                  size={20}
+                />
+
                 <span className={styles.time}>
                   {formatTime(task.start_time)}
                 </span>

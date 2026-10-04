@@ -17,7 +17,8 @@ from pydantic import BaseModel, Field
 from engine.api.rate_limit import limiter
 from engine.hal.ai_vision.vision_tool import VisionAnalysis
 from engine.managers import scheduler
-from engine.managers.db_manager import run_query
+from engine.logger.logger import audit_log
+from engine.managers.db_manager import get_connection, run_query
 from engine.managers.emergency_manager import (
     activate_emergency_stop,
     clear_emergency_stop,
@@ -64,6 +65,15 @@ class ToolCallRequest(BaseModel):
 
 class SettingsUpdate(BaseModel):
     settings: dict[str, Any]
+
+
+class AuditLogCreate(BaseModel):
+    action_type: str
+    description: str
+    user_id: int | None = None
+    entity_type: str | None = None
+    entity_id: int | None = None
+    metadata: dict[str, Any] | None = None
 
 
 class ScheduleCreate(BaseModel):
@@ -321,7 +331,18 @@ async def get_farm_state(
     rows = await run_query("""
         SELECT
             (SELECT COUNT(*) FROM sensors),
-            (SELECT COUNT(*) FROM sensors WHERE status = 'ACTIVE'),
+            (
+                SELECT COUNT(*)
+                FROM sensors s
+                WHERE s.status = 'ACTIVE'
+                  AND EXISTS (
+                      SELECT 1
+                      FROM sensor_readings sr
+                      WHERE sr.sensor_id = s.sensor_id
+                        AND sr.quality_status = 'VALID'
+                        AND sr.recorded_at >= NOW() - INTERVAL '60 seconds'
+                  )
+            ),
             (SELECT COUNT(*) FROM cameras),
             (SELECT COUNT(*) FROM cameras WHERE status = 'ACTIVE'),
             (SELECT COUNT(*) FROM notifications WHERE status = 'OPEN'),
@@ -924,7 +945,7 @@ async def control_ph_target(
     x_user_role: str | None = Header(default=None, alias="X-User-Role"),
 ):
     _require_webapp_token(authorization)
-    _user_context(x_user_id, x_user_role, {"ADMIN"})
+    _user_context(x_user_id, x_user_role, {"OPERATOR", "ADMIN"})
 
     try:
         result = await request.app.state.hal.controls.dose_ph_to_target(
@@ -946,7 +967,7 @@ async def control_ec_target(
     x_user_role: str | None = Header(default=None, alias="X-User-Role"),
 ):
     _require_webapp_token(authorization)
-    _user_context(x_user_id, x_user_role, {"ADMIN"})
+    _user_context(x_user_id, x_user_role, {"OPERATOR", "ADMIN"})
 
     try:
         result = await request.app.state.hal.controls.dose_ec_to_target(
@@ -1249,7 +1270,7 @@ async def approve_approval(
     x_user_role: str | None = Header(default=None, alias="X-User-Role"),
 ):
     _require_webapp_token(authorization)
-    user_id, _ = _user_context(x_user_id, x_user_role, {"ADMIN"})
+    user_id, _ = _user_context(x_user_id, x_user_role, {"OPERATOR", "ADMIN"})
 
     try:
         result = await approve_request(
@@ -1274,7 +1295,7 @@ async def reject_approval(
     x_user_role: str | None = Header(default=None, alias="X-User-Role"),
 ):
     _require_webapp_token(authorization)
-    user_id, _ = _user_context(x_user_id, x_user_role, {"ADMIN"})
+    user_id, _ = _user_context(x_user_id, x_user_role, {"OPERATOR", "ADMIN"})
 
     try:
         result = await reject_request(
@@ -1336,7 +1357,7 @@ async def emergency_stop_route(
     x_user_role: str | None = Header(default=None, alias="X-User-Role"),
 ):
     _require_webapp_token(authorization)
-    _user_context(x_user_id, x_user_role, {"ADMIN"})
+    _user_context(x_user_id, x_user_role, {"OPERATOR", "ADMIN"})
     await activate_emergency_stop()
 
     return {"success": True, "emergency_stop": True, "ai_enabled": False}
@@ -1351,7 +1372,7 @@ async def clear_emergency_stop_route(
     x_user_role: str | None = Header(default=None, alias="X-User-Role"),
 ):
     _require_webapp_token(authorization)
-    _user_context(x_user_id, x_user_role, {"ADMIN"})
+    _user_context(x_user_id, x_user_role, {"OPERATOR", "ADMIN"})
     await clear_emergency_stop()
 
     return {"success": True, "emergency_stop": False, "ai_enabled": False}
@@ -1366,7 +1387,7 @@ async def enable_ai_route(
     x_user_role: str | None = Header(default=None, alias="X-User-Role"),
 ):
     _require_webapp_token(authorization)
-    _user_context(x_user_id, x_user_role, {"ADMIN"})
+    _user_context(x_user_id, x_user_role, {"OPERATOR", "ADMIN"})
     await enable_ai()
 
     current = (await manage_settings()).get("security", {})
@@ -1389,10 +1410,33 @@ async def disable_ai_route(
     x_user_role: str | None = Header(default=None, alias="X-User-Role"),
 ):
     _require_webapp_token(authorization)
-    _user_context(x_user_id, x_user_role, {"ADMIN"})
+    _user_context(x_user_id, x_user_role, {"OPERATOR", "ADMIN"})
     await disable_ai()
 
     return {"success": True, "ai_enabled": False}
+
+
+@router.post("/audit-logs", status_code=201)
+@limiter.limit("120/minute")
+async def create_audit_log(
+    request: Request,
+    body: AuditLogCreate,
+    authorization: str | None = Header(default=None),
+):
+    _require_webapp_token(authorization)
+    metadata = dict(body.metadata or {})
+    metadata["source_service"] = "webapp_backend"
+    async with get_connection() as conn:
+        log_id = await audit_log(
+            conn=conn,
+            action_type=body.action_type,
+            description=body.description,
+            user_id=body.user_id,
+            entity_type=body.entity_type,
+            entity_id=body.entity_id,
+            metadata=metadata,
+        )
+    return {"success": True, "log_id": log_id}
 
 
 @router.get("/audit-logs")

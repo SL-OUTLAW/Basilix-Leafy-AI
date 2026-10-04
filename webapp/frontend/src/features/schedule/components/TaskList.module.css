@@ -349,3 +349,6 @@
   color: var(--color-red);
   background: rgba(255, 53, 53, 0.06);
 }
+.task > div:first-child { justify-self: center; align-self: center; }
+.task { grid-template-columns: 38px 90px minmax(0, 1fr) auto; }
+@media (max-width: 600px) { .task { grid-template-columns: 34px 70px minmax(0, 1fr); height: auto; min-height: 54px; } .task .status { grid-column: 3; justify-self: start; } }

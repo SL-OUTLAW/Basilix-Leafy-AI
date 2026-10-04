@@ -10,10 +10,13 @@ import styles from "./Farm.module.css";
 function Farm({
   data = null,
   loading = false,
-  error = ""
+  error = "",
+  token,
+  onTokenRefresh,
+  user,
+  access
 }) {
-  const [activeTab, setActiveTab] =
-    useState("monitoring");
+  const [activeTab, setActiveTab] = useState("monitoring");
 
   const hasError = Boolean(error);
 
@@ -30,9 +33,7 @@ function Farm({
               : ""
           }
           type="button"
-          onClick={() =>
-            setActiveTab("monitoring")
-          }
+          onClick={() => setActiveTab("monitoring")}
         >
           Monitoring
         </button>
@@ -44,9 +45,7 @@ function Farm({
               : ""
           }
           type="button"
-          onClick={() =>
-            setActiveTab("insight")
-          }
+          onClick={() => setActiveTab("insight")}
         >
           AI Insight
         </button>
@@ -58,9 +57,7 @@ function Farm({
               : ""
           }
           type="button"
-          onClick={() =>
-            setActiveTab("routine")
-          }
+          onClick={() => setActiveTab("routine")}
         >
           Grow Routine
         </button>
@@ -72,9 +69,7 @@ function Farm({
               : ""
           }
           type="button"
-          onClick={() =>
-            setActiveTab("override")
-          }
+          onClick={() => setActiveTab("override")}
         >
           Manual Override
         </button>
@@ -85,19 +80,40 @@ function Farm({
           data={data?.monitoring}
           loading={loading}
           error={hasError}
+          token={token}
+          onTokenRefresh={onTokenRefresh}
         />
       )}
 
       {activeTab === "insight" && (
-        <AIInsightTab />
+        <AIInsightTab
+          data={data?.insight}
+          loading={loading}
+          error={hasError}
+        />
       )}
 
       {activeTab === "routine" && (
-        <GrowRoutineTab />
+        <GrowRoutineTab
+          data={data?.routine}
+          loading={loading}
+          error={hasError}
+          token={token}
+          onTokenRefresh={onTokenRefresh}
+          access={access}
+        />
       )}
 
       {activeTab === "override" && (
-        <ManualOverrideTab />
+        <ManualOverrideTab
+          data={data?.controls}
+          loading={loading}
+          error={hasError}
+          token={token}
+          onTokenRefresh={onTokenRefresh}
+          user={user}
+          access={access}
+        />
       )}
     </div>
   );

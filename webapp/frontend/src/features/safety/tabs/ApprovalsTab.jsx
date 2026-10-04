@@ -5,7 +5,10 @@ import styles from "../Safety.module.css";
 function ApprovalsTab({
   data = [],
   loading = false,
-  error = false
+  error = false,
+  canReview = false,
+  onApprove,
+  onReject
 }) {
   const items = Array.isArray(data) ? data : [];
 
@@ -17,7 +20,7 @@ function ApprovalsTab({
           <p>Review commands that require human approval.</p>
         </div>
 
-        <span>Read only</span>
+        <span>{canReview ? "Admin review" : "Read only"}</span>
       </div>
 
       {loading ? (
@@ -37,11 +40,8 @@ function ApprovalsTab({
       ) : items.length === 0 ? (
         <div className={styles.fullEmptyState}>
           <div>
-            <h3>No approval data available</h3>
-            <p>
-              Approval controls will be added when the backend approval
-              workflow is available.
-            </p>
+            <h3>No approval requests</h3>
+            <p>No approval requests are currently available.</p>
           </div>
         </div>
       ) : (
@@ -82,9 +82,26 @@ function ApprovalsTab({
                 </small>
               </div>
 
-              <span className={styles.pendingBadge}>
-                Pending approval
-              </span>
+              {canReview && item.status === "PENDING" ? (
+                <div className={styles.approvalActions}>
+                  <button
+                    type="button"
+                    onClick={() => onApprove?.(item.id)}
+                  >
+                    Approve
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onReject?.(item.id)}
+                  >
+                    Reject
+                  </button>
+                </div>
+              ) : (
+                <span className={styles.pendingBadge}>
+                  {item.status || "Pending approval"}
+                </span>
+              )}
             </article>
           ))}
         </div>

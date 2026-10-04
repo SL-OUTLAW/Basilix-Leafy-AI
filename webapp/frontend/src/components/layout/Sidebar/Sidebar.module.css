@@ -414,3 +414,11 @@
 [data-theme="light"] .collapsed .emergency img {
   filter: none;
 }
+.sidebar nav button > svg {
+  width: 25.5px;
+  height: 25.5px;
+  flex-shrink: 0;
+}
+.sidebar .active > svg { color: var(--color-green); }
+@media (max-width: 1399px) and (min-width: 1100px) { .sidebar nav button > svg { width: 22.5px; height: 22.5px; } }
+@media (max-width: 1099px) and (min-width: 768px) { .sidebar nav button > svg { width: 21px; height: 21px; } }

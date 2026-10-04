@@ -1,0 +1,25 @@
+.admin { display: grid; gap: 18px; }
+.summary { display: flex; gap: 12px; flex-wrap: wrap; }
+.summary > div { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border: 1px solid var(--color-border); border-radius: 10px; background: var(--color-bg-card); }
+.summary svg { color: var(--color-green); }
+.panel { border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-bg-card); overflow: hidden; }
+.panelHeader { padding: 18px; border-bottom: 1px solid var(--color-border); }
+.panelHeader h2 { margin: 0 0 4px; font-size: 17px; }
+.panelHeader p { margin: 0; color: var(--color-text-muted); font-size: 12px; }
+.addUser { display: grid; grid-template-columns: minmax(220px, 1fr) 160px auto; gap: 10px; padding: 16px 18px; border-bottom: 1px solid var(--color-border); }
+.addUser input, .addUser select, .permissionCard select, td select { border: 1px solid var(--color-border); border-radius: 7px; background: var(--color-bg-card-inner); color: var(--color-text-primary); padding: 9px 10px; }
+.addUser button, .deleteButton { display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid var(--color-border); border-radius: 7px; padding: 8px 11px; background: var(--color-bg-card-inner); color: var(--color-text-primary); }
+.tableWrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+th, td { padding: 12px 16px; border-bottom: 1px solid var(--color-border); text-align: left; font-size: 12px; }
+th { color: var(--color-text-muted); font-weight: 500; }
+td:first-child strong, td:first-child span { display: block; }
+td:first-child span { margin-top: 3px; color: var(--color-text-muted); }
+.switchLabel { display: inline-flex; align-items: center; gap: 7px; }
+.deleteButton { color: var(--color-red); }
+.permissionGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; padding: 16px 18px; }
+.permissionCard { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 13px; border: 1px solid var(--color-border); border-radius: 9px; background: var(--color-bg-card-inner); }
+.permissionCard strong, .permissionCard span { display: block; }
+.permissionCard span { margin-top: 3px; color: var(--color-text-muted); font-size: 10px; }
+.error, .denied { padding: 12px 14px; border: 1px solid var(--color-red); border-radius: 8px; background: rgba(220, 38, 38, .1); color: var(--color-text-primary); }
+@media (max-width: 800px) { .addUser { grid-template-columns: 1fr; } .permissionGrid { grid-template-columns: 1fr; } .permissionCard { align-items: flex-start; flex-direction: column; } }

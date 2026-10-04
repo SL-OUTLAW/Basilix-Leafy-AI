@@ -7,7 +7,9 @@ import styles from "./MonitoringTab.module.css";
 function MonitoringTab({
   data = null,
   loading = false,
-  error = false
+  error = false,
+  token,
+  onTokenRefresh
 }) {
   const sensors = data?.sensors ?? {};
 return (
@@ -49,6 +51,8 @@ return (
           levels={data?.levels}
           loading={loading}
           error={error}
+          token={token}
+          onTokenRefresh={onTokenRefresh}
         />
 
         <HarvestCard
@@ -80,8 +84,8 @@ return (
         />
 
         <FarmSensorCard
-          title="Water Flow"
-          data={sensors.waterFlow}
+          title="Water Temperature"
+          data={sensors.waterTemperature}
           loading={loading}
           error={error}
           tone="blue"

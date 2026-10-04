@@ -1,5 +1,7 @@
 import { apiRequest } from "./apiClient";
 
+const SENSOR_ONLINE_THRESHOLD_MS = 60 * 1000;
+
 function isRecent(dateValue) {
   const time = new Date(dateValue).getTime();
 
@@ -53,7 +55,7 @@ function buildLevels(sensors, cameras) {
   const levels = new Set();
 
   sensors.forEach((sensor) => {
-    if (sensor.level_no != null) {
+    if (sensor.level_no === 1 || sensor.level_no === 2) {
       levels.add(Number(sensor.level_no));
     }
   });
@@ -96,9 +98,69 @@ function getFarmHealthNote(farm) {
   }
 
   return (
-    `${farm.active_sensors ?? 0}/${totalSensors} sensors active · ` +
+    `${farm.active_sensors ?? 0}/${totalSensors} sensors online · ` +
     `${farm.active_cameras ?? 0}/${totalCameras} cameras active`
   );
+}
+
+function sensorDisplay(sensor) {
+  if (!sensor) {
+    return null;
+  }
+
+  const unit = sensor.unit || "";
+  const value =
+    sensor.value === null || sensor.value === undefined
+      ? "—"
+      : `${sensor.value}${unit ? ` ${unit}` : ""}`;
+
+  let status = "Normal";
+  let tone = "green";
+
+  if (sensor.status !== "ACTIVE") {
+    status = "Disabled";
+    tone = "neutral";
+  } else if (!sensor.recorded_at) {
+    status = "Unavailable";
+    tone = "neutral";
+  } else if (Date.now() - new Date(sensor.recorded_at).getTime() > SENSOR_ONLINE_THRESHOLD_MS) {
+    status = "Offline";
+    tone = "red";
+  } else if (
+    sensor.quality_status &&
+    sensor.quality_status !== "VALID"
+  ) {
+    status = sensor.quality_status;
+    tone = "orange";
+  }
+
+  return {
+    value,
+    status,
+    tone,
+    trend: [],
+    percentage:
+      sensor.sensor_type === "water_level" &&
+      Number.isFinite(Number(sensor.value))
+        ? Number(sensor.value)
+        : undefined
+  };
+}
+
+function mapRecommendation(item) {
+  return {
+    id: item.recommendation_id,
+    title: item.recommendation_message,
+    description: item.recommendation_reason,
+    status: item.status,
+    risk: item.risk_level,
+    area:
+      item.level_no === 0
+        ? "Global"
+        : `Level ${item.level_no}`,
+    time: formatTime(item.created_at),
+    relativeTime: formatRelativeTime(item.created_at)
+  };
 }
 
 export async function getOverviewData(
@@ -109,22 +171,34 @@ export async function getOverviewData(
     stateResult,
     sensorResult,
     cameraResult,
-    notificationResult
+    notificationResult,
+    recommendationResult,
+    approvalResult
   ] = await Promise.allSettled([
     apiRequest("/api/farm/state", token, onTokenRefresh),
     apiRequest("/api/farm/sensors", token, onTokenRefresh),
     apiRequest("/api/farm/cameras", token, onTokenRefresh),
-    apiRequest("/api/notifications", token, onTokenRefresh)
+    apiRequest("/api/notifications", token, onTokenRefresh),
+    apiRequest(
+      "/api/ai/recommendations?limit=20",
+      token,
+      onTokenRefresh
+    ),
+    apiRequest(
+      "/api/approvals?limit=100",
+      token,
+      onTokenRefresh
+    )
   ]);
 
-  const allFailed = [
+  const primary = [
     stateResult,
     sensorResult,
     cameraResult,
     notificationResult
-  ].every((result) => result.status === "rejected");
+  ];
 
-  if (allFailed) {
+  if (primary.every((result) => result.status === "rejected")) {
     throw new Error("Unable to load overview data.");
   }
 
@@ -156,25 +230,46 @@ export async function getOverviewData(
       ? notificationResult.value.notifications
       : [];
 
+  const recommendations =
+    recommendationResult.status === "fulfilled" &&
+    Array.isArray(recommendationResult.value.recommendations)
+      ? recommendationResult.value.recommendations
+      : [];
+
+  const approvals =
+    approvalResult.status === "fulfilled" &&
+    Array.isArray(approvalResult.value.approvals)
+      ? approvalResult.value.approvals
+      : [];
+
   const recentNotifications = notifications.filter((item) =>
     isRecent(item.created_at)
   );
 
-  const alertTypes = new Set([
-    "SENSOR_ALERT",
-    "SENSOR_OFFLINE",
-    "CAMERA_ALERT",
-    "CAMERA_OFFLINE"
-  ]);
-
   const alertCount = recentNotifications.filter((item) =>
-    alertTypes.has(item.type)
+    ["WARN", "CRITICAL"].includes(item.severity)
   ).length;
+
+  const approved = approvals.filter(
+    (item) => item.status === "APPROVED"
+  ).length;
+
+  const sensorByType = Object.fromEntries(
+    sensors.map((sensor) => [sensor.sensor_type, sensor])
+  );
+
+  const healthValue = stateFailed
+    ? null
+    : farm.emergency_stop
+      ? "Stopped"
+      : farm.critical_notifications > 0
+        ? "Attention"
+        : "Online";
 
   return {
     summary: {
       farmHealth: {
-        value: null,
+        value: healthValue,
         note: stateFailed
           ? "Farm status unavailable"
           : getFarmHealthNote(farm)
@@ -182,7 +277,7 @@ export async function getOverviewData(
 
       activeSensors: {
         value: farm.active_sensors ?? 0,
-        note: `${farm.active_sensors ?? 0}/${farm.sensors ?? 0} sensors active`
+        note: `${farm.active_sensors ?? 0}/${farm.sensors ?? 0} sensors online`
       },
 
       alerts: {
@@ -193,32 +288,46 @@ export async function getOverviewData(
       },
 
       pending: {
-        value: null,
-        note: "Not available"
+        value:
+          approvalResult.status === "fulfilled"
+            ? approvals.filter((item) => item.status === "PENDING").length
+            : null,
+        note: "Pending approvals"
       },
 
       autoExecuted: {
-        value: null,
-        note: "Not available"
+        value:
+          null,
+        note: "Execution mode not exposed"
       },
 
       approved: {
-        value: null,
-        note: "Not available"
+        value:
+          approvalResult.status === "fulfilled"
+            ? approved
+            : null,
+        note: "Approved requests"
       }
     },
 
-    sensors: {},
+    sensors: {
+      ph: sensorDisplay(sensorByType.ph),
+      temperature: sensorDisplay(sensorByType.ambient_temperature),
+      waterLevel: sensorDisplay(sensorByType.water_level),
+      ec: sensorDisplay(sensorByType.ec)
+    },
 
     farmOverview: {
       levels: buildLevels(sensors, cameras)
     },
 
-    recommendations: [],
+    recommendations: recommendations
+      .slice(0, 6)
+      .map(mapRecommendation),
 
     notifications: recentNotifications.map((item) => ({
       id: item.notification_id,
-      type: item.type,
+      type: item.notification_type,
       title: item.title,
       message: item.message,
       severity: item.severity,
@@ -232,4 +341,16 @@ export async function getOverviewData(
       notifications: notificationsFailed
     }
   };
+}
+
+export function mergeOverviewSensorSnapshot(data, payload) {
+  if (!data?.sensors || !payload?.sensors) return data;
+  const keyByType = { ph: "ph", ec: "ec", ambient_temperature: "temperature", water_level: "waterLevel" };
+  const sensors = { ...data.sensors };
+  Object.entries(payload.sensors).forEach(([type, reading]) => {
+    const key = keyByType[type]; if (!key) return;
+    const unit = reading?.unit || ""; const number = Number(reading?.value);
+    sensors[key] = { ...(sensors[key] || {}), value: reading?.value == null ? "—" : `${reading.value}${unit ? ` ${unit}` : ""}`, status: reading?.quality_status === "VALID" ? "Normal" : reading?.quality_status || "Unavailable", tone: reading?.quality_status === "VALID" ? "green" : "orange", percentage: type === "water_level" && Number.isFinite(number) ? number : sensors[key]?.percentage };
+  });
+  return { ...data, sensors };
 }

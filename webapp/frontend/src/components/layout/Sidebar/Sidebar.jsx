@@ -1,6 +1,5 @@
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, UserCog } from "lucide-react";
 import styles from "./Sidebar.module.css";
-
 import logo from "../../../assets/sidebar/leafy-ai-logo.png";
 import overview from "../../../assets/sidebar/overview.svg";
 import farm from "../../../assets/sidebar/farm.svg";
@@ -12,134 +11,47 @@ import emergency from "../../../assets/sidebar/emergency.svg";
 import settings from "../../../assets/sidebar/settings.svg";
 import logout from "../../../assets/sidebar/logout.svg";
 
-function Sidebar({
-  activePage,
-  onNavigate,
-  onLogout,
-  collapsed = false,
-  onToggle
-}) {
-  return (
-    <aside
-      className={`${styles.sidebar} ${
-        collapsed ? styles.collapsed : ""
-      }`}
+function Sidebar({ activePage, onNavigate, onLogout, collapsed = false, onToggle, user, access, onEmergencyStop }) {
+  const item = (page, label, icon) => (
+    <button
+      className={activePage === page ? styles.active : ""}
+      type="button"
+      onClick={() => onNavigate(page)}
+      title={collapsed ? label : undefined}
     >
-      <div className={styles.sidebarHeader}>
-        <div className={styles.brand}>
-          <img src={logo} alt="Leafy AI logo" />
-          <span>Leafy AI</span>
-        </div>
+      {typeof icon === "string" ? <img src={icon} alt="" /> : icon}
+      <span>{label}</span>
+    </button>
+  );
 
-        <button
-          className={styles.toggleButton}
-          type="button"
-          onClick={onToggle}
-          aria-label={
-            collapsed ? "Expand sidebar" : "Collapse sidebar"
-          }
-          title={
-            collapsed ? "Expand sidebar" : "Collapse sidebar"
-          }
-        >
-          {collapsed ? (
-            <ChevronRight aria-hidden="true" />
-          ) : (
-            <ChevronLeft aria-hidden="true" />
-          )}
+  return (
+    <aside className={`${styles.sidebar} ${collapsed ? styles.collapsed : ""}`}>
+      <div className={styles.sidebarHeader}>
+        <div className={styles.brand}><img src={logo} alt="Leafy AI logo" /><span>Leafy AI</span></div>
+        <button className={styles.toggleButton} type="button" onClick={onToggle} aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}>
+          {collapsed ? <ChevronRight /> : <ChevronLeft />}
         </button>
       </div>
 
       <nav>
-        <button
-          className={activePage === "overview" ? styles.active : ""}
-          type="button"
-          onClick={() => onNavigate("overview")}
-          title={collapsed ? "Overview" : undefined}
-        >
-          <img src={overview} alt="" />
-          <span>Overview</span>
-        </button>
-
-        <button
-          className={activePage === "farm" ? styles.active : ""}
-          type="button"
-          onClick={() => onNavigate("farm")}
-          title={collapsed ? "Farm" : undefined}
-        >
-          <img src={farm} alt="" />
-          <span>Farm</span>
-        </button>
-
-        <button
-          className={activePage === "leafyAI" ? styles.active : ""}
-          type="button"
-          onClick={() => onNavigate("leafyAI")}
-          title={collapsed ? "Leafy AI" : undefined}
-        >
-          <img src={leafyAI} alt="" />
-          <span>Leafy AI</span>
-        </button>
-
-        <button
-          className={activePage === "safety" ? styles.active : ""}
-          type="button"
-          onClick={() => onNavigate("safety")}
-          title={collapsed ? "Safety" : undefined}
-        >
-          <img src={safety} alt="" />
-          <span>Safety</span>
-        </button>
-
-        <button
-          className={activePage === "logs" ? styles.active : ""}
-          type="button"
-          onClick={() => onNavigate("logs")}
-          title={collapsed ? "Logs" : undefined}
-        >
-          <img src={logs} alt="" />
-          <span>Logs</span>
-        </button>
-
-        <button
-          className={activePage === "schedule" ? styles.active : ""}
-          type="button"
-          onClick={() => onNavigate("schedule")}
-          title={collapsed ? "Schedule" : undefined}
-        >
-          <img src={schedule} alt="" />
-          <span>Schedule</span>
-        </button>
+        {item("overview", "Overview", overview)}
+        {item("farm", "Farm", farm)}
+        {item("leafyAI", "Leafy AI", leafyAI)}
+        {item("safety", "Safety", safety)}
+        {item("logs", "Logs", logs)}
+        {item("schedule", "Schedule", schedule)}
+        {user?.role === "ADMIN" && item("admin", "Admin", <UserCog aria-hidden="true" />)}
       </nav>
 
-      <button
-        className={styles.emergency}
-        type="button"
-        title={collapsed ? "Emergency" : undefined}
-      >
-        <img src={emergency} alt="" />
-        <span>Emergency</span>
-      </button>
+      {access?.allowed?.EMERGENCY_STOP && (
+        <button className={styles.emergency} type="button" onClick={onEmergencyStop} title={collapsed ? "Emergency Stop" : undefined}>
+          <img src={emergency} alt="" /><span>Emergency Stop</span>
+        </button>
+      )}
 
       <div className={styles.bottom}>
-        <button
-          className={activePage === "settings" ? styles.active : ""}
-          type="button"
-          onClick={() => onNavigate("settings")}
-          title={collapsed ? "Setting" : undefined}
-        >
-          <img src={settings} alt="" />
-          <span>Setting</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={onLogout}
-          title={collapsed ? "Log out" : undefined}
-        >
-          <img src={logout} alt="" />
-          <span>Log out</span>
-        </button>
+        {item("settings", "Settings", settings)}
+        <button type="button" onClick={onLogout} title={collapsed ? "Log out" : undefined}><img src={logout} alt="" /><span>Log out</span></button>
       </div>
     </aside>
   );

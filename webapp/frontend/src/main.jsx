@@ -5,7 +5,6 @@ import "@fontsource/inter/700.css";
 import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
-
 import "./styles/tokens.css";
 import "./styles/globals.css";
 

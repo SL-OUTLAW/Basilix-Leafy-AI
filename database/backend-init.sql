@@ -87,85 +87,29 @@ CREATE INDEX IF NOT EXISTS idx_auth_sessions_active_user
     ON auth_sessions (user_id, expires_at)
     WHERE revoked_at IS NULL;
 
-CREATE TABLE IF NOT EXISTS notifications (
-    notification_id BIGSERIAL PRIMARY KEY,
-    type VARCHAR(50) NOT NULL,
-    title VARCHAR(255) NOT NULL,
-    message TEXT NOT NULL,
-    severity VARCHAR(20) NOT NULL,
+CREATE TABLE IF NOT EXISTS feature_permissions (
+    permission_key VARCHAR(100) PRIMARY KEY,
+    access_level VARCHAR(30) NOT NULL DEFAULT 'ADMIN',
+    description VARCHAR(255),
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
-    CONSTRAINT chk_notifications_type
-        CHECK (
-            type IN (
-                'SENSOR_ALERT',
-                'SENSOR_OFFLINE',
-                'CAMERA_ALERT',
-                'CAMERA_OFFLINE',
-                'TASK_COMPLETED',
-                'TASK_FAILED',
-                'AI_RECOMMENDATION',
-                'APPROVAL_REQUIRED',
-                'APPROVAL_APPROVED',
-                'APPROVAL_REJECTED',
-                'SYSTEM'
-            )
-        ),
-
-    CONSTRAINT chk_notifications_severity
-        CHECK (
-            severity IN (
-                'INFO',
-                'WARNING',
-                'CRITICAL'
-            )
-        )
+    CONSTRAINT chk_feature_permissions_access
+        CHECK (access_level IN ('ALL', 'OPERATOR', 'ADMIN'))
 );
 
-CREATE INDEX IF NOT EXISTS idx_notifications_type
-    ON notifications (type);
-
-CREATE INDEX IF NOT EXISTS idx_notifications_severity
-    ON notifications (severity);
-
-CREATE INDEX IF NOT EXISTS idx_notifications_created
-    ON notifications (created_at DESC);
-
-CREATE TABLE IF NOT EXISTS user_notifications (
-    notification_id BIGINT NOT NULL,
-    user_id BIGINT NOT NULL,
-    status VARCHAR(30) NOT NULL DEFAULT 'UNREAD',
-    read_at TIMESTAMPTZ,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-
-    PRIMARY KEY (notification_id, user_id),
-
-    CONSTRAINT chk_user_notifications_status
-        CHECK (
-            status IN (
-                'UNREAD',
-                'READ'
-            )
-        ),
-
-    CONSTRAINT fk_user_notifications_notification
-        FOREIGN KEY (notification_id)
-        REFERENCES notifications(notification_id)
-        ON DELETE CASCADE,
-
-    CONSTRAINT fk_user_notifications_user
-        FOREIGN KEY (user_id)
-        REFERENCES users(user_id)
-        ON DELETE CASCADE
-);
-
-CREATE INDEX IF NOT EXISTS idx_user_notifications_user
-    ON user_notifications (user_id);
-
-CREATE INDEX IF NOT EXISTS idx_user_notifications_status
-    ON user_notifications (status);
-
-CREATE INDEX IF NOT EXISTS idx_user_notifications_created
-    ON user_notifications (created_at DESC);
+INSERT INTO feature_permissions (permission_key, access_level, description)
+VALUES
+    ('EMERGENCY_STOP', 'ADMIN', 'Activate emergency stop'),
+    ('CLEAR_EMERGENCY_STOP', 'ADMIN', 'Clear emergency stop'),
+    ('AI_TOGGLE', 'ADMIN', 'Enable or disable AI'),
+    ('APPROVAL_REVIEW', 'ADMIN', 'Approve or reject protected actions'),
+    ('MANUAL_CONTROLS', 'OPERATOR', 'Use manual farm controls'),
+    ('DOSING_TARGETS', 'ADMIN', 'Set pH and EC dosing targets'),
+    ('SCHEDULE_MANAGE', 'OPERATOR', 'Create, edit, enable or disable schedules'),
+    ('GROW_CYCLE_MANAGE', 'OPERATOR', 'Manage grow cycles'),
+    ('HARVEST_RECORD', 'OPERATOR', 'Record harvest data'),
+    ('SETTINGS_MANAGE', 'ADMIN', 'Edit Engine settings')
+ON CONFLICT (permission_key) DO NOTHING;
 
 COMMIT;

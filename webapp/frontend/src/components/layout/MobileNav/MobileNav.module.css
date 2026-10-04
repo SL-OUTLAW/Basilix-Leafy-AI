@@ -117,3 +117,6 @@
     color: var(--color-red);
   }
 }
+@media (max-width: 767px) {
+  .moreMenu button > svg { width: 18px; height: 18px; }
+}

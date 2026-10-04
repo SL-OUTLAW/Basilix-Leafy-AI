@@ -6,7 +6,8 @@ from typing import Any
 from engine.hal.drivers import (
     SixOutletPowerSystem,
 )
-from engine.managers.db_manager import run_query
+from engine.logger.logger import audit_log
+from engine.managers.db_manager import get_connection, run_query
 from engine.managers.settings_manager import settings
 
 
@@ -23,6 +24,8 @@ class FarmControls:
         )
 
         self.started = False
+        self.available = False
+        self.startup_error: str | None = None
 
         self.latest_state: dict[
             int,
@@ -38,11 +41,33 @@ class FarmControls:
         if self.started:
             return
 
-        await self.power.connect()
-
-        self.started = True
-
-        await self.refresh_state()
+        try:
+            await self.power.connect()
+            self.started = True
+            self.available = True
+            self.startup_error = None
+            await self.refresh_state()
+        except Exception as error:
+            self.started = False
+            self.available = False
+            self.startup_error = str(error)
+            self.latest_state = {}
+            try:
+                await self.power.disconnect()
+            except Exception:
+                pass
+            try:
+                async with get_connection() as conn:
+                    await audit_log(
+                        conn=conn,
+                        action_type="FARM_CONTROLS_START_FAILED",
+                        entity_type="farm_controls",
+                        description="Farm controls could not connect during Engine startup. Engine continued in degraded mode.",
+                        metadata={"error_type": type(error).__name__, "error": str(error)},
+                    )
+            except Exception as audit_error:
+                print(f"Farm controls startup audit failed: {audit_error}")
+            print(f"Farm controls unavailable: {error}")
 
     async def stop(
         self,
@@ -62,8 +87,10 @@ class FarmControls:
         self,
     ) -> None:
 
-        if not self.started:
-            raise RuntimeError("Farm controls are not started.")
+        if not self.started or not self.available:
+            if self.startup_error:
+                raise RuntimeError(f"Farm controls are unavailable: {self.startup_error}")
+            raise RuntimeError("Farm controls are unavailable.")
 
     def _get_outlet_mapping(
         self,
@@ -242,6 +269,8 @@ class FarmControls:
         equipment: str,
         enabled: bool,
     ) -> dict[str, Any]:
+
+        self._require_started()
 
         outlet = self._get_outlet(equipment)
 

@@ -4,7 +4,7 @@ import {
   useState
 } from "react";
 
-import { Expand } from "lucide-react";
+import { Droplets, Expand, FlaskConical, Gauge, Thermometer, Waves } from "lucide-react";
 
 import ExpandModal from "./ExpandModal";
 
@@ -68,6 +68,13 @@ function WaterGauge({ percentage }) {
       />
     </div>
   );
+}
+
+
+function SensorTypeIcon({ sensorType, title }) {
+  const key = String(sensorType || title || "").toLowerCase();
+  const Icon = key.includes("ph") ? FlaskConical : key.includes("ec") ? Gauge : key.includes("water level") ? Waves : key.includes("temperature") ? Thermometer : key.includes("humidity") ? Droplets : Gauge;
+  return <Icon size={18} aria-hidden="true" />;
 }
 
 function FarmSensorCard({
@@ -181,7 +188,7 @@ function FarmSensorCard({
       >
         <div className={styles.top}>
           <div>
-            <h3>{title}</h3>
+            <h3 className={styles.title}><SensorTypeIcon sensorType={data?.type} title={title} />{title}</h3>
             <p className={styles.value}>{value}</p>
           </div>
 

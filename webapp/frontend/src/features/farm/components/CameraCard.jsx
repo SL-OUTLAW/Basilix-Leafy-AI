@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { ChevronLeft, ChevronRight, Expand } from "lucide-react";
 
+import { getCameraImageBlob } from "../../../services/farmApi";
 import ExpandModal from "./ExpandModal";
 import styles from "./CameraCard.module.css";
 
@@ -9,10 +10,14 @@ function CameraCard({
   data = null,
   levels = [],
   loading = false,
-  error = false
+  error = false,
+  token,
+  onTokenRefresh
 }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [selectedLevelId, setSelectedLevelId] = useState(null);
+  const [imageUrl, setImageUrl] = useState("");
+  const [imageError, setImageError] = useState(false);
 
   const farmLevels = Array.isArray(levels)
     ? levels
@@ -28,21 +33,66 @@ function CameraCard({
   const selectedLevel =
     farmLevels[selectedIndex] || null;
 
+  const cameraId = selectedLevel?.camera?.id;
+
+  useEffect(() => {
+    if (!selectedLevelId && farmLevels[0]?.id) {
+      setSelectedLevelId(farmLevels[0].id);
+    }
+  }, [farmLevels, selectedLevelId]);
+
+  useEffect(() => {
+    let active = true;
+    let objectUrl = "";
+
+    setImageUrl("");
+    setImageError(false);
+
+    if (!cameraId || !token) {
+      return undefined;
+    }
+
+    getCameraImageBlob(cameraId, token, onTokenRefresh)
+      .then((blob) => {
+        if (!active) {
+          return;
+        }
+
+        objectUrl = URL.createObjectURL(blob);
+        setImageUrl(objectUrl);
+      })
+      .catch(() => {
+        if (active) {
+          setImageError(true);
+        }
+      });
+
+    return () => {
+      active = false;
+
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+      }
+    };
+  }, [cameraId, token, onTokenRefresh]);
+
   const cameraStatus =
     selectedLevel?.camera?.status ||
     data?.status ||
     "";
 
-  let cameraMessage = "Camera feed unavailable";
+  let cameraMessage = "Latest image unavailable";
 
   if (loading) {
     cameraMessage = "Loading camera status...";
-  } else if (error) {
-    cameraMessage = "Camera unavailable";
+  } else if (error || imageError) {
+    cameraMessage = "Camera image unavailable";
   } else if (cameraStatus === "connecting") {
-    cameraMessage = "Connecting to camera...";
+    cameraMessage = "Waiting for latest camera image...";
   } else if (cameraStatus === "offline") {
     cameraMessage = "Camera offline";
+  } else if (!imageUrl) {
+    cameraMessage = "Loading latest image...";
   }
 
   const selectLevel = (index) => {
@@ -58,16 +108,30 @@ function CameraCard({
   const canGoForward =
     selectedIndex < farmLevels.length - 1;
 
+  const renderCamera = () => {
+    if (imageUrl && !loading && !error && !imageError) {
+      return (
+        <img
+          className={styles.cameraImage}
+          src={imageUrl}
+          alt={`${selectedLevel?.name || "Farm"} latest camera capture`}
+        />
+      );
+    }
+
+    return <span>{cameraMessage}</span>;
+  };
+
   return (
     <>
       <section className={styles.card}>
         <div className={styles.header}>
-          <h2>Camera</h2>
+          <h2>Latest Farm Image</h2>
 
           <button
             className={styles.expandButton}
             type="button"
-            aria-label="Expand camera"
+            aria-label="Expand latest farm image"
             onClick={() => setIsExpanded(true)}
           >
             <Expand aria-hidden="true" />
@@ -75,7 +139,7 @@ function CameraCard({
         </div>
 
         <div className={styles.cameraArea}>
-          <span>{cameraMessage}</span>
+          {renderCamera()}
         </div>
 
         <div className={styles.controls}>
@@ -115,12 +179,12 @@ function CameraCard({
 
       {isExpanded && (
         <ExpandModal
-          title="Camera"
+          title="Latest Farm Image"
           onClose={() => setIsExpanded(false)}
           fullScreen
         >
           <div className={styles.expandedCamera}>
-            {cameraMessage}
+            {renderCamera()}
           </div>
         </ExpandModal>
       )}

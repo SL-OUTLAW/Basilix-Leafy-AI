@@ -99,3 +99,51 @@
     min-height: 64.5px;
   }
 }
+.settings {
+  display: grid;
+  gap: 15px;
+}
+
+.engineSettingsHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+}
+
+.engineSettingsHeader button {
+  padding: 8px 11px;
+  border: 1px solid var(--color-border);
+  border-radius: 7px;
+  background: var(--color-bg-card-inner);
+  color: var(--color-text-primary);
+  cursor: pointer;
+}
+
+.engineSettingsHeader button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.settingGroups {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 12px;
+}
+
+.settingGroups span {
+  padding: 5px 8px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  color: var(--color-text-secondary);
+  font-size: 10.5px;
+}
+
+.settingsError {
+  color: var(--color-text-primary);
+  font-size: 12px;
+}
+.editorGrid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; margin-top:14px; }.editorCard{border:1px solid var(--color-border);border-radius:9px;background:var(--color-bg-card-inner);overflow:hidden}.editorHeader{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border-bottom:1px solid var(--color-border)}.editorHeader button,.engineSettingsHeader button{display:inline-flex;align-items:center;gap:6px}.editorCard textarea{width:100%;min-height:180px;resize:vertical;border:0;padding:12px;background:transparent;color:var(--color-text-primary);font:11px/1.5 ui-monospace,SFMono-Regular,Consolas,monospace;outline:none}@media(max-width:800px){.editorGrid{grid-template-columns:1fr}}
