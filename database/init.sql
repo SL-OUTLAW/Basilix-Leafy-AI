@@ -265,6 +265,26 @@ CREATE INDEX idx_plant_image_analysis_data
     );
 
 
+-- Prevent duplicate assessments for a single image/model.
+CREATE UNIQUE INDEX uq_plant_image_analysis_image_model
+    ON plant_image_analysis (image_id, model_name);
+
+CREATE TABLE vision_analysis_jobs (
+    image_id BIGINT PRIMARY KEY REFERENCES plant_images(image_id) ON DELETE CASCADE,
+    status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
+    attempts INTEGER NOT NULL DEFAULT 0,
+    next_attempt_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    last_error VARCHAR(250),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT chk_vision_jobs_status
+        CHECK (status IN ('PENDING', 'PROCESSING', 'SUCCEEDED', 'FAILED')),
+    CONSTRAINT chk_vision_jobs_attempts CHECK (attempts >= 0)
+);
+
+CREATE INDEX idx_vision_jobs_retry
+    ON vision_analysis_jobs (next_attempt_at)
+    WHERE status = 'FAILED';
+
 CREATE TABLE ai_recommendations (
     recommendation_id BIGSERIAL PRIMARY KEY,
     recommendation_type VARCHAR(50) NOT NULL,

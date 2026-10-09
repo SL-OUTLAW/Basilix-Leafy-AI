@@ -1,4 +1,5 @@
 import asyncio
+import os
 import selectors
 import time
 
@@ -41,11 +42,17 @@ class Camera:
 class Cameras:
     def __init__(
         self,
-        output_directory: Path = Path("camera_images"),
+        output_directory: Path | None = None,
     ):
         self.cameras: list[Camera] = []
 
-        self.output_directory = output_directory
+        self.output_directory = (
+            Path(output_directory) if output_directory is not None
+            else Path(os.getenv(
+                "CAMERA_IMAGE_DIR",
+                str(Path(__file__).resolve().parents[2] / "camera_images"),
+            ))
+        ).resolve()
 
         self.loop = False
 
@@ -170,7 +177,10 @@ class Cameras:
 
             timestamp = datetime.now().astimezone().strftime("%Y%m%d_%H%M%S_%f")
 
-            output_path = self.output_directory / (f"{camera.name}_{timestamp}.jpg")
+            # Use the database ID, not a user-editable camera name, as filename.
+            output_path = self.output_directory / (
+                f"camera_{camera.camera_id}_{timestamp}.jpg"
+            )
 
             parameters = [
                 cv2.IMWRITE_JPEG_QUALITY,

@@ -1,4 +1,4 @@
-ultralytics==8.4.121
-torch>=2.2.0
-opencv-python
-numpy
+google-genai>=2.0,<3.0
+pydantic>=2.7,<3
+Pillow>=11,<13
+opencv-python-headless>=4.10,<5

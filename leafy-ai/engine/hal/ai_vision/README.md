@@ -1,199 +1,126 @@
-# Basilix AI Vision
-AI Vision module for whole-camera basil canopy analysis.
+# Leafy AI Vision
 
-## Models
+### Leafy AI Vision relies on Gemini AI API
 
-The current active Vision pipeline uses one model:
+The Engine camera loop captures a frame, stores its path in `plant_images` and
+the independent HAL vision worker processes unanalysed captures in chronological
+order. Each request sends exactly one sanitized JPEG to Gemini, validates the
+structured result with Pydantic, then stores the JSON in `plant_image_analysis`.
 
-- `models/basil_segmentation_yolo26s_final.pt`
+## What the model assesses
 
-The model performs basil instance segmentation internally.
+The output is limited to visually observable information:
 
-For the active Vision pipeline, the detected basil masks are combined into one overall canopy mask for the camera image.
+- plant size: `none`, `small`, `medium`, `large`, or `unknown`
+- canopy coverage, density, crowding and leaf overlap
+- overall visual health
+- visible signs compatible with dryness/water stress
+- visible signs compatible with overwatering/root-zone stress
+- visible signs compatible with nutrient deficiency
+- image quality and concise visible evidence
 
-Individual detections are not treated as physical plant counts.
+## Install
 
-## Current Vision Output
+From `leafy-ai/`:
 
-Vision currently provides:
+```bash
+pip install -r engine/hal/ai_vision/requirements.txt
+```
 
-- camera identifier
-- image width and height
-- whole-frame basil canopy coverage percentage
-- health availability status
+The Gemini integration uses the Google GenAI SDK.
 
-Example detector output:
+## Configuration
+
+```env
+GEMINI_VISION_ENABLED=true
+GEMINI_VISION_MODEL=gemini-3.8-flash
+GEMINI_VISION_THINKING_LEVEL=low
+GEMINI_VISION_BATCH_SIZE=4
+CAMERA_IMAGE_DIR=/data/camera_images
+GEMINI_API_KEY_FILE=/run/secrets/gemini_api_key
+```
+
+For Docker, prefer a read-only secret
+file via `GEMINI_API_KEY_FILE`. `GEMINI_API_KEY` is supported for local
+development only.
+
+`GEMINI_VISION_BATCH_SIZE` is clamped to 1-20. It limits how many pending images
+are sent during one vision-loop iteration; it does not discard older images.
+Pending images remain in `plant_images` and are processed on later iterations.
+
+`CAMERA_IMAGE_DIR` must point to the same persistent directory used by the camera
+capture loop and should be mounted as a Docker volume.
+
+## Security boundary
+
+Before an image leaves the Engine container, the integration:
+
+- accepts only local `.jpg`, `.jpeg` or `.png` files under `CAMERA_IMAGE_DIR`
+- rejects oversized or invalid images
+- opens and verifies the image using Pillow
+- strips EXIF/embedded metadata by re-encoding it to JPEG
+- scales the image to a bounded size
+- exposes no Gemini tools, browsing or farm-control functions
+- uses a strict system prompt that treats image text/QR codes as untrusted data
+- requires schema-conforming JSON and forbids unknown fields
+- logs only sanitized failure categories, not raw provider errors/responses
+- retries failed images at most three times with exponential backoff
+- processes API calls sequentially to bound outbound concurrency
+
+## Docker example
+
+```yaml
+services:
+  engine:
+    environment:
+      GEMINI_VISION_ENABLED: "true"
+      GEMINI_VISION_MODEL: gemini-3.8-flash
+      GEMINI_VISION_THINKING_LEVEL: low
+      GEMINI_VISION_BATCH_SIZE: "4"
+      CAMERA_IMAGE_DIR: /data/camera_images
+      GEMINI_API_KEY_FILE: /run/secrets/gemini_api_key
+    secrets:
+      - gemini_api_key
+    volumes:
+      - camera_images:/data/camera_images
+
+secrets:
+  gemini_api_key:
+    file: ./secrets/gemini_api_key.txt
+
+volumes:
+  camera_images:
+```
+
+## Stored JSON
+
+`plant_image_analysis.analysis` contains the validated assessment plus provider,
+model, camera and image metadata. The main assessment sections are:
 
 ```json
 {
-  "source": "vision",
-  "status": "success",
-  "camera": "camera1",
-  "image": {
-    "width": 704,
-    "height": 576
-  },
-  "canopy": {
-    "coverage_percent": 74.3
-  },
+  "image_quality": {},
+  "plant_size": {},
+  "canopy": {},
   "health": {
-    "status": "not_available",
-    "reason": "The current single vision model does not classify plant health."
+    "overall": "visually_healthy",
+    "status": "visually_healthy",
+    "dryness": {},
+    "overwatering": {},
+    "nutrient_deficiency": {},
+    "visible_symptoms": [],
+    "summary": "..."
   }
 }
 ```
 
-## Setup
+## Processing behavior
 
-Create or activate a Python environment and install:
-
-```bash
-pip install -r requirements.txt
-```
-
-## Run
-
-From the `leafy-ai` directory:
-
-```bash
-python -m engine.hal.ai_vision.detector "path/to/image.jpg"
-```
-
-## Hardware
-
-The Vision code uses GPU acceleration when CUDA is available and can fall back to CPU execution.
-
-Development and testing have been performed with the current Leafy AI development environment.
-
-Actual inference performance on the final farm deployment computer has not yet been validated.
-
-## AI Core Integration
-
-Vision exposes one public batch analysis function:
-
-`analyse_camera_images(image_paths)`
-
-Input format:
-
-```python
-{
-    image_id: image_path,
-    ...
-}
-```
-
-The camera/HAL layer is responsible for creating the corresponding plant_images records and supplying Vision with the image IDs and image paths.
-
-Vision then:
-
-- analyses each supplied image
-- creates a compact whole-camera analysis
-- stores successful results in plant_image_analysis
-- associates each analysis with its supplied image_id
-- returns the results as a JSON-compatible dictionary
-- keeps the latest fully successful batch in memory
-
-The latest fully successful batch can be retrieved with:
-
-`get_latest_analysis()`
-
-Example stored analysis:
-
-```json
-{
-  "source": "vision",
-  "status": "success",
-  "image_id": 101,
-  "camera": "camera1",
-  "image": {
-    "width": 704,
-    "height": 576
-  },
-  "health": {
-    "status": "not_available",
-    "reason": "The current single vision model does not classify plant health."
-  },
-  "canopy": {
-    "coverage_percent": 74.3
-  }
-}
-```
-
-## Current Testing
-
-The current Vision pipeline has been tested successfully with real basil camera images.
-
-Verified tests include:
-
-- single-image integration test: passed
-- two-image real PostgreSQL batch test: passed
-- PostgreSQL analysis read-back: passed
-- database cleanup verification: passed
-- failure-case test suite: passed
-- 20-image repeated batch stress test: passed
-- 58 newer farm-camera images processed successfully
-- Camera 1: 29/29 images passed
-- Camera 2: 29/29 images passed
-
-For the 58-image farm-camera robustness test:
-
-- Camera 1 canopy range: 39.46% to 45.14%
-- Camera 1 average canopy coverage: 41.71%
-- Camera 2 canopy range: 32.73% to 34.60%
-- Camera 2 average canopy coverage: 33.90%
-
-These canopy percentages measure predicted basil coverage across the full image frame. They are not model-confidence or accuracy percentages.
-
-These tests demonstrate pipeline robustness on the tested images but should not be treated as independent segmentation-accuracy benchmarks.
-
-## Database Integration
-
-Vision is implemented to store successful analysis results in:
-
-plant_image_analysis
-
-using the supplied plant_images.image_id.
-
-The database connection has been verified.
-
-Real Vision-to-plant_image_analysis inserts have been verified successfully using temporary test camera and plant_images records.
-
-In normal operation, the camera/HAL pipeline is responsible for creating the real plant_images records before Vision analyses them.
-
-Vision does not create camera or plant_images records itself.
-
-## Important limitations
-
-The current active Vision model does not classify:
-
-- disease
-- dryness
-- overwatering
-- nutrient deficiency
-- other plant health conditions
-
-Health therefore returns `not_available`.
-
-These should not be inferred without validated model or sensor evidence.
-
-The system does not currently provide:
-
-- physical plant count
-- physical centimetre measurements
-- individual plant size
-- individual plant spacing
-- crowding measurements
-- persistent plant tracking across dates
-- confirmed channel or row identification
-- exact plant age
-- harvest readiness
-- expansion readiness
-- yield prediction
-
-Physical measurements would require camera calibration or another known physical reference.
-
-Canopy coverage is measured across the full camera frame because a validated growing-area region has not yet been defined.
-
-Dense mature canopy and overlapping leaves may affect segmentation performance.
-
-The camera identifier is currently inferred from the image filename. If the filename does not identify a recognised camera, the detector returns `"camera": "unknown"`.
+1. Camera capture saves the JPEG and inserts `plant_images`.
+2. The vision loop queries the oldest unanalysed images for the configured model.
+3. A processing job is claimed in `vision_analysis_jobs`.
+4. The sanitized single image is sent to Gemini.
+5. Gemini returns schema-constrained JSON.
+6. Pydantic validates the response again inside the Engine.
+7. A successful assessment is inserted into `plant_image_analysis` and audited.
+8. Failures are marked for bounded retry while camera capture continues.
