@@ -1,0 +1,101 @@
+.settings {
+  width: 100%;
+  display: grid;
+  gap: 15px;
+}
+
+.section {
+  padding: 18px;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-large);
+}
+
+.sectionTitle h2 { margin: 0; color: var(--color-text-primary); font-size: 16.5px; }
+.sectionTitle p { margin: 4.5px 0 18px; color: var(--color-text-secondary); font-size: 12px; }
+
+.themeOptions { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.themeButton {
+  min-height: 75px;
+  padding: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-medium);
+  background: var(--color-bg-card-inner);
+  color: var(--color-text-primary);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+}
+.themeButton:hover { border-color: var(--color-green); }
+.selected { border: 2px solid var(--color-green); }
+.themeButton div { display: flex; flex-direction: column; gap: 3.75px; }
+.themeButton strong { font-size: 12.75px; }
+.themeButton div span { color: var(--color-text-secondary); font-size: 12px; }
+.previewDark, .previewLight { width: 39px; height: 39px; border-radius: 7.5px; flex-shrink: 0; }
+.previewDark { background: #151b1d; border: 1px solid #3a4344; }
+.previewLight { background: #ffffff; border: 1px solid #d8d0c6; }
+
+.primaryButton,
+.secondaryButton,
+.cameraForm button,
+.engineSettingsHeader button,
+.editorHeader button {
+  min-height: 34px;
+  padding: 7px 11px;
+  border-radius: var(--radius-medium);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  transition: border-color 150ms ease, background 150ms ease, color 150ms ease, opacity 150ms ease;
+}
+
+.primaryButton {
+  border: 1px solid var(--color-green-primary);
+  background: var(--color-green-primary);
+  color: #ffffff;
+}
+.primaryButton:hover:not(:disabled) { background: var(--color-green-active); border-color: var(--color-green-active); }
+
+.secondaryButton {
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-card-inner);
+  color: var(--color-text-primary);
+}
+.secondaryButton:hover:not(:disabled) { border-color: var(--color-green); color: var(--color-green); }
+
+.primaryButton:disabled, .secondaryButton:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.engineSettingsHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+}
+
+.settingsError { color: var(--color-red-text); font-size: 12px; }
+
+.editorGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 14px; }
+.editorCard { border: 1px solid var(--color-border); border-radius: var(--radius-large); background: var(--color-bg-card-inner); overflow: hidden; }
+.editorHeader { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; border-bottom: 1px solid var(--color-border); }
+.editorHeader > div { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.editorCard textarea { width: 100%; min-height: 180px; resize: vertical; border: 0; padding: 12px; background: transparent; color: var(--color-text-primary); font: 11px/1.5 ui-monospace, SFMono-Regular, Consolas, monospace; outline: none; }
+
+.cameraForm { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
+.cameraForm input, .cameraForm select { padding: 9px; border: 1px solid var(--color-border); border-radius: var(--radius-medium); background: var(--color-bg-card-inner); color: var(--color-text-primary); }
+.cameraForm input:focus, .cameraForm select:focus, .editorCard textarea:focus { border-color: var(--color-green); outline: none; }
+.cameraForm .primaryButton { grid-column: span 2; justify-self: start; }
+.cameraList { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 7px; }
+.cameraList span { padding: 5px 8px; border: 1px solid var(--color-border); border-radius: 999px; background: var(--color-bg-card-inner); color: var(--color-text-secondary); font-size: 11px; }
+
+[data-theme="light"] .primaryButton { background: var(--color-green-primary); border-color: var(--color-green-primary); color: #ffffff; }
+[data-theme="light"] .secondaryButton { background: #ffffff; color: var(--color-text-primary); }
+
+@media (max-width: 800px) { .editorGrid { grid-template-columns: 1fr; } }
+@media (max-width: 700px) { .cameraForm { grid-template-columns: 1fr; } .cameraForm .primaryButton { grid-column: auto; width: 100%; } }
+@media (max-width: 767px) { .section { padding: 13.5px; } .themeOptions { grid-template-columns: 1fr; } .themeButton { min-height: 64.5px; } }

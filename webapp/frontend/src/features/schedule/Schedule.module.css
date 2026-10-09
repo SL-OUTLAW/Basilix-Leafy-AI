@@ -1,0 +1,57 @@
+.schedule {
+  width: 100%;
+  min-width: 0;
+  margin-top: -16px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.topGrid {
+  min-height: 375px;
+
+  display: grid;
+  gap: 12px;
+}
+
+.listOnly {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.withDetails {
+  grid-template-columns: minmax(0, 1.5fr) minmax(292.5px, 0.9fr);
+}
+
+.bottomGrid {
+  min-height: 176.25px;
+
+  display: grid;
+  grid-template-columns: minmax(270px, 0.78fr) minmax(0, 1.22fr);
+  gap: 12px;
+}
+
+@media (max-width: 1100px) {
+  .topGrid {
+    min-height: 0;
+  }
+
+  .withDetails,
+  .bottomGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 767px) {
+  .schedule {
+    margin-top: 0;
+  }
+}
+
+@media (max-width: 600px) {
+  .schedule,
+  .topGrid,
+  .bottomGrid {
+    gap: 10.5px;
+  }
+}

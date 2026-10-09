@@ -1,0 +1,327 @@
+.page {
+  width: 100%;
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 15px;
+  padding: 15px;
+  background: var(--color-bg-main);
+  color: var(--color-text-primary);
+}
+
+.imagePanel,
+.loginPanel {
+  min-width: 0;
+  min-height: calc(100vh - 30px);
+  border-radius: 12px;
+}
+
+.imagePanel {
+  position: relative;
+  overflow: hidden;
+  background: var(--color-bg-sidebar);
+}
+
+.imagePanel img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.imagePanel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(6, 10, 9, 0.72), transparent 52%);
+}
+
+.imageText {
+  position: absolute;
+  z-index: 1;
+  left: 31.5px;
+  right: 31.5px;
+  bottom: 31.5px;
+}
+
+.imageText span {
+  color: var(--color-green);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 2px;
+}
+
+.imageText h2 {
+  max-width: 375px;
+  margin: 7.5px 0 0;
+  color: #ffffff;
+  font-size: 28.5px;
+  line-height: 1.1;
+  font-weight: 600;
+}
+
+.loginPanel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 36px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-card);
+}
+
+.loginContent {
+  width: 100%;
+  max-width: 315px;
+  min-width: 0;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 13.5px;
+  margin-bottom: 40.5px;
+}
+
+.brand img {
+  width: 57px;
+  height: 57px;
+  object-fit: contain;
+}
+
+.brand h1,
+.heading h2 {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-weight: 600;
+}
+
+.brand h1 {
+  font-size: 28.5px;
+}
+
+.brand p {
+  margin: 3.75px 0 0;
+  color: var(--color-green);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 2px;
+}
+
+.heading {
+  margin-bottom: 21px;
+}
+
+.heading h2 {
+  margin-bottom: 9px;
+  font-size: 31.5px;
+}
+
+.heading p {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.googleButton {
+  width: 100%;
+  max-width: 300px;
+  min-height: 33px;
+  display: flex;
+  justify-content: center;
+}
+
+.remember {
+  width: fit-content;
+  display: flex;
+  align-items: center;
+  gap: 7.5px;
+  margin-top: 15px;
+  color: var(--color-text-muted);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.remember input {
+  width: 13.5px;
+  height: 13.5px;
+  margin: 0;
+  accent-color: var(--color-green);
+}
+
+.remember input:disabled {
+  cursor: not-allowed;
+}
+
+.note,
+.loading,
+.error {
+  font-size: 12px;
+}
+
+.note {
+  margin: 19.5px 0 0;
+  color: var(--color-text-muted);
+  line-height: 1.6;
+}
+
+.loading,
+.error {
+  margin: 12px 0 0;
+}
+
+.loading {
+  color: var(--color-green);
+}
+
+.error {
+  color: var(--color-red);
+  line-height: 1.5;
+}
+
+@media (max-width: 1000px) {
+  .page {
+    gap: 10.5px;
+    padding: 10.5px;
+  }
+
+  .imagePanel,
+  .loginPanel {
+    min-height: calc(100vh - 21px);
+  }
+
+  .loginPanel {
+    padding: 24px;
+  }
+
+  .brand {
+    margin-bottom: 31.5px;
+  }
+
+  .brand img {
+    width: 49.5px;
+    height: 49.5px;
+  }
+
+  .brand h1 {
+    font-size: 24px;
+  }
+
+  .heading h2 {
+    font-size: 27px;
+  }
+
+  .imageText {
+    left: 22.5px;
+    right: 22.5px;
+    bottom: 22.5px;
+  }
+
+  .imageText h2 {
+    font-size: 24px;
+  }
+}
+
+@media (max-width: 760px) {
+  .page {
+    min-height: 100svh;
+    display: flex;
+    flex-direction: column;
+    gap: 7.5px;
+    padding: 7.5px;
+  }
+
+  .imagePanel {
+    width: 100%;
+    height: 180px;
+    min-height: 180px;
+    flex-shrink: 0;
+    border-radius: 10.5px;
+  }
+
+  .imageText {
+    display: none;
+  }
+
+  .loginPanel {
+    width: 100%;
+    min-height: calc(100svh - 202.5px);
+    flex: 1;
+    padding: 27px 21px;
+    border-radius: 10.5px;
+  }
+
+  .loginContent {
+    max-width: none;
+  }
+
+  .brand {
+    margin-bottom: 28.5px;
+  }
+
+  .brand img {
+    width: 48px;
+    height: 48px;
+  }
+
+  .brand h1 {
+    font-size: 23.25px;
+  }
+
+  .brand p {
+    font-size: 12px;
+  }
+
+  .heading h2 {
+    font-size: 27px;
+  }
+
+  .heading p {
+    font-size: 12px;
+  }
+
+  .googleButton {
+    max-width: none;
+  }
+}
+
+@media (max-width: 400px) {
+  .page {
+    gap: 6px;
+    padding: 6px;
+  }
+
+  .imagePanel {
+    height: 157.5px;
+    min-height: 157.5px;
+    border-radius: var(--radius-large);
+  }
+
+  .loginPanel {
+    min-height: calc(100svh - 175.5px);
+    padding: 22.5px 16.5px;
+    border-radius: var(--radius-large);
+  }
+
+  .brand {
+    margin-bottom: 24px;
+  }
+
+  .brand img {
+    width: 43.5px;
+    height: 43.5px;
+  }
+
+  .brand h1 {
+    font-size: 21px;
+  }
+
+  .heading h2 {
+    font-size: 24px;
+  }
+
+  .heading p {
+    font-size: 12px;
+  }
+}

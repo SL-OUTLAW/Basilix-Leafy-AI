@@ -1,0 +1,204 @@
+.panel {
+  min-height: 225px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-medium);
+}
+
+.header {
+  margin-bottom: 10.5px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 9px;
+}
+
+.header h2 {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.header p {
+  margin: 3px 0 0;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.count {
+  min-width: 27px;
+  height: 27px;
+  padding: 0 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  color: var(--color-green);
+  background: rgba(52, 211, 153, 0.1);
+  border: 1px solid rgba(52, 211, 153, 0.35);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.state {
+  flex: 1;
+  min-height: 172.5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  text-align: center;
+}
+
+.grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  align-content: start;
+  gap: 9px;
+}
+
+.card {
+  min-width: 0;
+  min-height: 97.5px;
+  padding: 13.5px;
+  display: flex;
+  align-items: center;
+  gap: 13.5px;
+  background: var(--color-bg-card-inner);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-medium);
+}
+
+.icon {
+  width: 43.5px;
+  height: 43.5px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.iconGraphic {
+  width: 22.5px;
+  height: 22.5px;
+  display: block;
+}
+
+.channelIcon,
+.irrigationIcon {
+  color: #34d399;
+  background: rgba(52, 211, 153, 0.14);
+}
+
+.fanIcon {
+  color: #f2f6f4;
+  background: rgba(242, 246, 244, 0.14);
+}
+
+.content {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+}
+
+.cardTop {
+  min-width: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.card h3 {
+  min-width: 0;
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.pending {
+  flex: 0 0 auto;
+  padding: 3px 6px;
+  color: #f5b94c;
+  border: 1px solid rgba(245, 185, 76, 0.35);
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.card p {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  line-height: 1.4;
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+[data-theme="light"] .card {
+  background: var(--color-bg-card);
+}
+
+[data-theme="light"] .channelIcon,
+[data-theme="light"] .irrigationIcon {
+  color: #209c63;
+  background: #e8f6ee;
+}
+
+[data-theme="light"] .fanIcon {
+  color: #5f6668;
+  background: #ecefed;
+}
+
+@media (max-width: 1100px) {
+  .card {
+    min-height: 90px;
+    padding: 12px;
+  }
+
+  .icon {
+    width: 39px;
+    height: 39px;
+  }
+
+  .iconGraphic {
+    width: 20.25px;
+    height: 20.25px;
+  }
+}
+
+@media (max-width: 767px) {
+  .panel {
+    min-height: auto;
+  }
+
+  .header h2 {
+    font-size: 13.5px;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .card {
+    min-height: 84px;
+  }
+}

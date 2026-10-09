@@ -23,6 +23,10 @@ SENSOR_TYPES = {
     "ph",
     "ec",
     "water_temperature",
+    "ambient_temperature",
+    "humidity",
+    "dew_point",
+    "water_level",
 }
 
 
@@ -460,27 +464,3 @@ async def sensor_history(
         },
         "timeline": buckets,
     }
-
-
-async def main():
-    await open_pool()
-
-    try:
-        result = await sensor_history(
-            {
-                "sensor_type": "ph",
-                "time_range": "1h",
-            }
-        )
-
-        print(result)
-
-    finally:
-        await close_pool()
-
-
-if __name__ == "__main__":
-    asyncio.run(
-        main(),
-        loop_factory=lambda: asyncio.SelectorEventLoop(selectors.SelectSelector()),
-    )

@@ -1,0 +1,148 @@
+.chart {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 270px;
+  overflow: hidden;
+  user-select: none;
+}
+
+.svg {
+  width: 100%;
+  height: 100%;
+  min-height: 270px;
+  display: block;
+  touch-action: none;
+  cursor: grab;
+}
+
+.svg:active {
+  cursor: grabbing;
+}
+
+.plotBackground {
+  fill: var(--color-bg-card-inner);
+}
+
+.gridLine {
+  stroke: var(--color-border);
+  stroke-width: 1;
+  opacity: 0.45;
+  vector-effect: non-scaling-stroke;
+}
+
+.axisLine {
+  stroke: var(--color-text-muted);
+  stroke-width: 1;
+  opacity: 0.75;
+  vector-effect: non-scaling-stroke;
+}
+
+.axisText,
+.axisTitle,
+.emptyText {
+  fill: var(--color-text-secondary);
+  font-family: inherit;
+}
+
+.axisText {
+  font-size: 12px;
+}
+
+.axisTitle {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.emptyText {
+  font-size: 14px;
+}
+
+.dataLine {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.dataPoint {
+  fill: currentColor;
+  stroke: var(--color-bg-card-inner);
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+}
+
+.crosshair {
+  stroke: currentColor;
+  stroke-width: 1;
+  stroke-dasharray: 5 5;
+  opacity: 0.6;
+  vector-effect: non-scaling-stroke;
+}
+
+.hoverPoint {
+  fill: var(--color-bg-card-inner);
+  stroke: currentColor;
+  stroke-width: 2.5;
+  vector-effect: non-scaling-stroke;
+}
+
+.green { color: #34d399; }
+.orange { color: #ff7b00; }
+.blue { color: #00a8d2; }
+.neutral { color: var(--color-text-secondary); }
+
+.tooltip {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  max-width: 240px;
+  padding: 7px 9px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: color-mix(in srgb, var(--color-bg-card) 92%, transparent);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  color: var(--color-text-primary);
+  font-size: 11px;
+  pointer-events: none;
+}
+
+.tooltip span {
+  color: var(--color-text-secondary);
+}
+
+.instructions {
+  position: absolute;
+  right: 14px;
+  bottom: 5px;
+  color: var(--color-text-muted);
+  font-size: 10px;
+  pointer-events: none;
+}
+
+[data-theme="light"] .green { color: #209c63; }
+[data-theme="light"] .orange { color: #d96500; }
+[data-theme="light"] .blue { color: #0063dc; }
+
+@media (max-width: 767px) {
+  .chart,
+  .svg {
+    min-height: 220px;
+  }
+
+  .instructions {
+    display: none;
+  }
+}
+
+@media (max-width: 520px) {
+  .chart,
+  .svg {
+    min-height: 185px;
+  }
+}

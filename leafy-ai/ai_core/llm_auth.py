@@ -35,7 +35,6 @@ def create_token() -> str:
         "jti": str(uuid.uuid4()),
     }
     token = jwt.encode(payload=payload, key=ai_core_key, algorithm="EdDSA")
-    print("[CREATED TOKEN]\n",token)
     return token
 
 
@@ -46,8 +45,8 @@ def validate_token(token) -> str:
             key=security_key,
             algorithms=["EdDSA"],
             issuer="security",
+            subject="security",
             audience="ai_core",
-            subject="ai_core",
         )
 
         return claims

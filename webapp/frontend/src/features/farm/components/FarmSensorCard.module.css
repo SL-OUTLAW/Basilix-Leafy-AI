@@ -1,0 +1,422 @@
+.card {
+  min-height: 150px;
+  padding: var(--card-padding);
+
+  display: flex;
+  flex-direction: column;
+
+  background: var(--color-bg-card-inner);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-medium);
+}
+
+.top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 9px;
+}
+
+.top h3 {
+  margin: 0;
+
+  color: var(--color-text-primary);
+  font-size: 12.75px;
+  font-weight: 600;
+}
+
+.value {
+  margin: 3.75px 0 0;
+
+  color: var(--color-text-primary);
+  font-size: 17.25px;
+  font-weight: 600;
+}
+
+.expandButton {
+  width: 22.5px;
+  height: 22.5px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid var(--color-border);
+  border-radius: 4.5px;
+
+  background: var(--icon-neutral-bg);
+  color: var(--icon-neutral);
+  border-color: var(--icon-neutral-border);
+
+  cursor: pointer;
+}
+
+.chart {
+  min-height: 45px;
+  flex: 1;
+
+  margin: 9px 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: var(--color-text-secondary);
+  font-size: 12px;
+}
+
+.sparkline {
+  width: 100%;
+  height: 45px;
+
+  overflow: visible;
+}
+
+.sparkline polyline {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.green .chart {
+  color: #34d399;
+}
+
+.orange .chart {
+  color: #ff7b00;
+}
+
+.blue .chart {
+  color: #00a8d2;
+}
+
+.neutral .chart {
+  color: var(--color-text-secondary);
+}
+
+.statusText {
+  color: var(--color-text-secondary);
+}
+
+.green .statusText {
+  color: #34d399;
+}
+
+.orange .statusText {
+  color: #ff7b00;
+}
+
+.blue .statusText {
+  color: #00a8d2;
+}
+
+.bottom {
+  display: flex;
+  justify-content: space-between;
+  gap: 7.5px;
+
+  font-size: 12px;
+}
+
+.connectionLive {
+  color: #34d399;
+}
+
+.connectionOffline {
+  color: var(--color-red);
+}
+
+.connectionNeutral {
+  color: var(--color-text-secondary);
+}
+
+.waterGauge {
+  position: relative;
+
+  width: 100%;
+  height: 43.5px;
+
+  overflow: hidden;
+
+  background: #07566a;
+  border-radius: 5.25px;
+}
+
+.waterFill {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  background: #11afd2;
+}
+
+.expanded {
+  width: 100%;
+  height: 100%;
+
+  min-width: 0;
+  min-height: 0;
+
+  display: flex;
+  flex-direction: column;
+}
+
+.expandedTop {
+  margin-bottom: 12px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.expandedValue {
+  margin: 0;
+
+  color: var(--color-text-primary);
+  font-size: 22.5px;
+  font-weight: 600;
+}
+
+.expandedChart {
+  width: 100%;
+  flex: 1;
+
+  min-width: 0;
+  min-height: 270px;
+
+  display: flex;
+  align-items: stretch;
+  justify-content: stretch;
+
+  overflow: hidden;
+
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-medium);
+
+  background: var(--color-bg-card-inner);
+  color: var(--color-text-secondary);
+}
+
+.expanded .sparkline {
+  width: calc(100% - 24px);
+  height: 100%;
+  min-height: 225px;
+
+  margin: auto;
+}
+
+.expanded .waterGauge {
+  width: min(360px, calc(100% - 30px));
+  height: 225px;
+
+  margin: auto;
+}
+
+.expanded.green .expandedChart {
+  color: #34d399;
+}
+
+.expanded.orange .expandedChart {
+  color: #ff7b00;
+}
+
+.expanded.blue .expandedChart {
+  color: #00a8d2;
+}
+
+.expandedBottom {
+  margin-top: 12px;
+
+  display: flex;
+  justify-content: space-between;
+
+  font-size: 12px;
+}
+
+[data-theme="light"] .card {
+  background: var(--color-bg-card);
+}
+
+[data-theme="light"] .green .chart,
+[data-theme="light"] .green .statusText,
+[data-theme="light"] .expanded.green .expandedChart {
+  color: #209c63;
+}
+
+[data-theme="light"] .orange .chart,
+[data-theme="light"] .orange .statusText,
+[data-theme="light"] .expanded.orange .expandedChart {
+  color: #d96500;
+}
+
+[data-theme="light"] .blue .chart,
+[data-theme="light"] .blue .statusText,
+[data-theme="light"] .expanded.blue .expandedChart {
+  color: #0063dc;
+}
+
+[data-theme="light"] .connectionLive {
+  color: #209c63;
+}
+
+[data-theme="light"] .waterGauge {
+  background: #dbe9f1;
+}
+
+[data-theme="light"] .waterFill {
+  background: #00a8d2;
+}
+
+@media (max-width: 767px) {
+  .expandedTop {
+    margin-bottom: 9px;
+  }
+
+  .expandedChart {
+    min-height: 210px;
+  }
+
+  .expandedValue {
+    font-size: 19.5px;
+  }
+}
+
+@media (max-width: 520px) {
+  .card {
+    min-height: 116.25px;
+  }
+
+  .chart {
+    min-height: 36px;
+    margin: 6px 0;
+  }
+
+  .sparkline {
+    height: 36px;
+  }
+
+  .waterGauge {
+    height: 36px;
+  }
+
+  .expandedChart {
+    min-height: 0;
+  }
+
+  .expanded .sparkline {
+    min-height: 165px;
+  }
+
+  .expanded .waterGauge {
+    width: min(240px, calc(100% - 18px));
+    height: 150px;
+  }
+
+  .expandedValue {
+    font-size: 18px;
+  }
+}
+
+.expandButton svg {
+  width: 12.75px;
+  height: 12.75px;
+}
+.title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.title svg {
+  flex: 0 0 auto;
+  color: currentColor;
+}
+
+.rangeControls {
+  width: 100%;
+  margin-bottom: 10px;
+
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) minmax(180px, 1fr) auto minmax(
+      220px,
+      1fr
+    );
+  align-items: end;
+  gap: 10px;
+}
+
+.rangeControls label {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.rangeControls label span,
+.rangeHint {
+  color: var(--color-text-secondary);
+  font-size: 11px;
+}
+
+.rangeControls input {
+  width: 100%;
+  min-width: 0;
+  height: 34px;
+  padding: 0 9px;
+
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-small);
+  background: var(--color-bg-card-inner);
+  color: var(--color-text-primary);
+}
+
+.rangeControls button {
+  height: 34px;
+  padding: 0 14px;
+
+  border: 1px solid var(--color-green);
+  border-radius: var(--radius-small);
+  background: var(--color-green-primary);
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.rangeControls button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.rangeHint {
+  align-self: center;
+  line-height: 1.4;
+}
+
+.rangeError {
+  margin: -2px 0 10px;
+  color: var(--color-red-text);
+  font-size: 12px;
+}
+
+@media (max-width: 900px) {
+  .rangeControls {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .rangeHint {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 600px) {
+  .rangeControls {
+    grid-template-columns: 1fr;
+  }
+
+  .rangeHint {
+    grid-column: auto;
+  }
+}

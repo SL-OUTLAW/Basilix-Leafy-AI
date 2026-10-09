@@ -1,0 +1,105 @@
+.card {
+  min-height: 142.5px;
+  padding: var(--card-padding);
+
+  display: grid;
+  grid-template-columns: 1fr 1px 1fr;
+  gap: var(--card-gap);
+  align-items: center;
+
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-medium);
+}
+
+.summary h2,
+.tracker h3 {
+  margin: 0;
+
+  color: var(--color-text-primary);
+  font-size: 16.5px;
+  font-weight: 600;
+}
+
+.value {
+  margin: 10.5px 0 4.5px;
+
+  color: var(--color-green);
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.summary span,
+.tracker p {
+  color: var(--color-text-secondary);
+}
+
+.divider {
+  width: 1px;
+  height: 82.5px;
+
+  background: var(--color-border);
+}
+
+.trackerTitle {
+  padding-bottom: 7.5px;
+
+  display: flex;
+  align-items: center;
+  gap: 7.5px;
+
+  border-bottom: 2px solid var(--color-green);
+}
+
+
+.tracker p {
+  margin: 10.5px 0 0;
+
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+@media (max-width: 767px) {
+  .card {
+    min-height: 0;
+    padding: var(--card-padding);
+
+    grid-template-columns: 1fr;
+    gap: var(--card-gap);
+  }
+
+  .divider {
+    width: 100%;
+    height: 1px;
+  }
+
+  .value {
+    margin: 9px 0 4.5px;
+  }
+}
+
+.trackerIcon {
+  width: 27px;
+  height: 27px;
+
+  flex: 0 0 auto;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: var(--icon-green);
+  background: var(--icon-green-bg);
+
+  border: 1px solid var(--icon-green-border);
+  border-radius: 7.5px;
+}
+
+.trackerIcon svg {
+  width: 15px;
+  height: 15px;
+
+  fill: none;
+  stroke: currentColor;
+}

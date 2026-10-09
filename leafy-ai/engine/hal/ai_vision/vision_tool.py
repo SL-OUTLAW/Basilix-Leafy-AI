@@ -1,6 +1,9 @@
 import asyncio
 import json
+
 from copy import deepcopy
+from datetime import datetime
+from typing import Any
 
 from engine.hal.ai_vision.detector import analyse_image
 from engine.hal.ai_vision.features.growth_history import get_growth_history
@@ -113,8 +116,14 @@ async def analyse_camera_images(image_paths):
                     model_name,
                     analysis
                 )
-                VALUES (%s, %s, %s::jsonb)
-                RETURNING analysis_id, created_at;
+                VALUES (
+                    %s,
+                    %s,
+                    %s::jsonb
+                )
+                RETURNING
+                    analysis_id,
+                    created_at;
                 """,
                 (
                     image_id,
@@ -124,48 +133,287 @@ async def analyse_camera_images(image_paths):
             )
 
             if not rows:
-                raise RuntimeError(
-                    "Database insert returned no result."
+
+                raise RuntimeError("Database insert returned no result.")
+
+            analysis_id = rows[0][0]
+            created_at = rows[0][1]
+
+            result = {
+                "status": "success",
+                "image_id": image_id,
+                "analysis_id": analysis_id,
+                "created_at": (
+                    created_at.isoformat() if created_at is not None else None
+                ),
+                "analysis": analysis,
+            }
+
+            try:
+
+                await self._audit_success(
+                    image=image,
+                    analysis_id=analysis_id,
+                    created_at=created_at,
                 )
 
-            analysis_id, created_at = rows[0]
+            except Exception as audit_error:
+                print(f"Vision success audit failed: {audit_error}.")
 
-            results[str(image_id)] = {
-                "status": "success",
-                "analysis_id": analysis_id,
-                "created_at": created_at.isoformat(),
-                "analysis": analysis,
-            }
-
-            successful += 1
+            return result
 
         except Exception as error:
-            results[str(image_id)] = {
+
+            try:
+
+                await self._audit_failure(
+                    image=image,
+                    error=error,
+                )
+
+            except Exception as audit_error:
+                print(
+                    f"Vision failure audit failed: {audit_error}. "
+                    f"Original error: {error}."
+                )
+
+            return {
                 "status": "error",
+                "image_id": image_id,
                 "error": str(error),
-                "analysis": analysis,
             }
 
-    if successful == len(image_paths):
-        status = "success"
-    elif successful > 0:
-        status = "partial_success"
-    else:
-        status = "error"
+    async def analyse_latest_images(
+        self,
+    ) -> dict[str, Any]:
 
-    result = {
-        "source": "vision",
-        "status": status,
-        "processed": len(image_paths),
-        "successful": successful,
-        "results": results,
-    }
+        images = await self.get_latest_unanalysed_images()
 
-    if status == "success":
-        _latest_analysis = deepcopy(result)
+        if not images:
 
-    return result
+            latest_images = await self.get_latest_images()
 
+            if not latest_images:
 
-def get_latest_analysis():
-    return deepcopy(_latest_analysis)
+                return {
+                    "source": "vision",
+                    "status": "no_data",
+                    "processed": 0,
+                    "successful": 0,
+                    "results": {},
+                    "message": (
+                        "No camera images are currently " "available for analysis."
+                    ),
+                }
+
+            return {
+                "source": "vision",
+                "status": "no_new_data",
+                "processed": 0,
+                "successful": 0,
+                "results": {},
+                "message": (
+                    "The latest available camera images " "have already been analysed."
+                ),
+            }
+
+        results: dict[str, Any] = {}
+
+        successful = 0
+
+        analyses = await asyncio.gather(
+            *[self.analyse_image(image) for image in images],
+            return_exceptions=True,
+        )
+
+        for image, result in zip(
+            images,
+            analyses,
+        ):
+
+            image_id = image["image_id"]
+
+            if isinstance(
+                result,
+                Exception,
+            ):
+
+                results[str(image_id)] = {
+                    "status": "error",
+                    "image_id": image_id,
+                    "error": str(result),
+                }
+
+                continue
+
+            results[str(image_id)] = result
+
+            if result.get("status") == "success":
+
+                successful += 1
+
+        if successful == len(images):
+
+            status = "success"
+
+        elif successful > 0:
+
+            status = "partial_success"
+
+        else:
+
+            status = "error"
+
+        result = {
+            "source": "vision",
+            "status": status,
+            "processed": len(images),
+            "successful": successful,
+            "results": results,
+        }
+
+        if successful > 0:
+
+            self.latest_analysis = deepcopy(result)
+
+        return result
+
+    async def _audit_success(
+        self,
+        image: dict[str, Any],
+        analysis_id: int,
+        created_at: datetime | None,
+    ) -> None:
+
+        async with get_connection() as conn:
+
+            await audit_log(
+                conn=conn,
+                action_type="VISION_ANALYSIS_COMPLETED",
+                entity_type="plant_image_analysis",
+                entity_id=analysis_id,
+                description=(
+                    "Vision analysis completed successfully "
+                    f"for {image['camera_name']}."
+                ),
+                metadata={
+                    "analysis_id": analysis_id,
+                    "image_id": image["image_id"],
+                    "camera_id": image["camera_id"],
+                    "camera_name": image["camera_name"],
+                    "level_no": image["level_no"],
+                    "image_path": image["image_path"],
+                    "captured_at": image["captured_at"],
+                    "analysed_at": (
+                        created_at.isoformat() if created_at is not None else None
+                    ),
+                    "model_name": MODEL_NAME,
+                },
+            )
+
+    async def _audit_failure(
+        self,
+        image: dict[str, Any],
+        error: Exception,
+    ) -> None:
+
+        async with get_connection() as conn:
+
+            await audit_log(
+                conn=conn,
+                action_type="VISION_ANALYSIS_FAILED",
+                entity_type="plant_image",
+                entity_id=image["image_id"],
+                description=("Vision analysis failed " f"for {image['camera_name']}."),
+                metadata={
+                    "image_id": image["image_id"],
+                    "camera_id": image["camera_id"],
+                    "camera_name": image["camera_name"],
+                    "level_no": image["level_no"],
+                    "image_path": image["image_path"],
+                    "captured_at": image["captured_at"],
+                    "model_name": MODEL_NAME,
+                    "error_type": type(error).__name__,
+                    "error": str(error),
+                },
+            )
+
+    async def run_once(
+        self,
+    ) -> dict[str, Any]:
+
+        return await self.analyse_latest_images()
+
+    def get_latest_analysis(
+        self,
+    ) -> dict[str, Any] | None:
+
+        return deepcopy(self.latest_analysis)
+
+    async def start(
+        self,
+    ) -> None:
+
+        self.loop = True
+
+        while self.loop:
+
+            try:
+
+                await self.analyse_latest_images()
+
+            except Exception as error:
+
+                try:
+
+                    async with get_connection() as conn:
+
+                        await audit_log(
+                            conn=conn,
+                            action_type="VISION_ANALYSIS_LOOP_FAILED",
+                            entity_type="vision",
+                            description=(
+                                "The scheduled vision analysis " "loop failed."
+                            ),
+                            metadata={
+                                "error_type": type(error).__name__,
+                                "error": str(error),
+                            },
+                        )
+
+                except Exception as audit_error:
+                    print(
+                        f"Vision loop error: {error}. "
+                        f"Audit logging also failed: {audit_error}."
+                    )
+
+            polling_rate = settings.get(
+                "vision",
+                {},
+            ).get(
+                "polling_rate",
+                1800,
+            )
+
+            try:
+
+                polling_rate = float(polling_rate)
+
+            except (
+                TypeError,
+                ValueError,
+            ):
+
+                polling_rate = 1800.0
+
+            if polling_rate <= 0:
+
+                polling_rate = 1800.0
+
+            await asyncio.sleep(polling_rate)
+
+    async def stop(
+        self,
+    ) -> None:
+
+        self.loop = False

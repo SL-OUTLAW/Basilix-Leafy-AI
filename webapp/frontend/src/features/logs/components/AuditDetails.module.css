@@ -1,0 +1,137 @@
+.detailsPanel {
+  min-width: 0;
+  padding: 13.5px;
+
+  display: flex;
+  flex-direction: column;
+
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-medium);
+}
+
+.detailsHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 9px;
+
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.detailsHeader h2 {
+  margin: 0 0 10.5px;
+
+  color: var(--color-text-primary);
+  font-size: 14.25px;
+}
+
+.detailsHeader strong {
+  display: block;
+
+  color: var(--color-text-primary);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.detailsHeader p {
+  margin: 3.75px 0 0;
+
+  color: var(--color-text-secondary);
+  font-size: 12px;
+}
+
+.closeDetails {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+
+  border: 1px solid var(--color-border);
+  border-radius: 5.25px;
+
+  background: var(--color-bg-card-inner);
+  color: var(--color-text-primary);
+
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.closeDetails:hover {
+  border-color: var(--color-green);
+}
+
+.detailSection {
+  padding: 12px 0;
+
+  border-bottom: 1px solid var(--color-border);
+}
+
+.detailSection:last-child {
+  border-bottom: none;
+}
+
+.detailSection h3 {
+  margin: 0 0 10.5px;
+
+  color: var(--color-text-primary);
+  font-size: 12px;
+}
+
+.detailSection dl {
+  margin: 0;
+
+  display: flex;
+  flex-direction: column;
+  gap: 7.5px;
+}
+
+.detailSection dl div {
+  display: grid;
+  grid-template-columns: 61.5px minmax(0, 1fr);
+  gap: 7.5px;
+}
+
+.detailSection dt {
+  color: var(--color-text-secondary);
+  font-size: 12px;
+}
+
+.detailSection dd {
+  margin: 0;
+
+  color: var(--color-text-primary);
+  font-size: 12px;
+  line-height: 1.35;
+
+  overflow-wrap: anywhere;
+}
+
+.statusApproved {
+  color: var(--color-green) !important;
+}
+
+.statusWarning,
+.statusPending {
+  color: var(--color-orange) !important;
+}
+
+.statusNeutral {
+  color: var(--color-text-primary) !important;
+}
+
+[data-theme="light"] .closeDetails {
+  background: #f4f2ee;
+}
+
+@media (max-width: 1100px) {
+  .detailsPanel {
+    min-height: 225px;
+  }
+}
+
+@media (max-width: 600px) {
+  .detailsPanel {
+    padding: 12px;
+  }
+}

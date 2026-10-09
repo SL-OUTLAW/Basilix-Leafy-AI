@@ -1,0 +1,146 @@
+.card {
+  min-width: 0;
+  min-height: 108px;
+  padding: 12px;
+
+  display: grid;
+  grid-template-columns: 58px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+
+  background: var(--color-bg-card-inner);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-medium);
+}
+
+.iconArea {
+  width: 54px;
+  height: 54px;
+  align-self: center;
+  justify-self: center;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid transparent;
+  border-radius: 50%;
+}
+
+.iconGraphic {
+  width: 34px;
+  height: 34px;
+  display: block;
+  flex: 0 0 auto;
+}
+
+.green .iconArea {
+  color: #34d399;
+  background: rgba(52, 211, 153, 0.12);
+  border-color: rgba(52, 211, 153, 0.38);
+}
+
+.orange .iconArea {
+  color: #ff7b00;
+  background: #433a2d;
+  border-color: rgba(255, 123, 0, 0.38);
+}
+
+.blue .iconArea {
+  color: #00a8d2;
+  background: #16304a;
+  border-color: rgba(0, 168, 210, 0.45);
+}
+
+.green .value { color: #34d399; }
+.orange .value { color: #ff7b00; }
+.blue .value { color: #00a8d2; }
+
+.content {
+  min-width: 0;
+  min-height: 72px;
+
+  display: grid;
+  grid-template-rows: auto auto minmax(30px, auto);
+  align-content: center;
+  justify-items: start;
+  gap: 3px;
+}
+
+.content h3 {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.value {
+  margin: 0;
+  font-size: 22.5px;
+  font-weight: 600;
+  line-height: 1.1;
+}
+
+.content span {
+  align-self: start;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+[data-theme="light"] .card {
+  background: var(--color-bg-card);
+}
+
+[data-theme="light"] .green .iconArea {
+  color: #209c63;
+  background: #e8f6ee;
+  border-color: #b9ddcb;
+}
+
+[data-theme="light"] .orange .iconArea {
+  color: #d96500;
+  background: #fff1d6;
+  border-color: #f3c68f;
+}
+
+[data-theme="light"] .blue .iconArea {
+  color: #0063dc;
+  background: #eaf1f8;
+  border-color: #b8d2f2;
+}
+
+[data-theme="light"] .green .value { color: #209c63; }
+[data-theme="light"] .orange .value { color: #d96500; }
+[data-theme="light"] .blue .value { color: #0063dc; }
+
+@media (max-width: 767px) {
+  .card {
+    min-height: 88px;
+    grid-template-columns: 48px minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  .iconArea {
+    width: 44px;
+    height: 44px;
+  }
+
+  .iconGraphic {
+    width: 28px;
+    height: 28px;
+  }
+
+  .content {
+    min-height: 62px;
+  }
+
+  .content h3 {
+    font-size: 12px;
+  }
+
+  .value {
+    font-size: 19.5px;
+  }
+}

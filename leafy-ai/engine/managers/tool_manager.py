@@ -1,10 +1,29 @@
 from typing import Any
+
 import asyncio
 
-from tools.sensor_history import sensor_history
-from tools.rag_tool.rag_tool import search_chunks
+from engine.tools.rag_tool.rag_tool import search_chunks
+from engine.tools.camera_analysis_history import camera_analysis_history
+from engine.tools.create_recommendations import create_recommendations
+from engine.tools.daily_farm_schedule import daily_farm_schedule
+from engine.tools.get_harvest_data import get_harvest_data
+from engine.tools.sensor_history import sensor_history
+from engine.tools.pending_approvals import pending_approvals
+from engine.tools.pending_recommendations import pending_recommendations
 
-TOOL_LIST = {"sensor_history_tool": sensor_history, "rag_tool": search_chunks}
+TOOL_LIST = {
+    "sensor_history": sensor_history,
+    "rag_tool": search_chunks,
+    "camera_analysis_history": camera_analysis_history,
+    "create_recommendations": create_recommendations,
+    "daily_farm_schedule": daily_farm_schedule,
+    "get_harvest_data": get_harvest_data,
+    "pending_approvals": pending_approvals,
+    "pending_recommendations": pending_recommendations,
+}
+
+
+# TODO : CREATE RECOMMENDATION NOT POPULATING THE DB CORRECTLY
 
 
 async def execute_tool(
@@ -15,6 +34,7 @@ async def execute_tool(
     tool = TOOL_LIST.get(tool_name)
 
     if tool is None:
+
         return {
             "tool_name": tool_name,
             "success": False,
@@ -22,6 +42,7 @@ async def execute_tool(
         }
 
     try:
+
         result = await tool(
             arguments=arguments,
         )
@@ -33,6 +54,7 @@ async def execute_tool(
         }
 
     except Exception as error:
+
         return {
             "tool_name": tool_name,
             "success": False,
@@ -41,25 +63,19 @@ async def execute_tool(
 
 
 async def execute_tools(
-    tool_calls: list[dict[str, Any]],
-) -> dict[str, Any]:
+    tool_calls: list[Any],
+) -> list[dict[str, Any]]:
 
     tasks = [
         asyncio.create_task(
             execute_tool(
-                tool_name=tool_call["tool_name"],
-                arguments=tool_call.get(
-                    "arguments",
-                    {},
-                ),
-            )
+                tool_name=tool_call.tool_name,
+                arguments=tool_call.arguments,
+            ),
         )
         for tool_call in tool_calls
     ]
 
     results = await asyncio.gather(*tasks)
 
-    return {
-        "success": True,
-        "results": results,
-    }
+    return results

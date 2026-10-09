@@ -1,0 +1,185 @@
+.card {
+  min-width: 0;
+  padding: var(--card-padding);
+
+  display: flex;
+  flex-direction: column;
+
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-medium);
+}
+
+.header {
+  margin-bottom: var(--card-gap);
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.header h2 {
+  margin: 0;
+
+  color: var(--color-text-primary);
+  font-size: 15.75px;
+  font-weight: 600;
+}
+
+.expandButton {
+  width: 22.5px;
+  height: 22.5px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+
+  border: 1px solid var(--color-border);
+  border-radius: 4.5px;
+
+  background: var(--icon-neutral-bg);
+  color: var(--icon-neutral);
+  border-color: var(--icon-neutral-border);
+}
+
+.cameraArea {
+  min-height: 240px;
+  flex: 1;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-medium);
+
+  background: var(--color-bg-card-inner);
+  color: var(--color-text-secondary);
+  font-size: 12px;
+}
+
+.controls {
+  min-height: 42px;
+  margin-top: var(--card-gap);
+
+  display: grid;
+  grid-template-columns: 60px 1fr 60px;
+  align-items: center;
+}
+
+.count {
+  color: var(--color-text-primary);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.levelControls {
+  grid-column: 2;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10.5px;
+}
+
+.levelControls button {
+  width: 28.5px;
+  height: 28.5px;
+
+  border: 1px solid var(--color-border);
+  border-radius: 5.25px;
+
+  background: var(--color-bg-card-inner);
+  color: var(--color-text-secondary);
+
+  font-size: 18px;
+}
+
+.levelControls span {
+  min-width: 112.5px;
+  padding: 7.5px 12px;
+
+  border: 1px solid var(--color-border);
+  border-radius: 5.25px;
+
+  background: var(--color-bg-card-inner);
+  color: var(--color-text-primary);
+
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.expandedCamera {
+  width: 100%;
+  min-height: 0;
+  flex: 1;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-medium);
+
+  background: var(--color-bg-card-inner);
+  color: var(--color-text-secondary);
+}
+
+@media (max-width: 767px) {
+  .card {
+    padding: var(--card-padding);
+  }
+
+  .cameraArea {
+    min-height: 165px;
+  }
+
+  .expandedCamera {
+    min-height: 225px;
+  }
+}
+
+@media (max-width: 520px) {
+  .cameraArea {
+    min-height: 135px;
+  }
+
+  .controls {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .count {
+    text-align: center;
+  }
+
+  .levelControls {
+    grid-column: 1;
+    gap: 6px;
+  }
+
+  .levelControls span {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .expandedCamera {
+    min-height: 165px;
+  }
+}
+.expandButton svg,
+.levelControls button svg {
+  width: 13.5px;
+  height: 13.5px;
+}
+
+.cameraImage {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}

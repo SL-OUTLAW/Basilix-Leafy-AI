@@ -1,0 +1,144 @@
+:root {
+  --color-bg-main: #0e1213;
+  --color-bg-sidebar: #151b1d;
+  --color-bg-header: #151b1d;
+  --color-bg-card: #1e2527;
+  --color-bg-card-inner: #293133;
+  --color-bg-section: #293133;
+
+  --color-border: #3a4344;
+
+  --color-text-primary: #ffffff;
+  --color-text-secondary: #a5b0ac;
+  --color-text-muted: #8f9b96;
+
+  --color-nav-text: #ffffff;
+  --color-nav-active-bg: #1e4a3a;
+  --color-nav-active-text: #34d399;
+
+  --color-green: #34d399;
+  --color-green-dark: #1e4a3a;
+  --color-green-primary: #2f6b4f;
+  --color-green-active: #3f7a63;
+  --color-green-success: #2f8f60;
+
+  --color-orange: #ff7b00;
+  --color-warning: #d9a441;
+
+  --color-blue: #00a8d2;
+  --color-info: #00c3d0;
+
+  --color-red: #ff3535;
+  --color-red-text: #ff6d6d;
+  --color-red-dark: #501111;
+
+  --icon-green: #34d399;
+  --icon-green-bg: rgba(52, 211, 153, 0.1);
+  --icon-green-border: rgba(52, 211, 153, 0.45);
+
+  --icon-orange: #ff7b00;
+  --icon-orange-bg: rgba(255, 123, 0, 0.1);
+  --icon-orange-border: rgba(255, 123, 0, 0.45);
+
+  --icon-blue: #00a8d2;
+  --icon-blue-bg: rgba(0, 168, 210, 0.1);
+  --icon-blue-border: rgba(0, 168, 210, 0.45);
+
+  --icon-red: #ff3535;
+  --icon-red-bg: rgba(255, 53, 53, 0.1);
+  --icon-red-border: rgba(255, 53, 53, 0.45);
+
+  --icon-neutral: #8f9b96;
+  --icon-neutral-bg: rgba(143, 155, 150, 0.12);
+  --icon-neutral-border: #566061;
+
+  --sidebar-width: 195px;
+  --header-height: 74.25px;
+
+  --page-padding: 18px;
+  --section-gap: 12px;
+  --card-gap: 12px;
+  --card-padding: 12px;
+
+  --radius-small: 3.75px;
+  --radius-medium: 7.5px;
+  --radius-large: 9px;
+}
+
+[data-theme="light"] {
+  --color-bg-main: #eaeaea;
+  --color-bg-sidebar: #2f6b4f;
+  --color-bg-header: #ffffff;
+  --color-bg-card: #ffffff;
+  --color-bg-card-inner: #f3efe8;
+  --color-bg-section: #f3efe8;
+
+  --color-border: #d8d0c6;
+
+  --color-text-primary: #202725;
+  --color-text-secondary: #7a7a72;
+  --color-text-muted: #656b68;
+
+  --color-nav-text: #ffffff;
+  --color-nav-active-bg: #ffffff;
+  --color-nav-active-text: #34d399;
+
+  --color-green: #34d399;
+  --color-green-dark: #1e4a3a;
+  --color-green-primary: #2f6b4f;
+  --color-green-active: #3f7a63;
+  --color-green-success: #2f8f60;
+
+  --color-orange: #ff7b00;
+  --color-warning: #ff7b00;
+
+  --color-blue: #0063dc;
+  --color-info: #0063dc;
+
+  --color-red: #ff3535;
+  --color-red-text: #ff3535;
+  --color-red-dark: #ff0000;
+
+  --icon-green: #2f8f60;
+  --icon-green-bg: #e8f6ee;
+  --icon-green-border: #b9ddcb;
+
+  --icon-orange: #ff7b00;
+  --icon-orange-bg: #fff1d6;
+  --icon-orange-border: #e6b35c;
+
+  --icon-blue: #0063dc;
+  --icon-blue-bg: #eaf1f8;
+  --icon-blue-border: #b8cde0;
+
+  --icon-red: #ff3535;
+  --icon-red-bg: #fff5f4;
+  --icon-red-border: #f1b5b0;
+
+  --icon-neutral: #656b68;
+  --icon-neutral-bg: #f3efe8;
+  --icon-neutral-border: #d8d0c6;
+}
+
+@media (max-width: 1399px) {
+  :root {
+    --sidebar-width: 165px;
+    --page-padding: 15px;
+  }
+}
+
+@media (max-width: 1099px) {
+  :root {
+    --sidebar-width: 66px;
+    --page-padding: 15px;
+  }
+}
+
+@media (max-width: 767px) {
+  :root {
+    --page-padding: 12px;
+    --section-gap: 10.5px;
+    --card-gap: 10.5px;
+    --card-padding: 10.5px;
+  }
+}

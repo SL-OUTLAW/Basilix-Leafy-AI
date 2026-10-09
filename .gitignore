@@ -62,7 +62,6 @@ runs/
 !leafy-ai/ai/vision/models/health_classifier_v1.pt
 !leafy-ai/ai/vision/models/health_detector_v2.pt
 
-secrets/
 
 __pycache__/
 *.pyc
@@ -75,6 +74,8 @@ __pycache__/
 leafy-ai/engine/context_manager/vision_context/analysed_images/
 
 leafy-ai/engine/hal/camera_images/
+
+secrets/
 
 .env
 !.env.example

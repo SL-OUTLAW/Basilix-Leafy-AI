@@ -1,0 +1,309 @@
+.card {
+  min-width: 0;
+  min-height: 78px;
+  padding: 12px 13.5px;
+
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) minmax(69px, 99px);
+  align-items: center;
+  gap: 12px;
+
+  background: var(--color-bg-card-inner);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-medium);
+}
+
+.iconArea {
+  width: 42px;
+  height: 42px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+}
+
+.iconGraphic {
+  width: 28.5px;
+  height: 28.5px;
+  display: block;
+}
+
+.phIcon {
+  color: #34d399;
+}
+
+.temperatureIcon {
+  color: #ff7b00;
+}
+
+.waterIcon {
+  color: #00a8d2;
+}
+
+.waterIcon .iconGraphic {
+  width: 25.5px;
+  height: 37.5px;
+}
+
+.ecIcon {
+  color: #34d399;
+}
+
+.content {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 3px;
+}
+
+.content h3 {
+  margin: 0;
+
+  color: var(--color-text-primary);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.value {
+  margin: 0;
+
+  color: var(--color-text-primary);
+  font-size: 16.5px;
+  font-weight: 600;
+  line-height: 1.15;
+
+  white-space: nowrap;
+}
+
+.status {
+  margin: 0;
+
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.visual {
+  min-width: 0;
+  height: 36px;
+
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.sparkline {
+  width: 100%;
+  max-width: 90px;
+  height: 28.5px;
+
+  overflow: visible;
+}
+
+.sparkline polyline {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.waterTrack {
+  position: relative;
+
+  width: 64.5px;
+  height: 30px;
+
+  overflow: hidden;
+
+  background: #0a5a72;
+  border-radius: 7.5px;
+}
+
+.waterFill {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  background: #19b4dc;
+}
+
+.green {
+  color: #34d399;
+}
+
+.orange {
+  color: #ff7b00;
+}
+
+.blue {
+  color: #00a8d2;
+}
+
+.red {
+  color: #ff3535;
+}
+
+.neutral {
+  color: var(--color-text-secondary);
+}
+
+.green .status {
+  color: #34d399;
+}
+
+.orange .status {
+  color: #ff7b00;
+}
+
+.blue .status {
+  color: #00a8d2;
+}
+
+.red .status {
+  color: #ff3535;
+}
+
+[data-theme="light"] .card {
+  background: var(--color-bg-card);
+}
+
+[data-theme="light"] .phIcon,
+[data-theme="light"] .ecIcon {
+  color: #209c63;
+}
+
+[data-theme="light"] .temperatureIcon {
+  color: #d96500;
+}
+
+[data-theme="light"] .waterIcon {
+  color: #0063dc;
+}
+
+[data-theme="light"] .green {
+  color: #209c63;
+}
+
+[data-theme="light"] .orange {
+  color: #d96500;
+}
+
+[data-theme="light"] .blue {
+  color: #0063dc;
+}
+
+[data-theme="light"] .red {
+  color: #c53b30;
+}
+
+[data-theme="light"] .green .status {
+  color: #209c63;
+}
+
+[data-theme="light"] .orange .status {
+  color: #d96500;
+}
+
+[data-theme="light"] .blue .status {
+  color: #0063dc;
+}
+
+[data-theme="light"] .red .status {
+  color: #c53b30;
+}
+
+[data-theme="light"] .waterTrack {
+  background: #dbe9f1;
+}
+
+[data-theme="light"] .waterFill {
+  background: #0063dc;
+}
+
+@media (max-width: 1350px) {
+  .card {
+    min-height: 87px;
+    grid-template-columns: 42px minmax(0, 1fr);
+  }
+
+  .visual {
+    grid-column: 1 / -1;
+    justify-content: flex-end;
+    height: 25.5px;
+  }
+
+  .sparkline {
+    max-width: 105px;
+    height: 22.5px;
+  }
+
+  .waterTrack {
+    width: 72px;
+    height: 24px;
+  }
+}
+
+@media (max-width: 1100px) {
+  .card {
+    min-height: 88.5px;
+  }
+
+  .visual {
+    height: 24px;
+  }
+}
+
+@media (max-width: 600px) {
+  .card {
+    min-height: 82.5px;
+    padding: 10.5px 12px;
+    gap: 10.5px;
+
+    grid-template-columns: 39px minmax(0, 1fr);
+  }
+
+  .iconArea {
+    width: 39px;
+    height: 39px;
+  }
+
+  .iconGraphic {
+    width: 25.5px;
+    height: 25.5px;
+  }
+
+  .waterIcon .iconGraphic {
+    width: 22.5px;
+    height: 33px;
+  }
+
+  .content h3 {
+    font-size: 12px;
+  }
+
+  .value {
+    font-size: 15px;
+  }
+
+  .status {
+    font-size: 12px;
+  }
+
+  .sparkline {
+    max-width: 90px;
+    height: 21px;
+  }
+
+  .waterTrack {
+    width: 66px;
+    height: 22.5px;
+  }
+}

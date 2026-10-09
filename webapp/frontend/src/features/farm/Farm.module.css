@@ -1,0 +1,26 @@
+.farm {
+  width: 100%;
+  min-width: 0;
+  min-height: calc(
+    100dvh
+    - var(--header-height)
+    - (var(--page-padding) * 2)
+  );
+
+  margin-top: -16px;
+
+  display: flex;
+  flex-direction: column;
+}
+
+@media (max-width: 1000px) {
+  .farm {
+    min-height: 0;
+  }
+}
+
+@media (max-width: 767px) {
+  .farm {
+    margin-top: 0;
+  }
+}

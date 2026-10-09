@@ -202,12 +202,52 @@ class Cameras:
             camera,
         )
 
+        try:
+            rows = await run_query(
+                """
+                INSERT INTO plant_images (
+                    camera_id,
+                    image_path,
+                    thumbnail_path,
+                    captured_at
+                )
+                VALUES (
+                    %s,
+                    %s,
+                    NULL,
+                    NOW()
+                )
+                RETURNING
+                    image_id,
+                    captured_at;
+                """,
+                (
+                    camera.camera_id,
+                    str(output_path),
+                ),
+            )
+
+            if not rows:
+                raise RuntimeError("Failed to create plant image record.")
+
+        except Exception:
+            try:
+                output_path.unlink(missing_ok=True)
+            except OSError as cleanup_error:
+                print(
+                    f"Could not remove unregistered camera image {output_path}: "
+                    f"{cleanup_error}"
+                )
+
+            raise
+
         self.latest_images[camera.camera_id] = {
+            "image_id": rows[0][0],
             "camera_id": camera.camera_id,
             "camera_name": camera.name,
             "level_no": camera.level,
             "image_path": str(output_path),
-            "captured_at": (datetime.now().astimezone().isoformat()),
+            "captured_at": rows[0][1].isoformat(),
         }
 
         return output_path
@@ -332,13 +372,67 @@ class Cameras:
 
         self.loop = True
 
-        await self.load_cameras()
-
         while self.loop:
 
-            await self.capture_all()
+            try:
 
-            await asyncio.sleep(settings.get("cameras").get("polling_rate"))
+                await self.load_cameras()
+
+                await self.capture_all()
+
+            except asyncio.CancelledError:
+
+                raise
+
+            except Exception as error:
+
+                try:
+
+                    async with get_connection() as conn:
+
+                        await audit_log(
+                            conn=conn,
+                            action_type="CAMERA_LOOP_FAILED",
+                            entity_type="camera",
+                            description=(
+                                "The camera capture loop encountered an error."
+                            ),
+                            metadata={
+                                "error_type": type(error).__name__,
+                                "error": str(error),
+                            },
+                        )
+
+                except Exception as audit_error:
+                    print(
+                        f"Camera loop error: {error}. "
+                        f"Audit logging also failed: {audit_error}."
+                    )
+
+            polling_rate = settings.get(
+                "cameras",
+                {},
+            ).get(
+                "polling_rate",
+                30.0,
+            )
+
+            try:
+
+                polling_rate = float(polling_rate)
+
+            except (
+                TypeError,
+                ValueError,
+            ):
+
+                polling_rate = 30.0
+
+            if polling_rate <= 0:
+
+                polling_rate = 30.0
+
+            await asyncio.sleep(polling_rate)
 
     async def stop(
         self,
@@ -354,8 +448,6 @@ async def test():
 
     try:
         await cameras.load_cameras()
-
-        print(f"Loaded " f"{len(cameras.cameras)} " f"camera(s)")
 
         for camera in cameras.cameras:
 
