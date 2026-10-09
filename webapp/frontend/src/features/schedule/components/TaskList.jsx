@@ -1,36 +1,10 @@
 import { Plus } from "lucide-react";
+import ActionIcon from "../../../components/common/ActionIcon/ActionIcon";
+import StateMessage from "../../../components/common/StateMessage/StateMessage";
+import { formatClockTime, formatLevel } from "../../../utils/formatters";
 
 import styles from "./TaskList.module.css";
 
-function formatTime(value) {
-  if (!value) {
-    return "—";
-  }
-
-  const [hourValue, minute] = String(value).split(":");
-  const hour = Number(hourValue);
-
-  if (Number.isNaN(hour)) {
-    return String(value);
-  }
-
-  const suffix = hour >= 12 ? "PM" : "AM";
-  const displayHour = hour % 12 || 12;
-
-  return `${String(displayHour).padStart(2, "0")}:${minute} ${suffix}`;
-}
-
-function formatLevel(level) {
-  if (level === 0) {
-    return "All levels";
-  }
-
-  if (level === null || level === undefined) {
-    return "";
-  }
-
-  return `Level ${level}`;
-}
 
 function getStatus(task) {
   const status = String(task.status || "").toUpperCase();
@@ -82,17 +56,11 @@ function TaskList({
 
       <div className={styles.list}>
         {loading ? (
-          <div className={styles.state}>
-            Loading schedule...
-          </div>
+          <StateMessage compact message="Loading schedule..." />
         ) : error ? (
-          <div className={styles.errorState}>
-            {error}
-          </div>
+          <StateMessage compact tone="error" message={error} />
         ) : tasks.length === 0 ? (
-          <div className={styles.state}>
-            No scheduled tasks are available.
-          </div>
+          <StateMessage compact message="No scheduled tasks are available." />
         ) : (
           tasks.map((task) => {
             const selected =
@@ -114,8 +82,16 @@ function TaskList({
                 }`}
                 onClick={() => onSelect(task.schedule_id)}
               >
+                <ActionIcon
+                  iconName={task.icon_name}
+                  iconKey={task.icon_key}
+                  tone={task.icon_tone}
+                  action={task.task_action}
+                  size={20}
+                />
+
                 <span className={styles.time}>
-                  {formatTime(task.start_time)}
+                  {formatClockTime(task.start_time)}
                 </span>
 
                 <span className={styles.taskText}>

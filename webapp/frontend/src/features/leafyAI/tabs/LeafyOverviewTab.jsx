@@ -1,243 +1,163 @@
+import {
+  Activity,
+  Bot,
+  Clock3,
+  Lightbulb,
+  ShieldCheck,
+  Sparkles,
+  Workflow,
+} from "lucide-react";
+
+import { getAIResultPreview } from "../../../utils/aiResult";
 import styles from "./LeafyOverviewTab.module.css";
 
-function SummaryCard({
-  label,
-  value,
-  description
-}) {
+function MetricCard({ label, value, description, Icon, tone = "green" }) {
   return (
-    <article className={styles.summaryCard}>
-      <span className={styles.cardLabel}>
-        {label}
-      </span>
+    <article className={`${styles.metricCard} ${styles[tone]}`}>
+      <div className={styles.metricIcon}>
+        <Icon aria-hidden="true" />
+      </div>
 
-      <strong className={styles.cardValue}>
-        {value}
-      </strong>
-
-      <p>{description}</p>
+      <div className={styles.metricContent}>
+        <span className={styles.metricLabel}>{label}</span>
+        <strong className={styles.metricValue}>{value}</strong>
+        <p>{description}</p>
+      </div>
     </article>
   );
 }
 
-function LeafyOverviewTab({
-  data = null,
-  loading = false,
-  error = false
-}) {
+function LeafyOverviewTab({ data = null, loading = false, error = false }) {
   const status = data?.status ?? {};
-
-  const feed = Array.isArray(data?.feed)
-    ? data.feed
-    : [];
-
-  const recommendations = Array.isArray(
-    data?.recommendations
-  )
+  const feed = Array.isArray(data?.feed) ? data.feed : [];
+  const recommendations = Array.isArray(data?.recommendations)
     ? data.recommendations
     : [];
+  const activity = Array.isArray(data?.activity) ? data.activity : [];
 
-  const activity = Array.isArray(data?.activity)
-    ? data.activity
-    : [];
+  const pendingRecommendations = recommendations.filter(
+    (item) => item.status === "PENDING",
+  );
 
-  const latestRecommendation =
-    recommendations[0] || null;
-
+  const latestPendingRecommendation = pendingRecommendations[0] || null;
   const latestActivity = activity[0] || null;
 
-  const statusValue = (value) => {
-    if (loading) {
-      return "Loading...";
-    }
-
-    if (error) {
-      return "Unavailable";
-    }
-
-    return value || "—";
+  const displayValue = (value) => {
+    if (loading) return "…";
+    if (error) return "-";
+    return value || "-";
   };
+
+  const latestRecommendationValue = loading
+    ? "…"
+    : error
+      ? "-"
+      : latestPendingRecommendation
+        ? latestPendingRecommendation.type || "Pending"
+        : "None";
+
+  const latestRecommendationDescription = loading
+    ? "Loading recommendation information..."
+    : error
+      ? "Recommendation information is unavailable."
+      : latestPendingRecommendation?.title ||
+        "No recommendation is currently waiting for review.";
+
+  const latestActivityValue = loading
+    ? "…"
+    : error
+      ? "-"
+      : latestActivity?.category || "None";
+
+  const latestActivityDescription = loading
+    ? "Loading recent AI activity..."
+    : error
+      ? "Recent AI activity is unavailable."
+      : latestActivity?.title || "No recent AI activity is available.";
 
   return (
     <div className={styles.overview}>
-      <div className={styles.statusGrid}>
-        <SummaryCard
+      <section className={styles.metricGrid}>
+        <MetricCard
           label="AI Status"
-          value={statusValue(status.aiStatus)}
-          description={
-            loading
-              ? "Loading system status..."
-              : error
-                ? "AI status is unavailable."
-                : status.aiStatus
-                  ? "Leafy AI is reporting its latest available system state."
-                  : "AI status is not available yet."
-          }
+          value={displayValue(status.aiStatus)}
+          description="Current Leafy AI operating state."
+          Icon={Bot}
+          tone="green"
         />
 
-        <SummaryCard
+        <MetricCard
           label="Last Analysis"
-          value={statusValue(
-            status.lastAnalysis
-          )}
-          description={
-            loading
-              ? "Loading analysis information..."
-              : error
-                ? "Analysis information is unavailable."
-                : status.lastAnalysis
-                  ? "Latest available analysis timestamp."
-                  : "No analysis timestamp available."
-          }
+          value={displayValue(status.lastAnalysis)}
+          description="Latest whole-farm AI analysis."
+          Icon={Clock3}
+          tone="blue"
         />
 
-        <SummaryCard
+        <MetricCard
           label="Safety Status"
-          value={statusValue(
-            status.safetyStatus
-          )}
-          description={
-            loading
-              ? "Loading safety status..."
-              : error
-                ? "Safety status is unavailable."
-                : status.safetyStatus
-                  ? "Latest available safety state."
-                  : "Safety status is not available yet."
-          }
+          value={displayValue(status.safetyStatus)}
+          description="Current farm safety state."
+          Icon={ShieldCheck}
+          tone="green"
         />
-      </div>
 
-      <div className={styles.highlightGrid}>
-        <section className={styles.highlightCard}>
-          <div className={styles.highlightHeader}>
-            <div>
-              <span className={styles.eyebrow}>
-                Latest recommendation
-              </span>
+        <MetricCard
+          label="Pending Recommendations"
+          value={loading || error ? "-" : pendingRecommendations.length}
+          description="Recommendations waiting for review."
+          Icon={Lightbulb}
+          tone="orange"
+        />
 
-              <h2>
-                {loading
-                  ? "Loading..."
-                  : latestRecommendation?.title ||
-                    "No recommendation available"}
-              </h2>
-            </div>
+        <MetricCard
+          label="AI Activity · 24h"
+          value={loading || error ? "-" : activity.length}
+          description="Recommendation and AI task activity."
+          Icon={Activity}
+          tone="blue"
+        />
 
-            <span className={styles.readOnly}>
-              Read only
-            </span>
-          </div>
+        <MetricCard
+          label="Latest Recommendation"
+          value={latestRecommendationValue}
+          description={latestRecommendationDescription}
+          Icon={Sparkles}
+          tone="green"
+        />
 
-          <p className={styles.highlightDescription}>
-            {loading
-              ? "Loading recommendation information..."
-              : error
-                ? "Recommendation information is unavailable."
-                : latestRecommendation?.summary ||
-                  "No recent recommendation is available."}
-          </p>
-
-          {latestRecommendation && (
-            <div className={styles.chipRow}>
-              {latestRecommendation.priority && (
-                <span className={styles.chip}>
-                  {latestRecommendation.priority}
-                </span>
-              )}
-
-              {latestRecommendation.type && (
-                <span className={styles.chip}>
-                  {latestRecommendation.type}
-                </span>
-              )}
-
-              {latestRecommendation.area && (
-                <span className={styles.chip}>
-                  {latestRecommendation.area}
-                </span>
-              )}
-            </div>
-          )}
-        </section>
-
-        <section className={styles.highlightCard}>
-          <div className={styles.highlightHeader}>
-            <div>
-              <span className={styles.eyebrow}>
-                Recent activity
-              </span>
-
-              <h2>
-                {loading
-                  ? "Loading..."
-                  : latestActivity?.title ||
-                    "No recent activity"}
-              </h2>
-            </div>
-
-            <span className={styles.highlightTime}>
-              {latestActivity?.time || "—"}
-            </span>
-          </div>
-
-          <p className={styles.highlightDescription}>
-            {loading
-              ? "Loading recent activity..."
-              : error
-                ? "Recent activity is unavailable."
-                : latestActivity?.description ||
-                  "No recent activity is available."}
-          </p>
-
-          {latestActivity && (
-            <div className={styles.chipRow}>
-              {latestActivity.category && (
-                <span className={styles.chip}>
-                  {latestActivity.category}
-                </span>
-              )}
-
-              {latestActivity.source && (
-                <span className={styles.chip}>
-                  {latestActivity.source}
-                </span>
-              )}
-            </div>
-          )}
-        </section>
-      </div>
+        <MetricCard
+          label="Latest AI Activity"
+          value={latestActivityValue}
+          description={latestActivityDescription}
+          Icon={Workflow}
+          tone="blue"
+        />
+      </section>
 
       <section className={styles.aiFeed}>
         <div className={styles.sectionHeader}>
           <div>
-            <h2>AI Feed</h2>
+            <h2>Recent AI Activity · 24 Hours</h2>
             <p>
-              Recent Leafy AI analysis and system activity.
+              Recommendations and scheduled AI task activity recorded during the
+              last 24 hours.
             </p>
           </div>
-
-          <span className={styles.readOnly}>
-            Read only
-          </span>
         </div>
 
         {loading ? (
           <div className={styles.feedEmptyState}>
             <div>
               <h3>Loading AI activity</h3>
-              <p>
-                Recent activity is loading.
-              </p>
+              <p>Recent activity is loading.</p>
             </div>
           </div>
         ) : error ? (
           <div className={styles.feedEmptyState}>
             <div>
               <h3>AI activity unavailable</h3>
-              <p>
-                Recent activity could not be loaded.
-              </p>
+              <p>Recent activity could not be loaded.</p>
             </div>
           </div>
         ) : feed.length === 0 ? (
@@ -252,24 +172,22 @@ function LeafyOverviewTab({
         ) : (
           <div className={styles.feedList}>
             {feed.map((item) => (
-              <article
-                key={item.id}
-                className={styles.feedItem}
-              >
-                <span className={styles.feedDot}></span>
+              <article key={item.id} className={styles.feedItem}>
+                <span className={styles.feedDot} />
 
-                <div className={styles.itemTime}>
-                  {item.time || "—"}
-                </div>
+                <div className={styles.itemTime}>{item.time || "-"}</div>
 
-                <div>
-                  <h3>
-                    {item.title ||
-                      "Leafy AI update"}
-                  </h3>
+                <div className={styles.feedContent}>
+                  <div className={styles.feedTitleRow}>
+                    <h3>{item.title || "Leafy AI update"}</h3>
+
+                    {item.category && (
+                      <span className={styles.feedStatus}>{item.category}</span>
+                    )}
+                  </div>
 
                   <p>
-                    {item.description ||
+                    {getAIResultPreview(item.result || item.description, 520) ||
                       "No additional details available."}
                   </p>
                 </div>
@@ -278,56 +196,6 @@ function LeafyOverviewTab({
           </div>
         )}
       </section>
-
-      <div className={styles.overviewSummaryGrid}>
-        <article className={styles.smallSummaryCard}>
-          <span className={styles.eyebrow}>
-            Recommendations
-          </span>
-
-          <strong>
-            {loading
-              ? "—"
-              : error
-                ? "—"
-                : recommendations.length}
-          </strong>
-
-          <p>
-            {loading
-              ? "Loading recommendations..."
-              : error
-                ? "Recommendations unavailable."
-                : recommendations.length === 1
-                  ? "recommendation currently available"
-                  : "recommendations currently available"}
-          </p>
-        </article>
-
-        <article className={styles.smallSummaryCard}>
-          <span className={styles.eyebrow}>
-            Recent activity
-          </span>
-
-          <strong>
-            {loading
-              ? "—"
-              : error
-                ? "—"
-                : activity.length}
-          </strong>
-
-          <p>
-            {loading
-              ? "Loading activity..."
-              : error
-                ? "Activity unavailable."
-                : activity.length === 1
-                  ? "activity entry currently available"
-                  : "activity entries currently available"}
-          </p>
-        </article>
-      </div>
     </div>
   );
 }

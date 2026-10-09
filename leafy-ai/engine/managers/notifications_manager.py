@@ -78,6 +78,7 @@ async def get_notifications(
     status: str | None = None,
     severity: str | None = None,
     limit: int = 100,
+    offset: int = 0,
 ) -> list[dict[str, Any]]:
 
     if limit <= 0:
@@ -133,7 +134,7 @@ async def get_notifications(
         ORDER BY
             created_at DESC,
             notification_id DESC
-        LIMIT %s;
+        LIMIT %s OFFSET %s;
         """,
         (
             status,
@@ -141,6 +142,7 @@ async def get_notifications(
             severity,
             severity,
             limit,
+            offset,
         ),
     )
 

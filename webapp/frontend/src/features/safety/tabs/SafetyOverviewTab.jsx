@@ -1,6 +1,5 @@
 import SafetySummary from "../components/SafetySummary";
 import PendingApprovals from "../components/PendingApprovals";
-import RiskAssessment from "../components/RiskAssessment";
 import RecentSafetyActivity from "../components/RecentSafetyActivity";
 
 import styles from "./SafetyOverviewTab.module.css";
@@ -10,7 +9,9 @@ function SafetyOverviewTab({
   loading = false,
   error = false,
   onOpenApprovals,
-  onOpenConfiguration
+  onOpenConfiguration,
+  canAdmin = false,
+  onEmergencyStop,
 }) {
   return (
     <div className={styles.overview}>
@@ -18,9 +19,12 @@ function SafetyOverviewTab({
         data={data?.summary}
         loading={loading}
         error={error}
+        emergencyStop={Boolean(data?.state?.emergency_stop)}
+        canAdmin={canAdmin}
+        onEmergencyStop={onEmergencyStop}
       />
 
-      <div className={styles.middle}>
+      <div className={styles.activityGrid}>
         <PendingApprovals
           data={data?.pendingApprovals}
           loading={loading}
@@ -28,19 +32,12 @@ function SafetyOverviewTab({
           onViewAll={onOpenApprovals}
         />
 
-        <RiskAssessment
-          data={data?.riskAssessment}
+        <RecentSafetyActivity
+          data={data?.recentActivity}
           loading={loading}
           error={error}
-          onConfigure={onOpenConfiguration}
         />
       </div>
-
-      <RecentSafetyActivity
-        data={data?.recentActivity}
-        loading={loading}
-        error={error}
-      />
     </div>
   );
 }

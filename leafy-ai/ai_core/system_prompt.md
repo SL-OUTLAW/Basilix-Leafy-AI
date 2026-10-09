@@ -298,7 +298,7 @@ ACTIONABLE RECOMMENDATIONS:
 - DISABLE_SCHEDULE requires schedule_id.
 - Never invent schedule_id.
 
-- Farm runtime actions such as SET_LIGHTING, RUN_IRRIGATION, SET_FAN, DOSE_PH, DOSE_EC, and ANALYSE_FARM belong in task_action.
+- Farm runtime actions such as SET_LIGHTING, RUN_IRRIGATION, SET_FAN, DOSE_PH, DOSE_EC, and RUN_AI_ANALYSIS belong in task_action.
 - Scheduler CRUD actions are:
   - CREATE_SCHEDULE
   - UPDATE_SCHEDULE

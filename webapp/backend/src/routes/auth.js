@@ -180,7 +180,10 @@ router.post("/google", loginLimiter, async (req, res) => {
     authenticated: true,
     token,
     user: {
-      ...googleUser,
+      userId: appUser.user_id,
+      email: appUser.email,
+      full_name: appUser.full_name,
+      avatar_url: appUser.avatar_url,
       role: allowedUser.role
     }
   });

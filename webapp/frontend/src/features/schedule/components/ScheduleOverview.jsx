@@ -4,7 +4,8 @@ import {
   ShieldQuestion
 } from "lucide-react";
 
-import TaskIcon from "./TaskIcon";
+import ActionIcon from "../../../components/common/ActionIcon/ActionIcon";
+import { formatClockTime, formatLevel } from "../../../utils/formatters";
 
 import styles from "./ScheduleOverview.module.css";
 
@@ -28,22 +29,6 @@ function isToday(value) {
   );
 }
 
-function formatTime(value) {
-  if (!value) {
-    return "—";
-  }
-
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return "—";
-  }
-
-  return date.toLocaleTimeString([], {
-    hour: "2-digit",
-    minute: "2-digit"
-  });
-}
 
 function formatNextRun(value) {
   if (!value) {
@@ -87,7 +72,7 @@ function formatNextRun(value) {
     });
   }
 
-  return `${dayLabel} • ${formatTime(value)}`;
+  return `${dayLabel} • ${formatClockTime(value)}`;
 }
 
 function getNextTask(tasks) {
@@ -160,7 +145,7 @@ function CalendarOverview({
           <p>{completed} completed</p>
 
           <p>
-            Next task at {formatTime(nextTask?.next_run_at)}
+            Next task at {formatClockTime(nextTask?.next_run_at)}
           </p>
         </div>
       </div>
@@ -220,11 +205,18 @@ function SummaryOverview({ tasks }) {
 
       <div className={styles.cards}>
         <article className={styles.detailCard}>
-          <h3>Next Scheduled Task</h3>
+          <div className={styles.detailHeader}>
+            <h3>Next Scheduled Task</h3>
+            {nextTask && (
+              <span className={styles.upcomingBadge}>
+                Upcoming
+              </span>
+            )}
+          </div>
 
           <div className={styles.detailContent}>
             {nextTask ? (
-              <TaskIcon
+              <ActionIcon
                 iconName={nextTask.icon_name}
                 iconKey={nextTask.icon_key}
                 tone={nextTask.icon_tone}
@@ -245,20 +237,13 @@ function SummaryOverview({ tasks }) {
               <span>
                 {nextTask
                   ? `${formatNextRun(nextTask.next_run_at)} • ${
-                      nextTask.level_no === 0
-                        ? "All levels"
-                        : `Level ${nextTask.level_no}`
+                      formatLevel(nextTask.level_no)
                     }`
                   : "No upcoming schedule"}
               </span>
             </div>
           </div>
 
-          {nextTask && (
-            <span className={styles.upcomingBadge}>
-              Upcoming
-            </span>
-          )}
         </article>
 
         <article className={styles.detailCard}>

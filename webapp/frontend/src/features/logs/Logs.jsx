@@ -4,6 +4,7 @@ import LogsToolbar from "./components/LogsToolbar";
 import LogsTable from "./components/LogsTable";
 import AuditDetails from "./components/AuditDetails";
 
+import { getLogsData } from "../../services/logsApi";
 import styles from "./Logs.module.css";
 
 function toIsoDate(date) {
@@ -25,9 +26,15 @@ function toIsoDate(date) {
 function Logs({
   data = null,
   loading = false,
-  error = ""
+  error = "",
+  token,
+  onTokenRefresh
 }) {
-  const logs = Array.isArray(data) ? data : [];
+  const [extraLogs, setExtraLogs] = useState([]);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const baseLogs = Array.isArray(data) ? data : [];
+  const logs = [...baseLogs, ...extraLogs.filter((item) => !baseLogs.some((base) => base.id === item.id))];
 
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
@@ -109,6 +116,16 @@ function Logs({
     setSelectedLog((current) =>
       current?.id === log.id ? null : log
     );
+  }
+
+  async function loadMore() {
+    if (loadingMore || !hasMore) return;
+    setLoadingMore(true);
+    try {
+      const next = await getLogsData(token, onTokenRefresh, { limit: 50, offset: logs.length });
+      setExtraLogs((current) => [...current, ...next]);
+      setHasMore(next.length === 50);
+    } finally { setLoadingMore(false); }
   }
 
   return (
@@ -216,6 +233,7 @@ function Logs({
           onClose={clearSelectedLog}
         />
       </div>
+      {hasMore && !loading && <button type="button" className={styles.loadMore} onClick={loadMore} disabled={loadingMore}>{loadingMore ? "Loading..." : "Load more logs"}</button>}
     </div>
   );
 }

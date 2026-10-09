@@ -1,11 +1,14 @@
-import ActionIcon from "../components/ActionIcon";
+import ActionIcon from "../../../components/common/ActionIcon/ActionIcon";
 
 import styles from "../Safety.module.css";
 
 function ConfigurationTab({
   data = [],
   loading = false,
-  error = false
+  error = false,
+  state = null,
+  canAdmin = false,
+  onSetAiEnabled,
 }) {
   const items = Array.isArray(data) ? data : [];
 
@@ -17,7 +20,18 @@ function ConfigurationTab({
           <p>Current risk levels and approval requirements.</p>
         </div>
 
-        <span>Read only</span>
+        {canAdmin ? (
+          <button
+            type="button"
+            className={styles.aiToggle}
+            disabled={loading || Boolean(state?.emergency_stop)}
+            onClick={() => onSetAiEnabled?.(!state?.ai_enabled)}
+          >
+            {state?.ai_enabled ? "Disable AI" : "Enable AI"}
+          </button>
+        ) : (
+          <span>Read only</span>
+        )}
       </div>
 
       {loading ? (
@@ -38,35 +52,26 @@ function ConfigurationTab({
         <div className={styles.fullEmptyState}>
           <div>
             <h3>No configuration data available</h3>
-            <p>
-              Safety configuration will appear when backend support is
-              available.
-            </p>
+            <p>Safety configuration is not currently available.</p>
           </div>
         </div>
       ) : (
         <div className={styles.configurationList}>
           {items.map((item) => (
-            <article
-              key={item.id}
-              className={styles.configurationRow}
-            >
-              <ActionIcon
-                type={item.type}
-                size="activity"
-              />
+            <article key={item.id} className={styles.configurationRow}>
+              <ActionIcon type={item.type} variant="activity" size={17} />
 
               <div className={styles.configurationCopy}>
                 <strong>{item.command || "Action"}</strong>
-                <span>
-                  {item.description || "No description available."}
-                </span>
+                <span>{item.description || "No description available."}</span>
               </div>
 
               <div className={styles.configurationMeta}>
                 <span
                   className={
-                    item.risk === "Low Risk"
+                    item.risk === "Low Risk" ||
+                    item.risk === "Monitored" ||
+                    item.risk === "Enabled"
                       ? styles.lowBadge
                       : item.risk === "Medium Risk"
                         ? styles.mediumBadge

@@ -219,8 +219,14 @@
 }
 
 .collapsed button:not(.toggleButton) img {
-  width: 18.75px;
-  height: 18.75px;
+  width: 25.5px;
+  height: 25.5px;
+}
+
+.collapsed button:not(.toggleButton) > svg {
+  width: 25.5px;
+  height: 25.5px;
+  flex-shrink: 0;
 }
 
 .collapsed .emergency {
@@ -228,8 +234,8 @@
 }
 
 .collapsed .emergency img {
-  width: 18.75px !important;
-  height: 18.75px !important;
+  width: 25.5px !important;
+  height: 25.5px !important;
 }
 
 .collapsed .bottom {
@@ -241,8 +247,8 @@
 }
 
 .collapsed .bottom button img {
-  width: 18.75px !important;
-  height: 18.75px !important;
+  width: 25.5px !important;
+  height: 25.5px !important;
 }
 
 @media (max-width: 1399px) and (min-width: 1100px) {
@@ -414,3 +420,11 @@
 [data-theme="light"] .collapsed .emergency img {
   filter: none;
 }
+.sidebar nav button > svg {
+  width: 25.5px;
+  height: 25.5px;
+  flex-shrink: 0;
+}
+.sidebar .active > svg { color: var(--color-green); }
+@media (max-width: 1399px) and (min-width: 1100px) { .sidebar nav button > svg { width: 22.5px; height: 22.5px; } }
+@media (max-width: 1099px) and (min-width: 768px) { .sidebar nav button > svg { width: 21px; height: 21px; } }

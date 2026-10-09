@@ -298,3 +298,4 @@
     min-height: 0;
   }
 }
+.loadMore { margin:12px auto 0; display:block; padding:8px 14px; border:1px solid var(--color-border); border-radius:7px; background:var(--color-bg-card); color:var(--color-text-secondary); }

@@ -1,155 +1,122 @@
 .overview {
   width: 100%;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
-.statusGrid {
+.metricGrid {
+  width: 100%;
+  padding: 12px;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.summaryCard,
-.smallSummaryCard,
-.aiFeed,
-.highlightCard {
-  background: var(--color-bg-card);
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 9px;
+  background: var(--color-bg-section);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-medium);
 }
 
-.summaryCard {
-  min-height: 88.5px;
+.metricCard {
+  min-width: 0;
+  min-height: 122px;
   padding: 12px;
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 8px;
+  background: var(--color-bg-card-inner);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-medium);
 }
 
-.cardLabel,
-.eyebrow {
-  color: var(--color-text-secondary);
-  font-size: 12px;
-  font-weight: 600;
+.metricIcon {
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  border: 1px solid transparent;
+  border-radius: 50%;
 }
 
-.cardValue {
-  margin-top: 6.75px;
-  color: var(--color-text-primary);
-  font-size: 18.75px;
-  line-height: 1;
+.metricIcon svg {
+  width: 22px;
+  height: 22px;
+  display: block;
 }
 
-.summaryCard p {
-  margin: auto 0 0;
-  color: var(--color-text-secondary);
-  font-size: 12px;
-  line-height: 1.4;
-}
-
-.statusGrid .summaryCard:nth-child(1) {
-  border-top: 2px solid var(--color-green);
-}
-
-.statusGrid .summaryCard:nth-child(2) {
-  border-top: 2px solid #00a8d2;
-}
-
-.statusGrid .summaryCard:nth-child(3) {
-  border-top: 2px solid var(--color-green);
-}
-
-.statusGrid .summaryCard:nth-child(1) .cardValue,
-.statusGrid .summaryCard:nth-child(3) .cardValue {
-  color: var(--color-green);
-}
-
-.statusGrid .summaryCard:nth-child(2) .cardValue {
-  color: #00a8d2;
-}
-
-.highlightGrid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.highlightCard {
+.metricContent {
+  width: 100%;
   min-width: 0;
-  min-height: 131.25px;
-  padding: 13.5px;
   display: flex;
   flex-direction: column;
+  gap: 3px;
 }
 
-.highlightGrid .highlightCard:nth-child(1) {
-  border-left: 3px solid var(--color-green);
+.metricLabel {
+  color: var(--color-text-primary);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.25;
 }
 
-.highlightGrid .highlightCard:nth-child(2) {
-  border-left: 3px solid #00a8d2;
+.metricValue {
+  color: var(--color-text-primary);
+  font-size: 19px;
+  font-weight: 700;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
 }
 
-.highlightGrid .highlightCard:nth-child(1) .eyebrow {
-  color: var(--color-green);
+.metricContent p {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 11px;
+  line-height: 1.35;
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
 }
 
-.highlightGrid .highlightCard:nth-child(2) .eyebrow {
+.green .metricIcon {
+  color: #34d399;
+  background: rgba(52, 211, 153, 0.12);
+  border-color: rgba(52, 211, 153, 0.38);
+}
+
+.green .metricValue {
+  color: #34d399;
+}
+
+.blue .metricIcon {
+  color: #00a8d2;
+  background: #16304a;
+  border-color: rgba(0, 168, 210, 0.45);
+}
+
+.blue .metricValue {
   color: #00a8d2;
 }
 
-.highlightHeader {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
+.orange .metricIcon {
+  color: #f5b94c;
+  background: rgba(245, 185, 76, 0.12);
+  border-color: rgba(245, 185, 76, 0.38);
 }
 
-.highlightHeader h2 {
-  margin: 5.25px 0 0;
-  color: var(--color-text-primary);
-  font-size: 15px;
-}
-
-.highlightTime {
-  color: var(--color-text-secondary);
-  font-size: 12px;
-  white-space: nowrap;
-}
-
-.highlightDescription {
-  margin: 10.5px 0 0;
-  color: var(--color-text-secondary);
-  font-size: 12px;
-  line-height: 1.5;
-}
-
-.chipRow {
-  margin-top: auto;
-  padding-top: 10.5px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5.25px;
-}
-
-.chip {
-  padding: 3.75px 6.75px;
-  display: inline-flex;
-  align-items: center;
-  border: 1px solid var(--color-border);
-  border-radius: 749.25px;
-  background: var(--color-bg-card-inner);
-  color: var(--color-text-secondary);
-  font-size: 12px;
-  font-weight: 600;
-  line-height: 1;
+.orange .metricValue {
+  color: #f5b94c;
 }
 
 .aiFeed {
-  min-height: 232.5px;
   padding: 13.5px;
-  border-top: 2px solid rgba(52, 211, 153, 0.75);
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-medium);
 }
 
 .sectionHeader {
@@ -205,7 +172,6 @@
   margin-top: 12px;
   display: flex;
   flex-direction: column;
-  gap: 0;
 }
 
 .feedItem {
@@ -214,20 +180,11 @@
   align-items: start;
   gap: 9px;
   padding: 9.75px 0;
-  border: none;
   border-bottom: 1px solid var(--color-border);
-  border-radius: 0;
-  background: transparent;
 }
 
 .feedItem:last-child {
   border-bottom: none;
-}
-
-.feedItem:hover {
-  background: transparent;
-  border-color: var(--color-border);
-  transform: none;
 }
 
 .feedDot {
@@ -245,6 +202,17 @@
   white-space: nowrap;
 }
 
+.feedContent {
+  min-width: 0;
+}
+
+.feedTitleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 9px;
+}
+
 .feedItem h3 {
   margin: 0;
   color: var(--color-text-primary);
@@ -252,98 +220,81 @@
   font-weight: 600;
 }
 
+.feedStatus {
+  flex: 0 0 auto;
+  padding: 3px 6px;
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+}
+
 .feedItem p {
   margin: 3px 0 0;
   color: var(--color-text-secondary);
   font-size: 12px;
   line-height: 1.45;
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
 }
 
-.overviewSummaryGrid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.smallSummaryCard {
-  min-height: 97.5px;
-  padding: 13.5px;
-}
-
-.overviewSummaryGrid .smallSummaryCard:nth-child(1) {
-  border-left: 3px solid var(--color-green);
-}
-
-.overviewSummaryGrid .smallSummaryCard:nth-child(2) {
-  border-left: 3px solid #00a8d2;
-}
-
-.overviewSummaryGrid .smallSummaryCard:nth-child(1) strong {
-  color: var(--color-green);
-}
-
-.overviewSummaryGrid .smallSummaryCard:nth-child(2) strong {
-  color: #00a8d2;
-}
-
-.smallSummaryCard strong {
-  display: block;
-  margin-top: 9px;
-  font-size: 22.5px;
-}
-
-.smallSummaryCard p {
-  margin: 5.25px 0 0;
-  color: var(--color-text-secondary);
-  font-size: 12px;
-}
-
-[data-theme="light"] .chip {
+[data-theme="light"] .metricCard {
   background: var(--color-bg-card);
 }
 
-[data-theme="light"] .statusGrid .summaryCard:nth-child(1) .cardValue,
-[data-theme="light"] .statusGrid .summaryCard:nth-child(3) .cardValue,
-[data-theme="light"] .highlightGrid .highlightCard:nth-child(1) .eyebrow,
-[data-theme="light"] .overviewSummaryGrid .smallSummaryCard:nth-child(1) strong {
+[data-theme="light"] .green .metricIcon {
+  color: #209c63;
+  background: #e8f6ee;
+  border-color: #b9ddcb;
+}
+
+[data-theme="light"] .green .metricValue {
   color: #209c63;
 }
 
-[data-theme="light"] .statusGrid .summaryCard:nth-child(2) .cardValue,
-[data-theme="light"] .highlightGrid .highlightCard:nth-child(2) .eyebrow,
-[data-theme="light"] .overviewSummaryGrid .smallSummaryCard:nth-child(2) strong {
+[data-theme="light"] .blue .metricIcon {
+  color: #0063dc;
+  background: #eaf1f8;
+  border-color: #b8d2f2;
+}
+
+[data-theme="light"] .blue .metricValue {
   color: #0063dc;
 }
 
-[data-theme="light"] .feedItem:hover {
-  background: #f1faf5;
+[data-theme="light"] .orange .metricIcon {
+  color: #c97800;
+  background: #fff4df;
+  border-color: #f0d09b;
 }
 
-@media (max-width: 1000px) {
-  .statusGrid,
-  .highlightGrid {
-    grid-template-columns: 1fr;
+[data-theme="light"] .orange .metricValue {
+  color: #c97800;
+}
+
+@media (max-width: 1500px) {
+  .metricGrid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1050px) {
+  .metricGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 767px) {
-  .overview {
-    gap: 9px;
-  }
-
-  .overviewSummaryGrid {
+  .metricGrid {
     grid-template-columns: 1fr;
   }
 
-  .summaryCard,
-  .smallSummaryCard,
-  .aiFeed,
-  .highlightCard {
-    padding: 11.25px;
-  }
-
-  .sectionHeader h2 {
-    font-size: 12.75px;
+  .metricCard {
+    min-height: 100px;
   }
 
   .feedItem {
@@ -351,13 +302,12 @@
     gap: 7.5px;
   }
 
-  .itemTime {
+  .itemTime,
+  .feedContent {
     grid-column: 2;
+  }
+
+  .itemTime {
     margin-bottom: -4px;
   }
-
-  .feedItem > div:last-child {
-    grid-column: 2;
-  }
 }
-

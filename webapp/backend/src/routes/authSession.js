@@ -87,6 +87,7 @@ router.post("/refresh", async (req, res) => {
         user_id,
         email,
         full_name,
+        avatar_url,
         role,
         is_active
       FROM users
@@ -142,7 +143,14 @@ router.post("/refresh", async (req, res) => {
 
     res.json({
       authenticated: true,
-      token
+      token,
+      user: {
+        userId: user.user_id,
+        email: user.email,
+        full_name: user.full_name,
+        avatar_url: user.avatar_url,
+        role: user.role
+      }
     });
   } catch (error) {
     console.error("Session refresh failed:", error.message);

@@ -32,7 +32,7 @@ function GoogleLogin({ onLogin }) {
 
         const data = await loginWithGoogle(
           response.credential,
-          rememberMeRef.current
+          rememberMeRef.current,
         );
 
         onLogin(data);
@@ -62,7 +62,7 @@ function GoogleLogin({ onLogin }) {
         text: "continue_with",
         shape: "rectangular",
         logo_alignment: "left",
-        width: Math.floor(width)
+        width: Math.floor(width),
       });
     }
 
@@ -75,7 +75,7 @@ function GoogleLogin({ onLogin }) {
 
       window.google.accounts.id.initialize({
         client_id: clientId,
-        callback: handleCredential
+        callback: handleCredential,
       });
 
       renderButton();
@@ -88,7 +88,7 @@ function GoogleLogin({ onLogin }) {
       initializeGoogle();
     } else {
       const script = document.querySelector(
-        'script[src="https://accounts.google.com/gsi/client"]'
+        'script[src="https://accounts.google.com/gsi/client"]',
       );
 
       script?.addEventListener("load", initializeGoogle);
@@ -98,7 +98,7 @@ function GoogleLogin({ onLogin }) {
       resizeObserver?.disconnect();
 
       const script = document.querySelector(
-        'script[src="https://accounts.google.com/gsi/client"]'
+        'script[src="https://accounts.google.com/gsi/client"]',
       );
 
       script?.removeEventListener("load", initializeGoogle);

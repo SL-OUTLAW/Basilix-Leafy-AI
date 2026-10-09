@@ -1,5 +1,7 @@
 import { useState } from "react";
+import { Activity, Brain, SlidersHorizontal, Sprout } from "lucide-react";
 
+import Tabs from "../../components/common/Tabs/Tabs";
 import MonitoringTab from "./tabs/MonitoringTab";
 import AIInsightTab from "./tabs/AIInsightTab";
 import GrowRoutineTab from "./tabs/GrowRoutineTab";
@@ -7,97 +9,73 @@ import ManualOverrideTab from "./tabs/ManualOverrideTab";
 
 import styles from "./Farm.module.css";
 
+const tabs = [
+  { id: "monitoring", label: "Monitoring", Icon: Activity },
+  { id: "insight", label: "AI Insight", Icon: Brain },
+  { id: "routine", label: "Grow Routine", Icon: Sprout },
+  { id: "override", label: "Manual Override", Icon: SlidersHorizontal }
+];
+
 function Farm({
   data = null,
   loading = false,
-  error = ""
+  error = "",
+  token,
+  onTokenRefresh,
+  user,
+  access
 }) {
-  const [activeTab, setActiveTab] =
-    useState("monitoring");
-
+  const [activeTab, setActiveTab] = useState("monitoring");
   const hasError = Boolean(error);
 
   return (
     <div className={styles.farm}>
-      <nav
-        className={styles.tabs}
-        aria-label="Farm sections"
-      >
-        <button
-          className={
-            activeTab === "monitoring"
-              ? styles.activeTab
-              : ""
-          }
-          type="button"
-          onClick={() =>
-            setActiveTab("monitoring")
-          }
-        >
-          Monitoring
-        </button>
-
-        <button
-          className={
-            activeTab === "insight"
-              ? styles.activeTab
-              : ""
-          }
-          type="button"
-          onClick={() =>
-            setActiveTab("insight")
-          }
-        >
-          AI Insight
-        </button>
-
-        <button
-          className={
-            activeTab === "routine"
-              ? styles.activeTab
-              : ""
-          }
-          type="button"
-          onClick={() =>
-            setActiveTab("routine")
-          }
-        >
-          Grow Routine
-        </button>
-
-        <button
-          className={
-            activeTab === "override"
-              ? styles.activeTab
-              : ""
-          }
-          type="button"
-          onClick={() =>
-            setActiveTab("override")
-          }
-        >
-          Manual Override
-        </button>
-      </nav>
+      <Tabs
+        tabs={tabs}
+        activeTab={activeTab}
+        onChange={setActiveTab}
+        ariaLabel="Farm sections"
+      />
 
       {activeTab === "monitoring" && (
         <MonitoringTab
           data={data?.monitoring}
           loading={loading}
           error={hasError}
+          token={token}
+          onTokenRefresh={onTokenRefresh}
         />
       )}
 
       {activeTab === "insight" && (
-        <AIInsightTab />
+        <AIInsightTab
+          data={data?.insight}
+          loading={loading}
+          error={hasError}
+        />
       )}
 
       {activeTab === "routine" && (
-        <GrowRoutineTab />
+        <GrowRoutineTab
+          data={data?.routine}
+          loading={loading}
+          error={hasError}
+          token={token}
+          onTokenRefresh={onTokenRefresh}
+          access={access}
+        />
       )}
 
       {activeTab === "override" && (
-        <ManualOverrideTab />
+        <ManualOverrideTab
+          data={data?.controls}
+          loading={loading}
+          error={hasError}
+          token={token}
+          onTokenRefresh={onTokenRefresh}
+          user={user}
+          access={access}
+        />
       )}
     </div>
   );

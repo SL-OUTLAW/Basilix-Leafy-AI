@@ -52,8 +52,11 @@ function LogsTable({
   );
 
   useEffect(() => {
-    setCurrentPage(1);
-  }, [logs]);
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+      onClearSelection();
+    }
+  }, [currentPage, totalPages, onClearSelection]);
 
   const visibleLogs = useMemo(() => {
     const start =

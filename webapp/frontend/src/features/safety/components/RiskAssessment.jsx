@@ -1,4 +1,5 @@
-import ActionIcon from "./ActionIcon";
+import ActionIcon from "../../../components/common/ActionIcon/ActionIcon";
+import StateMessage from "../../../components/common/StateMessage/StateMessage";
 
 import styles from "./RiskAssessment.module.css";
 
@@ -33,17 +34,11 @@ function RiskAssessment({
 
       <div className={styles.list}>
         {loading ? (
-          <div className={styles.state}>
-            Loading risk assessment...
-          </div>
+          <StateMessage compact message="Loading risk assessment..." />
         ) : error ? (
-          <div className={styles.state}>
-            Risk assessment unavailable.
-          </div>
+          <StateMessage compact tone="error" message="Risk assessment unavailable." />
         ) : items.length === 0 ? (
-          <div className={styles.state}>
-            No risk assessment data available.
-          </div>
+          <StateMessage compact message="No risk assessment data available." />
         ) : (
           items.map((item) => (
             <article
@@ -51,7 +46,7 @@ function RiskAssessment({
               className={styles.row}
             >
               <div className={styles.action}>
-                <ActionIcon type={item.type} size="compact" />
+                <ActionIcon type={item.type} variant="compact" size={16} />
 
                 <div>
                   <strong>{item.command || "Command"}</strong>

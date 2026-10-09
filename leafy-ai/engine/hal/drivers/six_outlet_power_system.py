@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from kasa_powerboard_driver import (
+from engine.hal.drivers.kasa_powerboard_driver import (
     KasaPowerBoardSystem,
     PowerBoardConfig,
 )
@@ -16,7 +16,7 @@ class LogicalOutlet:
 
 @dataclass
 class LogicalOutletState:
-    logical_outlet: int
+    outlet: int
     board_name: str
     board_outlet: int
     alias: str
@@ -95,30 +95,51 @@ class SixOutletPowerSystem:
 
     async def turn_on(self, outlet: int) -> None:
         target = self._get_target(outlet)
-        await self._boards.turn_on(target.board_name, target.board_outlet)
+        await self._boards.turn_on(
+            target.board_name,
+            target.board_outlet,
+        )
 
     async def turn_off(self, outlet: int) -> None:
         target = self._get_target(outlet)
-        await self._boards.turn_off(target.board_name, target.board_outlet)
+        await self._boards.turn_off(
+            target.board_name,
+            target.board_outlet,
+        )
 
-    async def set_outlet(self, outlet: int, on: bool) -> None:
+    async def set_outlet(
+        self,
+        outlet: int,
+        on: bool,
+    ) -> None:
         target = self._get_target(outlet)
+
         await self._boards.set_outlet(
             target.board_name,
             target.board_outlet,
             on,
         )
 
-    async def cycle_power(self, outlet: int, off_seconds: float = 5.0) -> None:
+    async def cycle_power(
+        self,
+        outlet: int,
+        off_seconds: float = 5.0,
+    ) -> None:
         target = self._get_target(outlet)
+
         await self._boards.cycle_power(
             target.board_name,
             target.board_outlet,
             off_seconds,
         )
 
-    async def pulse(self, outlet: int, seconds: float = 1.0) -> None:
+    async def pulse(
+        self,
+        outlet: int,
+        seconds: float = 1.0,
+    ) -> None:
         target = self._get_target(outlet)
+
         await self._boards.pulse(
             target.board_name,
             target.board_outlet,
@@ -139,22 +160,39 @@ class SixOutletPowerSystem:
         """
         return await self._boards.get_all_states()
 
-    async def get_outlet_states(self) -> list[LogicalOutletState]:
+    async def get_outlet_state(
+        self,
+        outlet: int,
+    ) -> LogicalOutletState:
+        target = self._get_target(outlet)
+        board_state = await self._boards.get_state(target.board_name)
+        physical_state = board_state.outlets[target.board_outlet - 1]
+        return LogicalOutletState(
+            outlet=outlet,
+            board_name=target.board_name,
+            board_outlet=target.board_outlet,
+            alias=physical_state.alias,
+            is_on=physical_state.is_on,
+        )
+
+    async def get_outlet_states(
+        self,
+    ) -> list[LogicalOutletState]:
         """
         Return flattened state for logical outlets 1 to 6.
         """
         board_states = await self._boards.get_all_states()
         logical_states: list[LogicalOutletState] = []
 
-        for logical_outlet in range(1, 7):
-            target = self._get_target(logical_outlet)
+        for outlet in range(1, 7):
+            target = self._get_target(outlet)
             board_state = board_states[target.board_name]
 
             physical_state = board_state.outlets[target.board_outlet - 1]
 
             logical_states.append(
                 LogicalOutletState(
-                    logical_outlet=logical_outlet,
+                    outlet=outlet,
                     board_name=target.board_name,
                     board_outlet=target.board_outlet,
                     alias=physical_state.alias,
@@ -164,9 +202,13 @@ class SixOutletPowerSystem:
 
         return logical_states
 
-    def _get_target(self, outlet: int) -> LogicalOutlet:
+    def _get_target(
+        self,
+        outlet: int,
+    ) -> LogicalOutlet:
         try:
             return self._outlet_map[outlet]
+
         except KeyError:
             raise ValueError("outlet must be between 1 and 6") from None
 
@@ -174,5 +216,10 @@ class SixOutletPowerSystem:
         await self.connect()
         return self
 
-    async def __aexit__(self, exc_type, exc, tb):
+    async def __aexit__(
+        self,
+        exc_type,
+        exc,
+        tb,
+    ):
         await self.disconnect()

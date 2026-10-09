@@ -11,7 +11,9 @@ function createToken(user) {
     {
       userId: user.user_id,
       email: user.email,
-      role: user.role
+      role: user.role,
+      full_name: user.full_name || user.name || null,
+      avatar_url: user.avatar_url || user.picture || null
     },
     process.env.JWT_SECRET,
     {

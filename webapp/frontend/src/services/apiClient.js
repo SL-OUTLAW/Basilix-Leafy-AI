@@ -31,7 +31,7 @@ export async function apiRequest(
     }
 
     activeToken = refreshed.token;
-    onTokenRefresh?.(activeToken);
+    onTokenRefresh?.(activeToken, refreshed.user || null);
 
     response = await sendRequest(
       path,
@@ -40,11 +40,13 @@ export async function apiRequest(
     );
   }
 
-  const data = await response.json();
+  const data = response.status === 204
+    ? {}
+    : await response.json();
 
   if (!response.ok) {
     const error = new Error(
-      data.error || "Request failed"
+      data.error || data.detail || "Request failed"
     );
 
     error.status = response.status;
