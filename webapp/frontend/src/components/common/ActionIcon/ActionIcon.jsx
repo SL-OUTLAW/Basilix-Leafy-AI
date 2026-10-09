@@ -28,7 +28,7 @@ import {
   Thermometer,
   Trees,
   Waves,
-  Wind
+  Wind,
 } from "lucide-react";
 import styles from "./ActionIcon.module.css";
 
@@ -40,10 +40,20 @@ export const iconOptions = [
   ["Droplets", "Droplets", Droplets, ["water", "irrigation", "humidity"]],
   ["Waves", "Water", Waves, ["water", "irrigation", "water_level"]],
   ["GlassWater", "Reservoir", GlassWater, ["water", "reservoir"]],
-  ["FlaskConical", "Nutrients", FlaskConical, ["nutrient", "ec", "ph", "chemical"]],
+  [
+    "FlaskConical",
+    "Nutrients",
+    FlaskConical,
+    ["nutrient", "ec", "ph", "chemical"],
+  ],
   ["TestTube2", "Test", TestTube2, ["nutrient", "ec", "ph", "test"]],
   ["Beaker", "Beaker", Beaker, ["nutrient", "chemical"]],
-  ["Thermometer", "Temperature", Thermometer, ["temperature", "heat", "environment"]],
+  [
+    "Thermometer",
+    "Temperature",
+    Thermometer,
+    ["temperature", "heat", "environment"],
+  ],
   ["Sun", "Light", Sun, ["light", "lighting", "environment"]],
   ["Lightbulb", "Lighting", Lightbulb, ["light", "lighting"]],
   ["Wind", "Airflow", Wind, ["air", "wind", "environment"]],
@@ -53,25 +63,38 @@ export const iconOptions = [
   ["Eye", "Monitor", Eye, ["monitor", "vision", "inspect"]],
   ["Gauge", "Sensor", Gauge, ["sensor", "monitor", "ec"]],
   ["Activity", "Activity", Activity, ["activity", "monitor", "sensor"]],
-  ["ChartNoAxesCombined", "Analytics", ChartNoAxesCombined, ["chart", "analysis", "report"]],
+  [
+    "ChartNoAxesCombined",
+    "Analytics",
+    ChartNoAxesCombined,
+    ["chart", "analysis", "report"],
+  ],
   ["CalendarDays", "Schedule", CalendarDays, ["calendar", "schedule"]],
   ["Clock3", "Time", Clock3, ["clock", "time", "schedule"]],
   ["Bell", "Alert", Bell, ["alert", "notification"]],
   ["CircleAlert", "Warning", CircleAlert, ["warning", "alert"]],
   ["Settings2", "Control", Settings2, ["control", "settings", "equipment"]],
-  ["Power", "Power", Power, ["power", "equipment"]]
+  ["Power", "Power", Power, ["power", "equipment"]],
 ].map(([name, label, icon, tags]) => ({ name, label, icon, tags }));
 
 function normalize(value) {
-  return String(value || "").trim().toUpperCase();
+  return String(value || "")
+    .trim()
+    .toUpperCase();
 }
 
-export function getSystemIcon({ action, sensorType, iconName, iconKey, type } = {}) {
+export function getSystemIcon({
+  action,
+  sensorType,
+  iconName,
+  iconKey,
+  type,
+} = {}) {
   const explicit = String(iconName || iconKey || "").toLowerCase();
   const explicitOption = iconOptions.find(
     (option) =>
       option.name.toLowerCase() === explicit ||
-      option.label.toLowerCase() === explicit
+      option.label.toLowerCase() === explicit,
   );
 
   if (explicitOption) {
@@ -92,8 +115,14 @@ export function getSystemIcon({ action, sensorType, iconName, iconKey, type } = 
 
   if (sensor === "ph" || sensor.includes("ph")) return FlaskConical;
   if (sensor === "ec" || sensor.includes("ec")) return Gauge;
-  if (sensor.includes("water_level") || sensor.includes("water level")) return Waves;
-  if (sensor.includes("temperature") || sensor.includes("dew_point") || sensor.includes("dew point")) return Thermometer;
+  if (sensor.includes("water_level") || sensor.includes("water level"))
+    return Waves;
+  if (
+    sensor.includes("temperature") ||
+    sensor.includes("dew_point") ||
+    sensor.includes("dew point")
+  )
+    return Thermometer;
   if (sensor.includes("humidity")) return Droplets;
 
   return value ? ShieldCheck : Leaf;
@@ -120,7 +149,7 @@ function ActionIcon({
   tone,
   size = 20,
   variant = "task",
-  className = ""
+  className = "",
 }) {
   const Icon = getSystemIcon({ action, type, sensorType, iconName, iconKey });
   const selectedTone = getActionTone(action || type, tone);

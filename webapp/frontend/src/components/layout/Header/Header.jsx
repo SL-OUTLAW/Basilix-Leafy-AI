@@ -8,9 +8,8 @@ function Header({
   profileImage,
   profileName = "User",
   token,
-  onTokenRefresh
+  onTokenRefresh,
 }) {
-
   const [currentTime, setCurrentTime] = useState(new Date());
   const [avatarFailed, setAvatarFailed] = useState(false);
 
@@ -30,14 +29,14 @@ function Header({
     .toLocaleTimeString("en-AU", {
       hour: "2-digit",
       minute: "2-digit",
-      hour12: true
+      hour12: true,
     })
     .toUpperCase();
 
   const date = currentTime.toLocaleDateString("en-AU", {
     day: "numeric",
     month: "long",
-    year: "numeric"
+    year: "numeric",
   });
 
   return (

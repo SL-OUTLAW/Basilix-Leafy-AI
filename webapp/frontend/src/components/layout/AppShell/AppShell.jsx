@@ -18,14 +18,16 @@ function AppShell({
   onClearEmergency,
   onEmergencyStop,
   token,
-  onTokenRefresh
+  onTokenRefresh,
 }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const emergency = Boolean(safetyState?.emergency_stop);
   const aiDisabled = safetyState && safetyState.ai_enabled === false;
 
   return (
-    <div className={`${styles.layout} ${sidebarCollapsed ? styles.sidebarCollapsed : ""}`}>
+    <div
+      className={`${styles.layout} ${sidebarCollapsed ? styles.sidebarCollapsed : ""}`}
+    >
       <Sidebar
         activePage={activePage}
         onNavigate={onNavigate}
@@ -71,13 +73,22 @@ function AppShell({
       />
 
       {emergency && (
-        <div className={styles.emergencyOverlay} role="alert" aria-live="assertive">
+        <div
+          className={styles.emergencyOverlay}
+          role="alert"
+          aria-live="assertive"
+        >
           <AlertTriangle size={58} />
           <h1>EMERGENCY STOP ACTIVE</h1>
-          <p>Farm automation and protected actions are stopped. Resolve the cause before clearing emergency mode.</p>
+          <p>
+            Farm automation and protected actions are stopped. Resolve the cause
+            before clearing emergency mode.
+          </p>
           <div className={styles.emergencyActions}>
             {access?.allowed?.CLEAR_EMERGENCY_STOP ? (
-              <button type="button" onClick={onClearEmergency}>Clear Emergency Stop</button>
+              <button type="button" onClick={onClearEmergency}>
+                Clear Emergency Stop
+              </button>
             ) : (
               <span>An authorised user must clear emergency mode.</span>
             )}

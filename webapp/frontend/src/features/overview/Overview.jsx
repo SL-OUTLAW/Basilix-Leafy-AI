@@ -4,7 +4,7 @@ import {
   Clock3,
   HeartPulse,
   TriangleAlert,
-  Zap
+  Zap,
 } from "lucide-react";
 
 import StatusCard from "./components/StatusCard";
@@ -21,15 +21,14 @@ function Overview({
   error = "",
   onGoToFarm,
   onOpenSafety,
-  onOpenSchedule
+  onOpenSchedule,
 }) {
   const summary = data?.summary ?? {};
   const sensors = data?.sensors ?? {};
 
-  const recommendations =
-    Array.isArray(data?.recommendations)
-      ? data.recommendations
-      : [];
+  const recommendations = Array.isArray(data?.recommendations)
+    ? data.recommendations
+    : [];
 
   const hasError = Boolean(error);
   const sectionErrors = data?.errors ?? {};
@@ -48,10 +47,7 @@ function Overview({
   return (
     <div className={styles.overview}>
       {hasError && (
-        <div
-          className={styles.errorState}
-          role="alert"
-        >
+        <div className={styles.errorState} role="alert">
           {errorMessage}
         </div>
       )}
@@ -60,10 +56,7 @@ function Overview({
         <StatusCard
           title="Farm Health"
           value={summary.farmHealth?.value}
-          note={
-            summary.farmHealth?.note ||
-            unavailableNote
-          }
+          note={summary.farmHealth?.note || unavailableNote}
           icon={HeartPulse}
           tone="green"
         />
@@ -71,10 +64,7 @@ function Overview({
         <StatusCard
           title="Active Cameras"
           value={summary.activeCameras?.value}
-          note={
-            summary.activeCameras?.note ||
-            unavailableNote
-          }
+          note={summary.activeCameras?.note || unavailableNote}
           icon={Camera}
           tone="green"
         />
@@ -82,10 +72,7 @@ function Overview({
         <StatusCard
           title="Alerts"
           value={summary.alerts?.value}
-          note={
-            summary.alerts?.note ||
-            unavailableNote
-          }
+          note={summary.alerts?.note || unavailableNote}
           icon={TriangleAlert}
           tone="orange"
         />
@@ -93,10 +80,7 @@ function Overview({
         <StatusCard
           title="Pending"
           value={summary.pending?.value}
-          note={
-            summary.pending?.note ||
-            unavailableNote
-          }
+          note={summary.pending?.note || unavailableNote}
           icon={Clock3}
           tone="orange"
         />
@@ -104,10 +88,7 @@ function Overview({
         <StatusCard
           title="Task Runs · 24h"
           value={summary.taskRuns?.value}
-          note={
-            summary.taskRuns?.note ||
-            unavailableNote
-          }
+          note={summary.taskRuns?.note || unavailableNote}
           icon={Zap}
           tone="blue"
         />
@@ -115,38 +96,11 @@ function Overview({
         <StatusCard
           title="Approved"
           value={summary.approved?.value}
-          note={
-            summary.approved?.note ||
-            unavailableNote
-          }
+          note={summary.approved?.note || unavailableNote}
           icon={CircleCheck}
           tone="green"
         />
       </section>
-
-      <div className={styles.mainRow}>
-        <RecentApprovalsPanel
-          approvals={data?.recentApprovals || []}
-          loading={loading}
-          error={hasError || Boolean(sectionErrors.approvals)}
-          onOpenSafety={onOpenSafety}
-        />
-
-        <RecommendationsPanel
-          recommendations={recommendations}
-          loading={loading}
-          error={hasError}
-        />
-      </div>
-
-      <div className={styles.activityRow}>
-        <RecentTaskActivityPanel
-          executions={data?.recentExecutions || []}
-          loading={loading}
-          error={hasError || Boolean(sectionErrors.executions)}
-          onOpenSchedule={onOpenSchedule}
-        />
-      </div>
 
       <section className={styles.sensorSection}>
         <SensorCard
@@ -213,6 +167,30 @@ function Overview({
           percentage={sensors.waterLevel?.percentage}
         />
       </section>
+
+      <div className={styles.mainRow}>
+        <RecentApprovalsPanel
+          approvals={data?.recentApprovals || []}
+          loading={loading}
+          error={hasError || Boolean(sectionErrors.approvals)}
+          onOpenSafety={onOpenSafety}
+        />
+
+        <RecommendationsPanel
+          recommendations={recommendations}
+          loading={loading}
+          error={hasError}
+        />
+      </div>
+
+      <div className={styles.activityRow}>
+        <RecentTaskActivityPanel
+          executions={data?.recentExecutions || []}
+          loading={loading}
+          error={hasError || Boolean(sectionErrors.executions)}
+          onOpenSchedule={onOpenSchedule}
+        />
+      </div>
     </div>
   );
 }

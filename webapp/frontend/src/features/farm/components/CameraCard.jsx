@@ -12,26 +12,21 @@ function CameraCard({
   loading = false,
   error = false,
   token,
-  onTokenRefresh
+  onTokenRefresh,
 }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [selectedLevelId, setSelectedLevelId] = useState(null);
   const [imageUrl, setImageUrl] = useState("");
   const [imageError, setImageError] = useState(false);
 
-  const farmLevels = Array.isArray(levels)
-    ? levels
-    : [];
+  const farmLevels = Array.isArray(levels) ? levels : [];
 
   const selectedIndex = Math.max(
     0,
-    farmLevels.findIndex(
-      (level) => level.id === selectedLevelId
-    )
+    farmLevels.findIndex((level) => level.id === selectedLevelId),
   );
 
-  const selectedLevel =
-    farmLevels[selectedIndex] || null;
+  const selectedLevel = farmLevels[selectedIndex] || null;
 
   const cameraId = selectedLevel?.camera?.id;
 
@@ -76,10 +71,7 @@ function CameraCard({
     };
   }, [cameraId, token, onTokenRefresh]);
 
-  const cameraStatus =
-    selectedLevel?.camera?.status ||
-    data?.status ||
-    "";
+  const cameraStatus = selectedLevel?.camera?.status || data?.status || "";
 
   let cameraMessage = "Latest image unavailable";
 
@@ -105,8 +97,7 @@ function CameraCard({
 
   const canGoBack = selectedIndex > 0;
 
-  const canGoForward =
-    selectedIndex < farmLevels.length - 1;
+  const canGoForward = selectedIndex < farmLevels.length - 1;
 
   const renderCamera = () => {
     if (imageUrl && !loading && !error && !imageError) {
@@ -138,9 +129,7 @@ function CameraCard({
           </button>
         </div>
 
-        <div className={styles.cameraArea}>
-          {renderCamera()}
-        </div>
+        <div className={styles.cameraArea}>{renderCamera()}</div>
 
         <div className={styles.controls}>
           <span className={styles.count}>
@@ -153,23 +142,17 @@ function CameraCard({
             <button
               type="button"
               disabled={!canGoBack}
-              onClick={() =>
-                selectLevel(selectedIndex - 1)
-              }
+              onClick={() => selectLevel(selectedIndex - 1)}
             >
               <ChevronLeft aria-hidden="true" />
             </button>
 
-            <span>
-              {selectedLevel?.name || "Farm Level —"}
-            </span>
+            <span>{selectedLevel?.name || "Farm Level —"}</span>
 
             <button
               type="button"
               disabled={!canGoForward}
-              onClick={() =>
-                selectLevel(selectedIndex + 1)
-              }
+              onClick={() => selectLevel(selectedIndex + 1)}
             >
               <ChevronRight aria-hidden="true" />
             </button>
@@ -183,9 +166,7 @@ function CameraCard({
           onClose={() => setIsExpanded(false)}
           fullScreen
         >
-          <div className={styles.expandedCamera}>
-            {renderCamera()}
-          </div>
+          <div className={styles.expandedCamera}>{renderCamera()}</div>
         </ExpandModal>
       )}
     </>

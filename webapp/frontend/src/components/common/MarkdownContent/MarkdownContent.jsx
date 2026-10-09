@@ -36,7 +36,9 @@ function MarkdownContent({ value, className = "" }) {
         const line = rawLine.trim();
 
         if (!line) {
-          return <div key={index} className={styles.spacer} aria-hidden="true" />;
+          return (
+            <div key={index} className={styles.spacer} aria-hidden="true" />
+          );
         }
 
         if (/^---+$/.test(line)) {
@@ -59,7 +61,9 @@ function MarkdownContent({ value, className = "" }) {
           return (
             <div key={index} className={styles.listItem}>
               <span className={styles.bullet}>•</span>
-              <span><InlineText text={bullet[1]} /></span>
+              <span>
+                <InlineText text={bullet[1]} />
+              </span>
             </div>
           );
         }
@@ -69,7 +73,9 @@ function MarkdownContent({ value, className = "" }) {
           return (
             <div key={index} className={styles.listItem}>
               <span className={styles.number}>{numbered[1]}.</span>
-              <span><InlineText text={numbered[2]} /></span>
+              <span>
+                <InlineText text={numbered[2]} />
+              </span>
             </div>
           );
         }

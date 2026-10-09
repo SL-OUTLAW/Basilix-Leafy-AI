@@ -21,7 +21,11 @@
   border-radius: 4px;
   background: var(--color-bg-card-inner);
   color: var(--color-text-primary);
-  font: 0.92em/1.4 ui-monospace, SFMono-Regular, Consolas, monospace;
+  font:
+    0.92em/1.4 ui-monospace,
+    SFMono-Regular,
+    Consolas,
+    monospace;
 }
 
 .heading {

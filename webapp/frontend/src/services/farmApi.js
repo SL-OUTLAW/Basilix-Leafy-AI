@@ -2,6 +2,7 @@ import { apiRequest } from "./apiClient";
 import { refreshSession } from "./authApi";
 
 const SENSOR_ONLINE_THRESHOLD_MS = 60 * 1000;
+const LIVE_CHART_WINDOW_MS = 30 * 60 * 1000;
 
 const HISTORY_TYPES = [
   "ph",
@@ -38,38 +39,74 @@ function formatSensorStatus(sensor) {
   return "Normal";
 }
 
-function mapHistory(history) {
-  const timeline = Array.isArray(history?.timeline)
-    ? history.timeline
+function mapRawReadings(response) {
+  const readings = Array.isArray(response?.readings)
+    ? response.readings
     : [];
 
-  return timeline
-    .filter((item) => Number.isFinite(Number(item.mean)))
+  return readings
     .map((item) => ({
-      time: item.time,
-      value: Number(item.mean),
-      min: item.min,
-      max: item.max,
-      samples: item.samples
-    }));
+      time: item?.time,
+      value: Number(item?.value),
+      qualityStatus: item?.quality_status
+    }))
+    .filter(
+      (item) =>
+        item.time &&
+        Number.isFinite(new Date(item.time).getTime()) &&
+        Number.isFinite(item.value)
+    );
 }
 
-function mapSensor(sensor, history) {
+function sensorDecimals(sensorType) {
+  if (sensorType === "ph") return 3;
+  if (sensorType === "ec") return 1;
+  if (sensorType === "humidity") return 1;
+  return 2;
+}
+
+function formatSensorUnit(unit) {
+  const normalized = String(unit || "").trim();
+
+  const units = {
+    degC: "°C",
+    degF: "°F",
+    "uS/cm": "µS/cm",
+    "uS_cm": "µS/cm"
+  };
+
+  return units[normalized] || normalized;
+}
+
+function formatSensorValue(sensorType, value, unit) {
+  const numericValue = Number(value);
+
+  if (!Number.isFinite(numericValue)) {
+    return null;
+  }
+
+  const formatted = numericValue.toLocaleString(undefined, {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: sensorDecimals(sensorType)
+  });
+
+  return `${formatted}${unit ? ` ${unit}` : ""}`;
+}
+
+function mapSensor(sensor, readingsResponse) {
   if (!sensor) {
     return null;
   }
 
   const value = sensor.value;
-  const unit = sensor.unit || "";
+  const unit = formatSensorUnit(sensor.unit);
   const numericValue = Number(value);
+  const history = mapRawReadings(readingsResponse);
 
   return {
     id: sensor.sensor_id,
     type: sensor.sensor_type,
-    value:
-      value === null || value === undefined
-        ? null
-        : `${value}${unit ? ` ${unit}` : ""}`,
+    value: formatSensorValue(sensor.sensor_type, value, unit),
     rawValue: Number.isFinite(numericValue)
       ? numericValue
       : null,
@@ -78,13 +115,61 @@ function mapSensor(sensor, history) {
     online: formatSensorStatus(sensor) === "Normal",
     qualityStatus: sensor.quality_status,
     recordedAt: sensor.recorded_at,
-    history: mapHistory(history),
-    trend: mapHistory(history).map((item) => item.value),
+    history,
+    trend: history.map((item) => item.value),
     percentage:
       sensor.sensor_type === "water_level" && Number.isFinite(numericValue)
         ? numericValue
         : undefined
   };
+}
+
+export async function getSensorReadings(
+  token,
+  onTokenRefresh,
+  sensorType,
+  startTime,
+  endTime
+) {
+  const params = new URLSearchParams({
+    start_time: new Date(startTime).toISOString(),
+    end_time: new Date(endTime).toISOString()
+  });
+
+  return apiRequest(
+    `/api/farm/sensors/${encodeURIComponent(sensorType)}/readings?${params.toString()}`,
+    token,
+    onTokenRefresh
+  );
+}
+
+function appendLiveReading(history, value, recordedAt) {
+  const numericValue = Number(value);
+  const timestamp = new Date(recordedAt).getTime();
+
+  if (!Number.isFinite(numericValue) || !Number.isFinite(timestamp)) {
+    return Array.isArray(history) ? history : [];
+  }
+
+  const current = Array.isArray(history) ? history : [];
+  const nextPoint = {
+    time: new Date(timestamp).toISOString(),
+    value: numericValue,
+    qualityStatus: "VALID"
+  };
+
+  const withoutDuplicate = current.filter(
+    (item) => new Date(item?.time).getTime() !== timestamp
+  );
+
+  const cutoff = timestamp - LIVE_CHART_WINDOW_MS;
+
+  return [...withoutDuplicate, nextPoint]
+    .filter((item) => new Date(item?.time).getTime() >= cutoff)
+    .sort(
+      (a, b) =>
+        new Date(a.time).getTime() - new Date(b.time).getTime()
+    );
 }
 
 function buildLevels(cameras) {
@@ -141,11 +226,18 @@ export async function getFarmData(
     apiRequest("/api/task-executions?task_action=RUN_AI_ANALYSIS&limit=10&offset=0", token, onTokenRefresh)
   ];
 
-  const historyRequests = HISTORY_TYPES.map((sensorType) =>
-    apiRequest(
-      `/api/farm/sensors/${sensorType}/history?time_range=24h`,
+  const initialEnd = new Date();
+  const initialStart = new Date(
+    initialEnd.getTime() - LIVE_CHART_WINDOW_MS
+  );
+
+  const readingRequests = HISTORY_TYPES.map((sensorType) =>
+    getSensorReadings(
       token,
-      onTokenRefresh
+      onTokenRefresh,
+      sensorType,
+      initialStart,
+      initialEnd
     )
   );
 
@@ -156,10 +248,10 @@ export async function getFarmData(
     harvestResult,
     controlsResult,
     analysisResult,
-    ...historyResults
+    ...readingResults
   ] = await Promise.allSettled([
     ...baseRequests,
-    ...historyRequests
+    ...readingRequests
   ]);
 
   if (
@@ -181,14 +273,14 @@ export async function getFarmData(
       ? camerasResult.value.cameras
       : [];
 
-  const histories = {};
+  const readings = {};
 
   HISTORY_TYPES.forEach((sensorType, index) => {
-    const result = historyResults[index];
+    const result = readingResults[index];
 
-    histories[sensorType] =
+    readings[sensorType] =
       result?.status === "fulfilled"
-        ? result.value.history
+        ? result.value
         : null;
   });
 
@@ -219,21 +311,21 @@ export async function getFarmData(
   return {
     monitoring: {
       sensors: {
-        ph: mapSensor(sensorByType.ph, histories.ph),
-        ec: mapSensor(sensorByType.ec, histories.ec),
+        ph: mapSensor(sensorByType.ph, readings.ph),
+        ec: mapSensor(sensorByType.ec, readings.ec),
         temperature: mapSensor(
           sensorByType.ambient_temperature,
-          histories.ambient_temperature
+          readings.ambient_temperature
         ),
         waterTemperature: mapSensor(
           sensorByType.water_temperature,
-          histories.water_temperature
+          readings.water_temperature
         ),
-        humidity: mapSensor(sensorByType.humidity, histories.humidity),
-        dewPoint: mapSensor(sensorByType.dew_point, histories.dew_point),
+        humidity: mapSensor(sensorByType.humidity, readings.humidity),
+        dewPoint: mapSensor(sensorByType.dew_point, readings.dew_point),
         waterLevel: mapSensor(
           sensorByType.water_level,
-          histories.water_level
+          readings.water_level
         )
       },
       camera: cameras[0]
@@ -363,14 +455,70 @@ export function setEcTarget(token, onTokenRefresh, targetValue) {
 }
 
 export function mergeFarmSensorSnapshot(data, payload) {
-  if (!data?.monitoring?.sensors || !payload?.sensors) return data;
-  const keyByType = { ph: "ph", ec: "ec", water_temperature: "waterTemperature", ambient_temperature: "temperature", humidity: "humidity", dew_point: "dewPoint", water_level: "waterLevel" };
+  if (!data?.monitoring?.sensors || !payload?.sensors) {
+    return data;
+  }
+
+  const keyByType = {
+    ph: "ph",
+    ec: "ec",
+    water_temperature: "waterTemperature",
+    ambient_temperature: "temperature",
+    humidity: "humidity",
+    dew_point: "dewPoint",
+    water_level: "waterLevel"
+  };
+
   const sensors = { ...data.monitoring.sensors };
+  const recordedAt = payload.recorded_at || new Date().toISOString();
+
   Object.entries(payload.sensors).forEach(([type, reading]) => {
-    const key = keyByType[type]; if (!key) return;
+    const key = keyByType[type];
+
+    if (!key) {
+      return;
+    }
+
     const current = sensors[key] || {};
-    const number = Number(reading?.value); const unit = reading?.unit || current.unit || "";
-    sensors[key] = { ...current, value: reading?.value == null ? null : `${reading.value}${unit ? ` ${unit}` : ""}`, rawValue: Number.isFinite(number) ? number : null, unit, status: reading?.quality_status === "VALID" ? "Normal" : reading?.quality_status || "Unavailable", online: reading?.value != null && reading?.quality_status === "VALID", qualityStatus: reading?.quality_status, recordedAt: payload.recorded_at || current.recordedAt, percentage: type === "water_level" && Number.isFinite(number) ? number : current.percentage };
+    const number = Number(reading?.value);
+    const unit = formatSensorUnit(
+      reading?.unit || current.unit
+    );
+    const valid =
+      reading?.value != null &&
+      reading?.quality_status === "VALID";
+    const history = valid
+      ? appendLiveReading(current.history, number, recordedAt)
+      : Array.isArray(current.history)
+        ? current.history
+        : [];
+
+    sensors[key] = {
+      ...current,
+      value: formatSensorValue(type, reading?.value, unit),
+      rawValue: Number.isFinite(number) ? number : null,
+      unit,
+      status: valid
+        ? "Normal"
+        : reading?.quality_status || "Unavailable",
+      online: valid,
+      qualityStatus: reading?.quality_status,
+      recordedAt,
+      history,
+      trend: history.map((item) => item.value),
+      percentage:
+        type === "water_level" && Number.isFinite(number)
+          ? number
+          : current.percentage
+    };
   });
-  return { ...data, monitoring: { ...data.monitoring, sensors } };
+
+  return {
+    ...data,
+    monitoring: {
+      ...data.monitoring,
+      sensors
+    }
+  };
 }
+

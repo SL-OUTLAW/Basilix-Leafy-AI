@@ -1,4 +1,4 @@
-import { BrainCircuit, CheckCircle2, CircleAlert } from "lucide-react";
+import { Brain, CheckCircle2, CircleAlert } from "lucide-react";
 import MarkdownContent from "../../../components/common/MarkdownContent/MarkdownContent";
 import { getAIResultContent } from "../../../utils/aiResult";
 import styles from "./AIInsightTab.module.css";
@@ -16,7 +16,7 @@ function AIInsightTab({ data = null, loading = false, error = false }) {
             created by Leafy AI are managed in Leafy AI → Recommendations.
           </p>
         </div>
-        <BrainCircuit size={24} />
+        <Brain size={24} />
       </div>
 
       {loading ? (

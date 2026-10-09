@@ -1,5 +1,6 @@
 import asyncio
 import json
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -453,6 +454,69 @@ async def get_farm_sensors(
     }
 
 
+@router.get("/farm/sensors/{sensor_type}/readings")
+@limiter.limit("60/minute")
+async def get_raw_sensor_readings(
+    request: Request,
+    sensor_type: str,
+    start_time: datetime = Query(...),
+    end_time: datetime = Query(...),
+    authorization: str | None = Header(default=None),
+):
+    _require_webapp_token(authorization)
+
+    if start_time.tzinfo is None or end_time.tzinfo is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="start_time and end_time must include a timezone.",
+        )
+
+    start_time = start_time.astimezone(timezone.utc)
+    end_time = end_time.astimezone(timezone.utc)
+
+    if end_time <= start_time:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="end_time must be after start_time.",
+        )
+
+    rows = await run_query(
+        """
+        SELECT
+            sr.recorded_at,
+            sr.value,
+            sr.quality_status
+        FROM sensor_readings sr
+        JOIN sensors s
+            ON s.sensor_id = sr.sensor_id
+        WHERE s.sensor_type = %s
+          AND sr.recorded_at >= %s
+          AND sr.recorded_at <= %s
+        ORDER BY sr.recorded_at ASC, sr.reading_id ASC;
+        """,
+        (
+            sensor_type,
+            start_time,
+            end_time,
+        ),
+    )
+
+    return {
+        "success": True,
+        "sensor_type": sensor_type,
+        "start_time": start_time.isoformat(),
+        "end_time": end_time.isoformat(),
+        "readings": [
+            {
+                "time": row[0].isoformat(),
+                "value": float(row[1]),
+                "quality_status": row[2],
+            }
+            for row in rows
+        ],
+    }
+
+
 @router.get("/farm/sensors/{sensor_type}/history")
 @limiter.limit("30/minute")
 async def get_sensor_history(
@@ -617,11 +681,18 @@ async def create_camera(
     )
     await request.app.state.hal.cameras.load_cameras()
     row = rows[0]
-    return {"success": True, "camera": {
-        "camera_id": row[0], "camera_name": row[1], "level_no": row[2],
-        "ip_address": row[3], "rtsp_path": row[4],
-        "status": row[5], "created_at": row[6].isoformat(),
-    }}
+    return {
+        "success": True,
+        "camera": {
+            "camera_id": row[0],
+            "camera_name": row[1],
+            "level_no": row[2],
+            "ip_address": row[3],
+            "rtsp_path": row[4],
+            "status": row[5],
+            "created_at": row[6].isoformat(),
+        },
+    }
 
 
 @router.get("/farm/cameras/{camera_id}/image")
@@ -1225,9 +1296,15 @@ async def get_ai_activity(
         "success": True,
         "activity": [
             {
-                "activity_type": row[0], "entity_id": row[1], "status": row[2],
-                "message": row[3], "occurred_at": row[4].isoformat(), "result": row[5],
-                "schedule_id": row[6], "task_name": row[7], "task_action": row[8],
+                "activity_type": row[0],
+                "entity_id": row[1],
+                "status": row[2],
+                "message": row[3],
+                "occurred_at": row[4].isoformat(),
+                "result": row[5],
+                "schedule_id": row[6],
+                "task_name": row[7],
+                "task_action": row[8],
             }
             for row in rows
         ],
@@ -1362,7 +1439,15 @@ async def approve_approval(
     except ValueError as error:
         _raise_bad_request(error)
     async with get_connection() as conn:
-        await audit_log(conn=conn, user_id=user_id, action_type="APPROVAL_APPROVED", entity_type="approval", entity_id=approval_id, description="A protected action was approved.", metadata={"status": "APPROVED"})
+        await audit_log(
+            conn=conn,
+            user_id=user_id,
+            action_type="APPROVAL_APPROVED",
+            entity_type="approval",
+            entity_id=approval_id,
+            description="A protected action was approved.",
+            metadata={"status": "APPROVED"},
+        )
 
     return {"success": True, "approval": result}
 
@@ -1389,7 +1474,15 @@ async def reject_approval(
     except ValueError as error:
         _raise_bad_request(error)
     async with get_connection() as conn:
-        await audit_log(conn=conn, user_id=user_id, action_type="APPROVAL_REJECTED", entity_type="approval", entity_id=approval_id, description="A protected action was rejected.", metadata={"status": "REJECTED"})
+        await audit_log(
+            conn=conn,
+            user_id=user_id,
+            action_type="APPROVAL_REJECTED",
+            entity_type="approval",
+            entity_id=approval_id,
+            description="A protected action was rejected.",
+            metadata={"status": "REJECTED"},
+        )
 
     return {"success": True, "approval": result}
 
@@ -1439,11 +1532,22 @@ async def get_safety_activity(
         """,
         (hours, limit, offset),
     )
-    return {"success": True, "activity": [
-        {"source": r[0], "entity_id": r[1], "status": r[2], "action": r[3],
-         "description": r[4], "occurred_at": r[5].isoformat(), "risk_level": r[6], "details": r[7]}
-        for r in rows
-    ]}
+    return {
+        "success": True,
+        "activity": [
+            {
+                "source": r[0],
+                "entity_id": r[1],
+                "status": r[2],
+                "action": r[3],
+                "description": r[4],
+                "occurred_at": r[5].isoformat(),
+                "risk_level": r[6],
+                "details": r[7],
+            }
+            for r in rows
+        ],
+    }
 
 
 @router.get("/safety/state")
@@ -1497,7 +1601,14 @@ async def emergency_stop_route(
     user_id, _ = _user_context(x_user_id, x_user_role, {"OPERATOR", "ADMIN"})
     await activate_emergency_stop()
     async with get_connection() as conn:
-        await audit_log(conn=conn, user_id=user_id, action_type="EMERGENCY_STOP_ACTIVATED", entity_type="safety", description="Emergency stop was activated.", metadata={"status": "EXECUTED"})
+        await audit_log(
+            conn=conn,
+            user_id=user_id,
+            action_type="EMERGENCY_STOP_ACTIVATED",
+            entity_type="safety",
+            description="Emergency stop was activated.",
+            metadata={"status": "EXECUTED"},
+        )
 
     return {"success": True, "emergency_stop": True, "ai_enabled": False}
 
@@ -1514,7 +1625,14 @@ async def clear_emergency_stop_route(
     user_id, _ = _user_context(x_user_id, x_user_role, {"OPERATOR", "ADMIN"})
     await clear_emergency_stop()
     async with get_connection() as conn:
-        await audit_log(conn=conn, user_id=user_id, action_type="EMERGENCY_STOP_CLEARED", entity_type="safety", description="Emergency stop was cleared.", metadata={"status": "EXECUTED"})
+        await audit_log(
+            conn=conn,
+            user_id=user_id,
+            action_type="EMERGENCY_STOP_CLEARED",
+            entity_type="safety",
+            description="Emergency stop was cleared.",
+            metadata={"status": "EXECUTED"},
+        )
 
     return {"success": True, "emergency_stop": False, "ai_enabled": False}
 
@@ -1540,7 +1658,14 @@ async def enable_ai_route(
         )
 
     async with get_connection() as conn:
-        await audit_log(conn=conn, user_id=user_id, action_type="AI_ENABLED", entity_type="safety", description="Leafy AI was enabled.", metadata={"status": "EXECUTED"})
+        await audit_log(
+            conn=conn,
+            user_id=user_id,
+            action_type="AI_ENABLED",
+            entity_type="safety",
+            description="Leafy AI was enabled.",
+            metadata={"status": "EXECUTED"},
+        )
     return {"success": True, "ai_enabled": True}
 
 
@@ -1556,7 +1681,14 @@ async def disable_ai_route(
     user_id, _ = _user_context(x_user_id, x_user_role, {"OPERATOR", "ADMIN"})
     await disable_ai()
     async with get_connection() as conn:
-        await audit_log(conn=conn, user_id=user_id, action_type="AI_DISABLED", entity_type="safety", description="Leafy AI was disabled.", metadata={"status": "EXECUTED"})
+        await audit_log(
+            conn=conn,
+            user_id=user_id,
+            action_type="AI_DISABLED",
+            entity_type="safety",
+            description="Leafy AI was disabled.",
+            metadata={"status": "EXECUTED"},
+        )
 
     return {"success": True, "ai_enabled": False}
 
@@ -1781,7 +1913,9 @@ async def get_grow_cycle(
 @router.patch("/grow-cycles/{grow_cycle_id}")
 @limiter.limit("20/minute")
 async def update_grow_cycle_route(
-    request: Request, grow_cycle_id: int, body: GrowCycleUpdate,
+    request: Request,
+    grow_cycle_id: int,
+    body: GrowCycleUpdate,
     authorization: str | None = Header(default=None),
     x_user_id: str | None = Header(default=None, alias="X-User-ID"),
     x_user_role: str | None = Header(default=None, alias="X-User-Role"),
@@ -1798,7 +1932,8 @@ async def update_grow_cycle_route(
 @router.delete("/grow-cycles/{grow_cycle_id}")
 @limiter.limit("10/minute")
 async def delete_grow_cycle_route(
-    request: Request, grow_cycle_id: int,
+    request: Request,
+    grow_cycle_id: int,
     authorization: str | None = Header(default=None),
     x_user_id: str | None = Header(default=None, alias="X-User-ID"),
     x_user_role: str | None = Header(default=None, alias="X-User-Role"),
@@ -2138,7 +2273,8 @@ async def reload_system_settings(
 @router.post("/settings/reset")
 @limiter.limit("10/minute")
 async def reset_system_settings(
-    request: Request, body: SettingsReset,
+    request: Request,
+    body: SettingsReset,
     authorization: str | None = Header(default=None),
     x_user_id: str | None = Header(default=None, alias="X-User-ID"),
     x_user_role: str | None = Header(default=None, alias="X-User-Role"),

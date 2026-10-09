@@ -2,11 +2,7 @@ import { CalendarDays } from "lucide-react";
 
 import styles from "./HarvestCard.module.css";
 
-function HarvestCard({
-  data = null,
-  loading = false,
-  error = false
-}) {
+function HarvestCard({ data = null, loading = false, error = false }) {
   const value =
     data?.predictedValue === null ||
     data?.predictedValue === undefined ||
@@ -14,15 +10,12 @@ function HarvestCard({
       ? "—"
       : data.predictedValue;
 
-  let trackerText =
-    "Harvest information is not available.";
+  let trackerText = "Harvest information is not available.";
 
   if (loading) {
-    trackerText =
-      "Loading harvest information...";
+    trackerText = "Loading harvest information...";
   } else if (error) {
-    trackerText =
-      "Harvest information is unavailable.";
+    trackerText = "Harvest information is unavailable.";
   } else if (data?.trackerText) {
     trackerText = data.trackerText;
   }
@@ -32,13 +25,9 @@ function HarvestCard({
       <div className={styles.summary}>
         <h2>Harvest</h2>
 
-        <p className={styles.value}>
-          {loading ? "—" : value}
-        </p>
+        <p className={styles.value}>{loading ? "—" : value}</p>
 
-        <span>
-          {data?.label || "Predicted Harvest"}
-        </span>
+        <span>{data?.label || "Predicted Harvest"}</span>
       </div>
 
       <div className={styles.divider}></div>
@@ -49,10 +38,7 @@ function HarvestCard({
             <CalendarDays aria-hidden="true" />
           </span>
 
-          <h3>
-            {data?.trackerTitle ||
-              "Harvest Tracker"}
-          </h3>
+          <h3>{data?.trackerTitle || "Harvest Tracker"}</h3>
         </div>
 
         <p>{trackerText}</p>

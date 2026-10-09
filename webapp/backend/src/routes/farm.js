@@ -136,6 +136,15 @@ router.get(
 );
 
 router.get(
+  "/sensors/:sensorType/readings",
+  ...proxyJson(
+    "GET",
+    (req) =>
+      `/farm/sensors/${encodeURIComponent(req.params.sensorType)}/readings`
+  )
+);
+
+router.get(
   "/sensors/:sensorType/history",
   ...proxyJson(
     "GET",

@@ -1,7 +1,10 @@
 import { useState } from "react";
 import MarkdownContent from "../../../components/common/MarkdownContent/MarkdownContent";
 import Modal from "../../../components/common/Modal/Modal";
-import { getAIResultContent, getAIResultPreview } from "../../../utils/aiResult";
+import {
+  getAIResultContent,
+  getAIResultPreview,
+} from "../../../utils/aiResult";
 import styles from "./ActivityTab.module.css";
 
 function getActivityContent(item) {
@@ -18,7 +21,7 @@ function ActivityTab({
   error = false,
   hasMore = false,
   loadingMore = false,
-  onLoadMore
+  onLoadMore,
 }) {
   const activity = Array.isArray(data) ? data : [];
   const [selected, setSelected] = useState(null);
@@ -29,24 +32,31 @@ function ActivityTab({
         <div>
           <h2>Recent 24hr AI Activity</h2>
           <p>
-            Recommendations and scheduled task executions from the last 24 hours.
-            Select an item to inspect its complete stored result.
+            Recommendations and scheduled task executions from the last 24
+            hours. Select an item to inspect its complete stored result.
           </p>
         </div>
-        <span className={styles.readOnly}>Read only</span>
       </div>
 
       {loading ? (
         <div className={styles.activityEmptyState}>
-          <div><h3>Loading activity</h3><p>Recent activity is loading.</p></div>
+          <div>
+            <h3>Loading activity</h3>
+            <p>Recent activity is loading.</p>
+          </div>
         </div>
       ) : error ? (
         <div className={styles.activityEmptyState}>
-          <div><h3>Activity unavailable</h3><p>Recent activity could not be loaded.</p></div>
+          <div>
+            <h3>Activity unavailable</h3>
+            <p>Recent activity could not be loaded.</p>
+          </div>
         </div>
       ) : activity.length === 0 ? (
         <div className={styles.activityEmptyState}>
-          <div><h3>No activity in the last 24 hours</h3></div>
+          <div>
+            <h3>No activity in the last 24 hours</h3>
+          </div>
         </div>
       ) : (
         <div className={styles.timeline}>
@@ -65,14 +75,18 @@ function ActivityTab({
                 <div className={styles.timelineRail}>
                   <span className={styles.timelineDot} />
                 </div>
-                <div className={styles.timelineTime}>{item.time || "—"}</div>
+                <div className={styles.timelineTime}>{item.time || "-"}</div>
                 <div className={styles.timelineContent}>
                   <div className={styles.timelineHeading}>
                     <h3>{item.title || "Activity"}</h3>
-                    {item.category && <span className={styles.chip}>{item.category}</span>}
+                    {item.category && (
+                      <span className={styles.chip}>{item.category}</span>
+                    )}
                   </div>
                   <p className={styles.preview}>{preview}</p>
-                  {item.source && <span className={styles.sourceText}>{item.source}</span>}
+                  {item.source && (
+                    <span className={styles.sourceText}>{item.source}</span>
+                  )}
                 </div>
               </button>
             );
@@ -92,7 +106,10 @@ function ActivityTab({
       )}
 
       {selected && (
-        <Modal title={selected.title || "Activity Result"} onClose={() => setSelected(null)}>
+        <Modal
+          title={selected.title || "Activity Result"}
+          onClose={() => setSelected(null)}
+        >
           <div className={styles.resultMeta}>
             <span>{selected.time}</span>
             <span>{selected.category}</span>

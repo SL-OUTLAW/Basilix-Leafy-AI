@@ -7,7 +7,7 @@ import {
   getEngineSettings,
   reloadEngineSettings,
   resetEngineSettings,
-  updateEngineSettings
+  updateEngineSettings,
 } from "../../services/settingsApi";
 
 import styles from "./Settings.module.css";
@@ -16,7 +16,7 @@ const EMPTY_CAMERA = {
   camera_name: "",
   level_no: 1,
   ip_address: "",
-  rtsp_path: ""
+  rtsp_path: "",
 };
 
 function Settings({ theme, setTheme, token, onTokenRefresh, user, access }) {
@@ -29,8 +29,7 @@ function Settings({ theme, setTheme, token, onTokenRefresh, user, access }) {
   const [error, setError] = useState("");
 
   const canEdit =
-    user?.role === "ADMIN" &&
-    access?.allowed?.SETTINGS_MANAGE !== false;
+    user?.role === "ADMIN" && access?.allowed?.SETTINGS_MANAGE !== false;
 
   function applySettings(settings) {
     const next = settings || {};
@@ -39,9 +38,9 @@ function Settings({ theme, setTheme, token, onTokenRefresh, user, access }) {
       Object.fromEntries(
         Object.entries(next).map(([key, value]) => [
           key,
-          JSON.stringify(value, null, 2)
-        ])
-      )
+          JSON.stringify(value, null, 2),
+        ]),
+      ),
     );
   }
 
@@ -56,15 +55,11 @@ function Settings({ theme, setTheme, token, onTokenRefresh, user, access }) {
         reload
           ? reloadEngineSettings(token, onTokenRefresh)
           : getEngineSettings(token, onTokenRefresh),
-        getCameras(token, onTokenRefresh)
+        getCameras(token, onTokenRefresh),
       ]);
 
       applySettings(data.settings);
-      setCameras(
-        Array.isArray(cameraData.cameras)
-          ? cameraData.cameras
-          : []
-      );
+      setCameras(Array.isArray(cameraData.cameras) ? cameraData.cameras : []);
     } catch (loadError) {
       setError(loadError.message || "Unable to load Engine settings");
     } finally {
@@ -88,18 +83,16 @@ function Settings({ theme, setTheme, token, onTokenRefresh, user, access }) {
         value = editable;
       }
 
-      const data = await updateEngineSettings(
-        token,
-        onTokenRefresh,
-        { [key]: value }
-      );
+      const data = await updateEngineSettings(token, onTokenRefresh, {
+        [key]: value,
+      });
 
       applySettings(data.settings);
     } catch (saveError) {
       setError(
         saveError instanceof SyntaxError
           ? `Invalid JSON in ${key}`
-          : saveError.message || "Unable to save setting"
+          : saveError.message || "Unable to save setting",
       );
     } finally {
       setBusy("");
@@ -132,7 +125,7 @@ function Settings({ theme, setTheme, token, onTokenRefresh, user, access }) {
         camera_name: camera.camera_name.trim(),
         level_no: Number(camera.level_no),
         ip_address: camera.ip_address.trim(),
-        rtsp_path: camera.rtsp_path.trim() || null
+        rtsp_path: camera.rtsp_path.trim() || null,
       });
 
       setCamera(EMPTY_CAMERA);
@@ -163,7 +156,10 @@ function Settings({ theme, setTheme, token, onTokenRefresh, user, access }) {
             onClick={() => setTheme("dark")}
           >
             <span className={styles.previewDark} />
-            <div><strong>Dark</strong><span>Dark background with light text</span></div>
+            <div>
+              <strong>Dark</strong>
+              <span>Dark background with light text</span>
+            </div>
           </button>
 
           <button
@@ -176,7 +172,10 @@ function Settings({ theme, setTheme, token, onTokenRefresh, user, access }) {
             onClick={() => setTheme("light")}
           >
             <span className={styles.previewLight} />
-            <div><strong>Light</strong><span>Light background with dark text</span></div>
+            <div>
+              <strong>Light</strong>
+              <span>Light background with dark text</span>
+            </div>
           </button>
         </div>
       </section>
@@ -186,32 +185,43 @@ function Settings({ theme, setTheme, token, onTokenRefresh, user, access }) {
           <section className={styles.section}>
             <div className={styles.sectionTitle}>
               <h2>Camera Management</h2>
-              <p>Add farm cameras. The Engine reloads the camera list after creation.</p>
+              <p>
+                Add farm cameras. The Engine reloads the camera list after
+                creation.
+              </p>
             </div>
 
             <form className={styles.cameraForm} onSubmit={createCamera}>
               <input
                 value={camera.camera_name}
-                onChange={(event) => setCamera({ ...camera, camera_name: event.target.value })}
+                onChange={(event) =>
+                  setCamera({ ...camera, camera_name: event.target.value })
+                }
                 placeholder="Camera name"
                 required
               />
               <select
                 value={camera.level_no}
-                onChange={(event) => setCamera({ ...camera, level_no: event.target.value })}
+                onChange={(event) =>
+                  setCamera({ ...camera, level_no: event.target.value })
+                }
               >
                 <option value="1">Level 1</option>
                 <option value="2">Level 2</option>
               </select>
               <input
                 value={camera.ip_address}
-                onChange={(event) => setCamera({ ...camera, ip_address: event.target.value })}
+                onChange={(event) =>
+                  setCamera({ ...camera, ip_address: event.target.value })
+                }
                 placeholder="IP address"
                 required
               />
               <input
                 value={camera.rtsp_path}
-                onChange={(event) => setCamera({ ...camera, rtsp_path: event.target.value })}
+                onChange={(event) =>
+                  setCamera({ ...camera, rtsp_path: event.target.value })
+                }
                 placeholder="RTSP path (optional)"
               />
               <button
@@ -237,8 +247,9 @@ function Settings({ theme, setTheme, token, onTokenRefresh, user, access }) {
             <div className={styles.sectionTitle}>
               <h2>Engine Settings</h2>
               <p>
-                Edit persisted settings. Invalid or missing values are repaired from
-                Engine defaults. AI and emergency state can only be changed in Safety.
+                Edit persisted settings. Invalid or missing values are repaired
+                from Engine defaults. AI and emergency state can only be changed
+                in Safety.
               </p>
             </div>
 
@@ -266,41 +277,46 @@ function Settings({ theme, setTheme, token, onTokenRefresh, user, access }) {
 
             {engineSettings && (
               <div className={styles.editorGrid}>
-                {Object.keys(engineSettings).sort().map((key) => (
-                  <article key={key} className={styles.editorCard}>
-                    <div className={styles.editorHeader}>
-                      <strong>{key}</strong>
-                      <div>
-                        <button
-                          type="button"
-                          className={styles.secondaryButton}
-                          onClick={() => restoreGroup(key)}
-                          disabled={!canEdit || busy === `reset-${key}`}
-                        >
-                          <RotateCcw size={14} />
-                          Defaults
-                        </button>
-                        <button
-                          type="button"
-                          className={styles.primaryButton}
-                          onClick={() => saveGroup(key)}
-                          disabled={!canEdit || busy === key}
-                        >
-                          <Save size={14} />
-                          {busy === key ? "Saving..." : "Save"}
-                        </button>
+                {Object.keys(engineSettings)
+                  .sort()
+                  .map((key) => (
+                    <article key={key} className={styles.editorCard}>
+                      <div className={styles.editorHeader}>
+                        <strong>{key}</strong>
+                        <div>
+                          <button
+                            type="button"
+                            className={styles.secondaryButton}
+                            onClick={() => restoreGroup(key)}
+                            disabled={!canEdit || busy === `reset-${key}`}
+                          >
+                            <RotateCcw size={14} />
+                            Defaults
+                          </button>
+                          <button
+                            type="button"
+                            className={styles.primaryButton}
+                            onClick={() => saveGroup(key)}
+                            disabled={!canEdit || busy === key}
+                          >
+                            <Save size={14} />
+                            {busy === key ? "Saving..." : "Save"}
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                    <textarea
-                      value={drafts[key] || ""}
-                      onChange={(event) =>
-                        setDrafts((current) => ({ ...current, [key]: event.target.value }))
-                      }
-                      spellCheck="false"
-                      readOnly={!canEdit}
-                    />
-                  </article>
-                ))}
+                      <textarea
+                        value={drafts[key] || ""}
+                        onChange={(event) =>
+                          setDrafts((current) => ({
+                            ...current,
+                            [key]: event.target.value,
+                          }))
+                        }
+                        spellCheck="false"
+                        readOnly={!canEdit}
+                      />
+                    </article>
+                  ))}
               </div>
             )}
           </section>

@@ -5,7 +5,7 @@ function Tabs({
   activeTab,
   onChange,
   ariaLabel = "Sections",
-  className = ""
+  className = "",
 }) {
   return (
     <nav

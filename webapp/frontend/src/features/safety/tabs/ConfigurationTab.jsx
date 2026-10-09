@@ -8,7 +8,7 @@ function ConfigurationTab({
   error = false,
   state = null,
   canAdmin = false,
-  onSetAiEnabled
+  onSetAiEnabled,
 }) {
   const items = Array.isArray(data) ? data : [];
 
@@ -58,26 +58,20 @@ function ConfigurationTab({
       ) : (
         <div className={styles.configurationList}>
           {items.map((item) => (
-            <article
-              key={item.id}
-              className={styles.configurationRow}
-            >
-              <ActionIcon
-                type={item.type}
-                variant="activity" size={17}
-              />
+            <article key={item.id} className={styles.configurationRow}>
+              <ActionIcon type={item.type} variant="activity" size={17} />
 
               <div className={styles.configurationCopy}>
                 <strong>{item.command || "Action"}</strong>
-                <span>
-                  {item.description || "No description available."}
-                </span>
+                <span>{item.description || "No description available."}</span>
               </div>
 
               <div className={styles.configurationMeta}>
                 <span
                   className={
-                    item.risk === "Low Risk" || item.risk === "Monitored" || item.risk === "Enabled"
+                    item.risk === "Low Risk" ||
+                    item.risk === "Monitored" ||
+                    item.risk === "Enabled"
                       ? styles.lowBadge
                       : item.risk === "Medium Risk"
                         ? styles.mediumBadge

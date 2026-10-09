@@ -1,5 +1,10 @@
 import { useEffect, useState } from "react";
-import { Activity, ListChecks, ShieldCheck, SlidersHorizontal } from "lucide-react";
+import {
+  Activity,
+  ListChecks,
+  ShieldCheck,
+  SlidersHorizontal,
+} from "lucide-react";
 
 import Tabs from "../../components/common/Tabs/Tabs";
 import SafetyOverviewTab from "./tabs/SafetyOverviewTab";
@@ -15,7 +20,7 @@ import {
   getSafetyActivityPage,
   getApprovalsPage,
   rejectRequest,
-  setAiEnabled
+  setAiEnabled,
 } from "../../services/safetyApi";
 
 import styles from "./Safety.module.css";
@@ -24,7 +29,7 @@ const tabs = [
   { id: "overview", label: "Overview", Icon: ShieldCheck },
   { id: "approvals", label: "Approvals", Icon: ListChecks },
   { id: "activity", label: "Safety Activity", Icon: Activity },
-  { id: "configuration", label: "Configuration", Icon: SlidersHorizontal }
+  { id: "configuration", label: "Configuration", Icon: SlidersHorizontal },
 ];
 
 function Safety({
@@ -35,7 +40,7 @@ function Safety({
   onTokenRefresh,
   user,
   access,
-  onDataChange
+  onDataChange,
 }) {
   const [activeTab, setActiveTab] = useState("overview");
   const [actionError, setActionError] = useState("");
@@ -51,29 +56,49 @@ function Safety({
   const canReview = Boolean(access?.allowed?.APPROVAL_REVIEW);
   const canToggleAi = Boolean(access?.allowed?.AI_TOGGLE);
 
-  useEffect(() => { setActivityItems(Array.isArray(data?.safetyActivity) ? data.safetyActivity : []); }, [data?.safetyActivity]);
-  useEffect(() => { setApprovalItems(Array.isArray(data?.approvals) ? data.approvals : []); }, [data?.approvals]);
+  useEffect(() => {
+    setActivityItems(
+      Array.isArray(data?.safetyActivity) ? data.safetyActivity : [],
+    );
+  }, [data?.safetyActivity]);
+  useEffect(() => {
+    setApprovalItems(Array.isArray(data?.approvals) ? data.approvals : []);
+  }, [data?.approvals]);
 
   async function loadMoreApprovals() {
     setActionBusy(true);
-    try { const next = await getApprovalsPage(token, onTokenRefresh, approvalItems.length, 50); setApprovalItems((current) => [...current, ...next]); setApprovalsMore(next.length === 50); }
-    finally { setActionBusy(false); }
+    try {
+      const next = await getApprovalsPage(
+        token,
+        onTokenRefresh,
+        approvalItems.length,
+        50,
+      );
+      setApprovalItems((current) => [...current, ...next]);
+      setApprovalsMore(next.length === 50);
+    } finally {
+      setActionBusy(false);
+    }
   }
 
   async function loadMoreSafetyActivity() {
     setActionBusy(true);
     try {
-      const next = await getSafetyActivityPage(token, onTokenRefresh, activityItems.length, 50);
+      const next = await getSafetyActivityPage(
+        token,
+        onTokenRefresh,
+        activityItems.length,
+        50,
+      );
       setActivityItems((current) => [...current, ...next]);
       setActivityMore(next.length === 50);
-    } finally { setActionBusy(false); }
+    } finally {
+      setActionBusy(false);
+    }
   }
 
   async function refresh() {
-    const updated = await getSafetyData(
-      token,
-      onTokenRefresh
-    );
+    const updated = await getSafetyData(token, onTokenRefresh);
 
     onDataChange?.(updated);
   }
@@ -86,9 +111,7 @@ function Safety({
       await operation();
       await refresh();
     } catch (actionFailure) {
-      setActionError(
-        actionFailure.message || "Safety action failed"
-      );
+      setActionError(actionFailure.message || "Safety action failed");
     } finally {
       setActionBusy(false);
     }
@@ -117,12 +140,14 @@ function Safety({
             error={hasError}
             onOpenApprovals={() => setActiveTab("approvals")}
             onOpenConfiguration={() => setActiveTab("configuration")}
-            canAdmin={data?.state?.emergency_stop ? canClearEmergency : canEmergency}
+            canAdmin={
+              data?.state?.emergency_stop ? canClearEmergency : canEmergency
+            }
             onEmergencyStop={() =>
               runAction(() =>
                 data?.state?.emergency_stop
                   ? clearEmergencyStop(token, onTokenRefresh)
-                  : activateEmergencyStop(token, onTokenRefresh)
+                  : activateEmergencyStop(token, onTokenRefresh),
               )
             }
           />
@@ -135,14 +160,10 @@ function Safety({
             error={hasError}
             canReview={canReview}
             onApprove={(id) =>
-              runAction(() =>
-                approveRequest(token, onTokenRefresh, id)
-              )
+              runAction(() => approveRequest(token, onTokenRefresh, id))
             }
             onReject={(id) =>
-              runAction(() =>
-                rejectRequest(token, onTokenRefresh, id)
-              )
+              runAction(() => rejectRequest(token, onTokenRefresh, id))
             }
             hasMore={approvalsMore}
             loadingMore={actionBusy}
@@ -151,7 +172,14 @@ function Safety({
         )}
 
         {activeTab === "activity" && (
-          <SafetyActivityTab data={activityItems} loading={loading} error={hasError} hasMore={activityMore} loadingMore={actionBusy} onLoadMore={loadMoreSafetyActivity} />
+          <SafetyActivityTab
+            data={activityItems}
+            loading={loading}
+            error={hasError}
+            hasMore={activityMore}
+            loadingMore={actionBusy}
+            onLoadMore={loadMoreSafetyActivity}
+          />
         )}
 
         {activeTab === "configuration" && (
@@ -162,13 +190,7 @@ function Safety({
             state={data?.state}
             canAdmin={canToggleAi}
             onSetAiEnabled={(enabled) =>
-              runAction(() =>
-                setAiEnabled(
-                  token,
-                  onTokenRefresh,
-                  enabled
-                )
-              )
+              runAction(() => setAiEnabled(token, onTokenRefresh, enabled))
             }
           />
         )}

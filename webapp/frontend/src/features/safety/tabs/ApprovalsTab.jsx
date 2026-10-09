@@ -11,7 +11,7 @@ function ApprovalsTab({
   onReject,
   hasMore = false,
   loadingMore = false,
-  onLoadMore
+  onLoadMore,
 }) {
   const items = Array.isArray(data) ? data : [];
 
@@ -50,14 +50,8 @@ function ApprovalsTab({
       ) : (
         <div className={styles.approvalList}>
           {items.map((item) => (
-            <article
-              key={item.id}
-              className={styles.approvalRow}
-            >
-              <ActionIcon
-                type={item.type}
-                variant="activity" size={17}
-              />
+            <article key={item.id} className={styles.approvalRow}>
+              <ActionIcon type={item.type} variant="activity" size={17} />
 
               <div className={styles.approvalCopy}>
                 <div className={styles.approvalTitle}>
@@ -76,9 +70,7 @@ function ApprovalsTab({
                   </span>
                 </div>
 
-                <p>
-                  {item.description || "No description available."}
-                </p>
+                <p>{item.description || "No description available."}</p>
 
                 <small>
                   {item.time || "—"} • {item.relativeTime || "—"}
@@ -87,16 +79,10 @@ function ApprovalsTab({
 
               {canReview && item.status === "PENDING" ? (
                 <div className={styles.approvalActions}>
-                  <button
-                    type="button"
-                    onClick={() => onApprove?.(item.id)}
-                  >
+                  <button type="button" onClick={() => onApprove?.(item.id)}>
                     Approve
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => onReject?.(item.id)}
-                  >
+                  <button type="button" onClick={() => onReject?.(item.id)}>
                     Reject
                   </button>
                 </div>
@@ -109,7 +95,16 @@ function ApprovalsTab({
           ))}
         </div>
       )}
-      {hasMore && !loading && <button type="button" className={styles.aiToggle} onClick={onLoadMore} disabled={loadingMore}>{loadingMore ? "Loading..." : "Load more approvals"}</button>}
+      {hasMore && !loading && (
+        <button
+          type="button"
+          className={styles.aiToggle}
+          onClick={onLoadMore}
+          disabled={loadingMore}
+        >
+          {loadingMore ? "Loading..." : "Load more approvals"}
+        </button>
+      )}
     </section>
   );
 }

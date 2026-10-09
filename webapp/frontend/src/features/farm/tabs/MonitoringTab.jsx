@@ -24,7 +24,19 @@ function MonitoringTab({ data = null, loading = false, error = false, token, onT
       <section className={styles.sensorPanel}>
         <div className={styles.groupHeader}><div><h2>Farm Sensors</h2><p>Latest live sensor readings</p></div><span>{sensorCards.length} sensors</span></div>
         <div className={styles.sensorGrid}>
-          {sensorCards.map(([title, key, tone, type]) => <FarmSensorCard key={key} title={title} data={sensors[key]} loading={loading} error={error} tone={tone} type={type} />)}
+          {sensorCards.map(([title, key, tone, type]) => (
+            <FarmSensorCard
+              key={key}
+              title={title}
+              data={sensors[key]}
+              loading={loading}
+              error={error}
+              tone={tone}
+              type={type}
+              token={token}
+              onTokenRefresh={onTokenRefresh}
+            />
+          ))}
         </div>
       </section>
     </div>

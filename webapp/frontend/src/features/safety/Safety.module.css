@@ -21,7 +21,7 @@
   border: 1px solid #3a4344;
   border-radius: 6px;
 
-  background: #1E2527;
+  background: #1e2527;
 }
 
 .panelHeader {
@@ -34,7 +34,7 @@
 .panelHeader h2 {
   margin: 0;
 
-  color: #FFFFF4;
+  color: #fffff4;
 
   font-size: 16.5px;
   line-height: 1.2;
@@ -43,7 +43,7 @@
 .panelHeader p {
   margin: 4.5px 0 0;
 
-  color: #A5B0AC;
+  color: #a5b0ac;
 
   font-size: 12px;
 }
@@ -56,7 +56,7 @@
   border: 1px solid #667170;
   border-radius: 3.75px;
 
-  color: #A5B0AC;
+  color: #a5b0ac;
 
   font-size: 12px;
   font-weight: 600;
@@ -83,7 +83,7 @@
 .fullEmptyState h3 {
   margin: 0;
 
-  color: #FFFFF4;
+  color: #fffff4;
 
   font-size: 13.5px;
 }
@@ -93,16 +93,16 @@
 
   margin: 6px auto 0;
 
-  color: #A5B0AC;
+  color: #a5b0ac;
 
   font-size: 12px;
   line-height: 1.5;
 }
 
 [data-theme="light"] .fullPanel {
-  border-color: #D8D0C6;
+  border-color: #d8d0c6;
 
-  background: #F4F2EE;
+  background: #f4f2ee;
 }
 
 [data-theme="light"] .panelHeader h2,
@@ -112,22 +112,21 @@
 
 [data-theme="light"] .panelHeader p,
 [data-theme="light"] .fullEmptyState p {
-  color: #7A7A72;
+  color: #7a7a72;
 }
 
 [data-theme="light"] .panelHeader > span {
-  border-color: #C8C1B8;
+  border-color: #c8c1b8;
 
-  background: #FFFFFF;
-  color: #7A7A72;
+  background: #ffffff;
+  color: #7a7a72;
 }
 
 [data-theme="light"] .fullEmptyState {
-  border-color: #D8D0C6;
+  border-color: #d8d0c6;
 
-  background: #FFFFFF;
+  background: #ffffff;
 }
-
 
 @media (max-width: 600px) {
   .fullPanel {
@@ -273,42 +272,41 @@
   }
 }
 
-
 .lowBadge {
   color: #34d399;
   border-color: rgba(52, 211, 153, 0.55);
-  background: rgba(52, 211, 153, 0.10);
+  background: rgba(52, 211, 153, 0.1);
 }
 
 .mediumBadge,
 .pendingBadge {
   color: #ff9a3d;
   border-color: rgba(255, 154, 61, 0.58);
-  background: rgba(255, 154, 61, 0.10);
+  background: rgba(255, 154, 61, 0.1);
 }
 
 .highBadge {
   color: #ff6b63;
   border-color: rgba(255, 107, 99, 0.58);
-  background: rgba(255, 107, 99, 0.10);
+  background: rgba(255, 107, 99, 0.1);
 }
 
 [data-theme="light"] .lowBadge {
   color: #209c63;
-  border-color: rgba(32, 156, 99, 0.50);
+  border-color: rgba(32, 156, 99, 0.5);
   background: rgba(32, 156, 99, 0.08);
 }
 
 [data-theme="light"] .mediumBadge,
 [data-theme="light"] .pendingBadge {
   color: #d96500;
-  border-color: rgba(217, 101, 0, 0.50);
+  border-color: rgba(217, 101, 0, 0.5);
   background: rgba(217, 101, 0, 0.08);
 }
 
 [data-theme="light"] .highBadge {
   color: #d92d20;
-  border-color: rgba(217, 45, 32, 0.50);
+  border-color: rgba(217, 45, 32, 0.5);
   background: rgba(217, 45, 32, 0.07);
 }
 

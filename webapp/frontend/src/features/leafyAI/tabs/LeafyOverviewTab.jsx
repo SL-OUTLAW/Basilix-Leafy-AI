@@ -5,19 +5,13 @@ import {
   Lightbulb,
   ShieldCheck,
   Sparkles,
-  Workflow
+  Workflow,
 } from "lucide-react";
 
 import { getAIResultPreview } from "../../../utils/aiResult";
 import styles from "./LeafyOverviewTab.module.css";
 
-function MetricCard({
-  label,
-  value,
-  description,
-  Icon,
-  tone = "green"
-}) {
+function MetricCard({ label, value, description, Icon, tone = "green" }) {
   return (
     <article className={`${styles.metricCard} ${styles[tone]}`}>
       <div className={styles.metricIcon}>
@@ -42,7 +36,7 @@ function LeafyOverviewTab({ data = null, loading = false, error = false }) {
   const activity = Array.isArray(data?.activity) ? data.activity : [];
 
   const pendingRecommendations = recommendations.filter(
-    (item) => item.status === "PENDING"
+    (item) => item.status === "PENDING",
   );
 
   const latestPendingRecommendation = pendingRecommendations[0] || null;
@@ -50,14 +44,14 @@ function LeafyOverviewTab({ data = null, loading = false, error = false }) {
 
   const displayValue = (value) => {
     if (loading) return "…";
-    if (error) return "—";
-    return value || "—";
+    if (error) return "-";
+    return value || "-";
   };
 
   const latestRecommendationValue = loading
     ? "…"
     : error
-      ? "—"
+      ? "-"
       : latestPendingRecommendation
         ? latestPendingRecommendation.type || "Pending"
         : "None";
@@ -72,7 +66,7 @@ function LeafyOverviewTab({ data = null, loading = false, error = false }) {
   const latestActivityValue = loading
     ? "…"
     : error
-      ? "—"
+      ? "-"
       : latestActivity?.category || "None";
 
   const latestActivityDescription = loading
@@ -110,7 +104,7 @@ function LeafyOverviewTab({ data = null, loading = false, error = false }) {
 
         <MetricCard
           label="Pending Recommendations"
-          value={loading || error ? "—" : pendingRecommendations.length}
+          value={loading || error ? "-" : pendingRecommendations.length}
           description="Recommendations waiting for review."
           Icon={Lightbulb}
           tone="orange"
@@ -118,7 +112,7 @@ function LeafyOverviewTab({ data = null, loading = false, error = false }) {
 
         <MetricCard
           label="AI Activity · 24h"
-          value={loading || error ? "—" : activity.length}
+          value={loading || error ? "-" : activity.length}
           description="Recommendation and AI task activity."
           Icon={Activity}
           tone="blue"
@@ -144,14 +138,12 @@ function LeafyOverviewTab({ data = null, loading = false, error = false }) {
       <section className={styles.aiFeed}>
         <div className={styles.sectionHeader}>
           <div>
-            <h2>Recent AI Activity — 24 Hours</h2>
+            <h2>Recent AI Activity · 24 Hours</h2>
             <p>
-              Recommendations and scheduled AI task activity recorded during
-              the last 24 hours.
+              Recommendations and scheduled AI task activity recorded during the
+              last 24 hours.
             </p>
           </div>
-
-          <span className={styles.readOnly}>Read only</span>
         </div>
 
         {loading ? (
@@ -183,7 +175,7 @@ function LeafyOverviewTab({ data = null, loading = false, error = false }) {
               <article key={item.id} className={styles.feedItem}>
                 <span className={styles.feedDot} />
 
-                <div className={styles.itemTime}>{item.time || "—"}</div>
+                <div className={styles.itemTime}>{item.time || "-"}</div>
 
                 <div className={styles.feedContent}>
                   <div className={styles.feedTitleRow}>

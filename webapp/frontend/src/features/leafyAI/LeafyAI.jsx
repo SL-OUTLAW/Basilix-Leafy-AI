@@ -6,16 +6,25 @@ import LeafyOverviewTab from "./tabs/LeafyOverviewTab";
 import RecommendationsTab from "./tabs/RecommendationsTab";
 import ActivityTab from "./tabs/ActivityTab";
 
-import { getMoreLeafyActivity, getMoreLeafyRecommendations } from "../../services/leafyAiApi";
+import {
+  getMoreLeafyActivity,
+  getMoreLeafyRecommendations,
+} from "../../services/leafyAiApi";
 import styles from "./LeafyAI.module.css";
 
 const tabs = [
   { id: "overview", label: "Overview", Icon: Brain },
   { id: "recommendations", label: "Recommendations", Icon: Lightbulb },
-  { id: "activity", label: "Activity", Icon: Activity }
+  { id: "activity", label: "Activity", Icon: Activity },
 ];
 
-function LeafyAI({ data = null, loading = false, error = "", token, onTokenRefresh }) {
+function LeafyAI({
+  data = null,
+  loading = false,
+  error = "",
+  token,
+  onTokenRefresh,
+}) {
   const [activeTab, setActiveTab] = useState("overview");
   const hasError = Boolean(error);
   const [recommendations, setRecommendations] = useState([]);
@@ -25,15 +34,39 @@ function LeafyAI({ data = null, loading = false, error = "", token, onTokenRefre
   const [activityMore, setActivityMore] = useState(true);
 
   useEffect(() => {
-    setRecommendations(Array.isArray(data?.recommendations) ? data.recommendations : []);
+    setRecommendations(
+      Array.isArray(data?.recommendations) ? data.recommendations : [],
+    );
     setActivity(Array.isArray(data?.activity) ? data.activity : []);
   }, [data]);
 
   async function loadMoreRecommendations() {
-    setMoreBusy(true); try { const next = await getMoreLeafyRecommendations(token, onTokenRefresh, recommendations.length); setRecommendations((current) => [...current, ...next]); setRecommendationsMore(next.length === 50); } finally { setMoreBusy(false); }
+    setMoreBusy(true);
+    try {
+      const next = await getMoreLeafyRecommendations(
+        token,
+        onTokenRefresh,
+        recommendations.length,
+      );
+      setRecommendations((current) => [...current, ...next]);
+      setRecommendationsMore(next.length === 50);
+    } finally {
+      setMoreBusy(false);
+    }
   }
   async function loadMoreActivity() {
-    setMoreBusy(true); try { const next = await getMoreLeafyActivity(token, onTokenRefresh, activity.length); setActivity((current) => [...current, ...next]); setActivityMore(next.length === 50); } finally { setMoreBusy(false); }
+    setMoreBusy(true);
+    try {
+      const next = await getMoreLeafyActivity(
+        token,
+        onTokenRefresh,
+        activity.length,
+      );
+      setActivity((current) => [...current, ...next]);
+      setActivityMore(next.length === 50);
+    } finally {
+      setMoreBusy(false);
+    }
   }
 
   return (

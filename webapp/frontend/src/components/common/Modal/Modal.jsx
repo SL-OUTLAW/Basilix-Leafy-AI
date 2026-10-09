@@ -12,7 +12,7 @@ function Modal({
   size = "medium",
   fullScreen = false,
   contentClassName = "",
-  ariaLabel
+  ariaLabel,
 }) {
   if (!open) {
     return null;
@@ -39,7 +39,9 @@ function Modal({
         {(title || subtitle || Icon || onClose) && (
           <header className={styles.header}>
             <div className={styles.heading}>
-              {Icon && <Icon className={styles.headerIcon} aria-hidden="true" />}
+              {Icon && (
+                <Icon className={styles.headerIcon} aria-hidden="true" />
+              )}
               <div>
                 {title && <h2>{title}</h2>}
                 {subtitle && <p>{subtitle}</p>}
