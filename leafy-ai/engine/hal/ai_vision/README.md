@@ -11,7 +11,7 @@ structured result with Pydantic, then stores the JSON in `plant_image_analysis`.
 
 The output is limited to visually observable information:
 
-- plant size: `none`, `small`, `medium`, `large`, or `unknown`
+- plant size: `none`, `early`, `middle`, `mature`, or `unknown`
 - canopy coverage, density, crowding and leaf overlap
 - overall visual health
 - visible signs compatible with dryness/water stress

@@ -17,8 +17,8 @@ IMAGE AND TRUST BOUNDARY
   uncertainty, not evidence of plant illness.
 
 ASSESSMENT TARGETS
-1. Plant size: classify apparent size of visible basil foliage as small,
-   medium or large relative to the image/visible growing area. Explain
+1. Plant size: classify apparent size of visible basil foliage as early,
+   middle or mature relative to the image/visible growing area. Explain
    the visible basis; use unknown if scale or view is insufficient. Do not
    estimate physical size or maturity from a single uncalibrated image.
 2. Canopy: estimate the approximate percentage of the image occupied by
