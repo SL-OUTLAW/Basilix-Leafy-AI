@@ -40,10 +40,12 @@ def _safe_image(image_path: str | Path) -> tuple[bytes, int, int]:
     root = Path(
         os.getenv(
             "CAMERA_IMAGE_DIR",
-            str(Path(__file__).resolve().parents[3] / "camera_images"),
+            str(Path(__file__).resolve().parents[2] / "camera_images"),
         )
     ).resolve()
+
     candidate = Path(image_path).resolve()
+
     if not candidate.is_relative_to(root) or not candidate.is_file():
         raise VisionError("Camera image path is outside the approved directory")
     if candidate.suffix.lower() not in (".jpg", ".jpeg", ".png"):
@@ -123,7 +125,7 @@ async def analyse_image(image_path: str | Path) -> dict:
     except (asyncio.TimeoutError, TimeoutError) as exc:
         raise VisionError("Gemini vision request timed out") from exc
     except Exception as exc:
-
+        print(exc)
         raise VisionError("Gemini vision request failed") from exc
 
     try:

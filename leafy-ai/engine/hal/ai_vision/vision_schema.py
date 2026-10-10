@@ -4,7 +4,8 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class StrictModel(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    # caused error 400 with gemini API
+    pass
 
 
 class ImageQuality(StrictModel):
@@ -25,7 +26,7 @@ class ImageQuality(StrictModel):
 
 
 class PlantSize(StrictModel):
-    category: Literal["none", "small", "medium", "large", "unknown"]
+    category: Literal["none", "early", "middle", "mature", "unknown"]
     uniformity: Literal["uniform", "mixed", "unknown"]
     evidence: str = Field(min_length=1, max_length=300)
 
