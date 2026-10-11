@@ -618,7 +618,7 @@ CREATE INDEX idx_harvest_records_harvested_at
 
 CREATE TABLE task_executions (
     execution_id BIGSERIAL PRIMARY KEY,
-    schedule_id BIGINT NOT NULL,
+    schedule_id BIGINT,
     scheduled_for TIMESTAMPTZ NOT NULL,
     started_at TIMESTAMPTZ,
     completed_at TIMESTAMPTZ,
@@ -647,7 +647,7 @@ CREATE TABLE task_executions (
         REFERENCES farm_schedule (
             schedule_id
         )
-        ON DELETE CASCADE
+        ON DELETE SET NULL
 );
 
 

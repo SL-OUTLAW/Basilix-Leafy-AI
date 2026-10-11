@@ -10,19 +10,57 @@ const sensorCards = [
   ["Water Temperature", "waterTemperature", "blue"],
   ["Humidity", "humidity", "orange"],
   ["Dew Point", "dewPoint", "orange"],
-  ["Water Level", "waterLevel", "blue", "water"]
+  ["Water Level", "waterLevel", "blue"],
 ];
 
-function MonitoringTab({ data = null, loading = false, error = false, token, onTokenRefresh }) {
+function MonitoringTab({
+  data = null,
+  loading = false,
+  error = false,
+  token,
+  onTokenRefresh,
+}) {
   const sensors = data?.sensors ?? {};
+  const cameras = data?.cameras ?? [];
+
   return (
     <div className={styles.monitoringLayout}>
-      <div className={styles.leftColumn}>
-        <CameraCard data={data?.camera} levels={data?.levels} loading={loading} error={error} token={token} onTokenRefresh={onTokenRefresh} />
+      <section className={styles.topGrid}>
+        <CameraCard
+          title="Level 1 Camera"
+          level={1}
+          cameras={cameras}
+          loading={loading}
+          error={error}
+          token={token}
+          onTokenRefresh={onTokenRefresh}
+        />
+
+        <CameraCard
+          title="Level 2 Camera"
+          level={2}
+          cameras={cameras}
+          loading={loading}
+          error={error}
+          token={token}
+          onTokenRefresh={onTokenRefresh}
+        />
+
         <HarvestCard data={data?.harvest} loading={loading} error={error} />
-      </div>
+      </section>
+
       <section className={styles.sensorPanel}>
-        <div className={styles.groupHeader}><div><h2>Farm Sensors</h2><p>Latest live sensor readings</p></div><span>{sensorCards.length} sensors</span></div>
+        <div className={styles.groupHeader}>
+          <div>
+            <h2>Farm Sensors</h2>
+            <p>Latest live sensor readings</p>
+          </div>
+
+          <span className={styles.sensorCount}>
+            {sensorCards.length} sensors
+          </span>
+        </div>
+
         <div className={styles.sensorGrid}>
           {sensorCards.map(([title, key, tone, type]) => (
             <FarmSensorCard
@@ -42,4 +80,5 @@ function MonitoringTab({ data = null, loading = false, error = false, token, onT
     </div>
   );
 }
+
 export default MonitoringTab;

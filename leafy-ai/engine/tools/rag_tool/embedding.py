@@ -1,6 +1,5 @@
 import ollama
 
-
 EMBEDDING_MODEL = "nomic-embed-text"
 EMBEDDING_DIMENSIONS = 768
 
@@ -14,9 +13,6 @@ async def embed_text(text: str) -> list[float]:
     response = await ollama_client.embed(
         model=EMBEDDING_MODEL,
         input=text,
-        options={
-            "num_gpu": 0,
-        },
     )
 
     embedding = response["embeddings"][0]

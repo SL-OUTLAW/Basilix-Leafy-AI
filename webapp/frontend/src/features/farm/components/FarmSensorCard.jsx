@@ -46,22 +46,6 @@ function Sparkline({ values = [] }) {
   );
 }
 
-function WaterGauge({ percentage }) {
-  const value = Number.isFinite(percentage)
-    ? Math.min(100, Math.max(0, percentage))
-    : null;
-
-  if (value === null) {
-    return null;
-  }
-
-  return (
-    <div className={styles.waterGauge}>
-      <div className={styles.waterFill} style={{ height: `${value}%` }} />
-    </div>
-  );
-}
-
 function SensorTypeIcon({ sensorType, title }) {
   const Icon = getSystemIcon({
     sensorType: sensorType || title,
@@ -259,8 +243,6 @@ function FarmSensorCard({
   const hasTrend =
     !loading && !error && trend.filter(Number.isFinite).length >= 2;
 
-  const hasWaterLevel = !loading && !error && Number.isFinite(data?.percentage);
-
   const chartMessage = loading
     ? "Loading live data..."
     : error
@@ -275,10 +257,6 @@ function FarmSensorCard({
         : styles.connectionNeutral;
 
   const renderSummaryChart = () => {
-    if (type === "water" && hasWaterLevel) {
-      return <WaterGauge percentage={data.percentage} />;
-    }
-
     if (hasTrend) {
       return <Sparkline values={trend} />;
     }

@@ -11,7 +11,7 @@ const HISTORY_TYPES = [
   "ambient_temperature",
   "humidity",
   "dew_point",
-  "water_level"
+  "water_level",
 ];
 
 function formatSensorStatus(sensor) {
@@ -28,7 +28,10 @@ function formatSensorStatus(sensor) {
   }
 
   const recordedAt = new Date(sensor.recorded_at).getTime();
-  if (!Number.isFinite(recordedAt) || Date.now() - recordedAt > SENSOR_ONLINE_THRESHOLD_MS) {
+  if (
+    !Number.isFinite(recordedAt) ||
+    Date.now() - recordedAt > SENSOR_ONLINE_THRESHOLD_MS
+  ) {
     return "Offline";
   }
 
@@ -40,21 +43,19 @@ function formatSensorStatus(sensor) {
 }
 
 function mapRawReadings(response) {
-  const readings = Array.isArray(response?.readings)
-    ? response.readings
-    : [];
+  const readings = Array.isArray(response?.readings) ? response.readings : [];
 
   return readings
     .map((item) => ({
       time: item?.time,
       value: Number(item?.value),
-      qualityStatus: item?.quality_status
+      qualityStatus: item?.quality_status,
     }))
     .filter(
       (item) =>
         item.time &&
         Number.isFinite(new Date(item.time).getTime()) &&
-        Number.isFinite(item.value)
+        Number.isFinite(item.value),
     );
 }
 
@@ -72,7 +73,7 @@ function formatSensorUnit(unit) {
     degC: "°C",
     degF: "°F",
     "uS/cm": "µS/cm",
-    "uS_cm": "µS/cm"
+    uS_cm: "µS/cm",
   };
 
   return units[normalized] || normalized;
@@ -87,7 +88,7 @@ function formatSensorValue(sensorType, value, unit) {
 
   const formatted = numericValue.toLocaleString(undefined, {
     minimumFractionDigits: 0,
-    maximumFractionDigits: sensorDecimals(sensorType)
+    maximumFractionDigits: sensorDecimals(sensorType),
   });
 
   return `${formatted}${unit ? ` ${unit}` : ""}`;
@@ -107,9 +108,7 @@ function mapSensor(sensor, readingsResponse) {
     id: sensor.sensor_id,
     type: sensor.sensor_type,
     value: formatSensorValue(sensor.sensor_type, value, unit),
-    rawValue: Number.isFinite(numericValue)
-      ? numericValue
-      : null,
+    rawValue: Number.isFinite(numericValue) ? numericValue : null,
     unit,
     status: formatSensorStatus(sensor),
     online: formatSensorStatus(sensor) === "Normal",
@@ -117,10 +116,6 @@ function mapSensor(sensor, readingsResponse) {
     recordedAt: sensor.recorded_at,
     history,
     trend: history.map((item) => item.value),
-    percentage:
-      sensor.sensor_type === "water_level" && Number.isFinite(numericValue)
-        ? numericValue
-        : undefined
   };
 }
 
@@ -129,17 +124,17 @@ export async function getSensorReadings(
   onTokenRefresh,
   sensorType,
   startTime,
-  endTime
+  endTime,
 ) {
   const params = new URLSearchParams({
     start_time: new Date(startTime).toISOString(),
-    end_time: new Date(endTime).toISOString()
+    end_time: new Date(endTime).toISOString(),
   });
 
   return apiRequest(
     `/api/farm/sensors/${encodeURIComponent(sensorType)}/readings?${params.toString()}`,
     token,
-    onTokenRefresh
+    onTokenRefresh,
   );
 }
 
@@ -155,21 +150,18 @@ function appendLiveReading(history, value, recordedAt) {
   const nextPoint = {
     time: new Date(timestamp).toISOString(),
     value: numericValue,
-    qualityStatus: "VALID"
+    qualityStatus: "VALID",
   };
 
   const withoutDuplicate = current.filter(
-    (item) => new Date(item?.time).getTime() !== timestamp
+    (item) => new Date(item?.time).getTime() !== timestamp,
   );
 
   const cutoff = timestamp - LIVE_CHART_WINDOW_MS;
 
   return [...withoutDuplicate, nextPoint]
     .filter((item) => new Date(item?.time).getTime() >= cutoff)
-    .sort(
-      (a, b) =>
-        new Date(a.time).getTime() - new Date(b.time).getTime()
-    );
+    .sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime());
 }
 
 function buildLevels(cameras) {
@@ -179,8 +171,8 @@ function buildLevels(cameras) {
     camera: {
       id: camera.camera_id,
       name: camera.camera_name,
-      status: String(camera.status || "").toLowerCase()
-    }
+      status: String(camera.status || "").toLowerCase(),
+    },
   }));
 }
 
@@ -189,47 +181,64 @@ function buildHarvest(historyResponse, activeCycle) {
     ? historyResponse.grow_cycles
     : [];
 
-  const latest = cycles[0] || null;
-  const latestSummary = latest?.harvest_summary || null;
-
-  if (activeCycle) {
-    return {
-      predictedValue: "—",
-      label: "Current Grow Cycle",
-      trackerTitle: activeCycle.cycle_name || "Active Grow Cycle",
-      trackerText: `Started ${new Date(activeCycle.started_at).toLocaleDateString()}. Harvest prediction is not supplied by the Engine.`
-    };
+  if (!activeCycle) {
+    return null;
   }
 
-  if (latestSummary) {
-    return {
-      predictedValue: `${Math.round(latestSummary.total_harvest_weight_g || 0)} g`,
-      label: "Latest Harvest",
-      trackerTitle: latest.cycle_name || "Harvest History",
-      trackerText: `${latestSummary.harvest_count || 0} harvest record(s) from the latest completed grow cycle.`
-    };
-  }
+  const historyCycle =
+    cycles.find((cycle) => cycle.grow_cycle_id === activeCycle.grow_cycle_id) ||
+    null;
 
-  return null;
+  const summary =
+    historyCycle?.harvest_summary || activeCycle?.harvest_summary || {};
+
+  const harvestCount = Number(summary.harvest_count || 0);
+
+  const totalWeight = Number(summary.total_harvest_weight_g || 0);
+
+  return {
+    grow_cycle_id: activeCycle.grow_cycle_id,
+
+    cycleName: activeCycle.cycle_name,
+
+    status: activeCycle.status,
+
+    startedAt: activeCycle.started_at,
+
+    completedAt: activeCycle.completed_at || null,
+
+    latestWeight:
+      summary.latest_harvest_weight_g ??
+      (harvestCount > 0 ? totalWeight : null),
+
+    totalWeight,
+
+    harvestCount,
+
+    harvestPrediction: null,
+  };
 }
 
-export async function getFarmData(
-  token,
-  onTokenRefresh
-) {
+export async function getFarmData(token, onTokenRefresh) {
   const baseRequests = [
     apiRequest("/api/farm/sensors", token, onTokenRefresh),
     apiRequest("/api/farm/cameras", token, onTokenRefresh),
     apiRequest("/api/grow-cycles/active", token, onTokenRefresh),
-    apiRequest("/api/harvest/history?limit=5&include_active=true", token, onTokenRefresh),
+    apiRequest(
+      "/api/harvest/history?limit=5&include_active=true",
+      token,
+      onTokenRefresh,
+    ),
     apiRequest("/api/farm/controls", token, onTokenRefresh),
-    apiRequest("/api/task-executions?task_action=RUN_AI_ANALYSIS&limit=10&offset=0", token, onTokenRefresh)
+    apiRequest(
+      "/api/task-executions?task_action=RUN_AI_ANALYSIS&limit=10&offset=0",
+      token,
+      onTokenRefresh,
+    ),
   ];
 
   const initialEnd = new Date();
-  const initialStart = new Date(
-    initialEnd.getTime() - LIVE_CHART_WINDOW_MS
-  );
+  const initialStart = new Date(initialEnd.getTime() - LIVE_CHART_WINDOW_MS);
 
   const readingRequests = HISTORY_TYPES.map((sensorType) =>
     getSensorReadings(
@@ -237,8 +246,8 @@ export async function getFarmData(
       onTokenRefresh,
       sensorType,
       initialStart,
-      initialEnd
-    )
+      initialEnd,
+    ),
   );
 
   const [
@@ -249,10 +258,7 @@ export async function getFarmData(
     controlsResult,
     analysisResult,
     ...readingResults
-  ] = await Promise.allSettled([
-    ...baseRequests,
-    ...readingRequests
-  ]);
+  ] = await Promise.allSettled([...baseRequests, ...readingRequests]);
 
   if (
     sensorsResult.status === "rejected" &&
@@ -278,14 +284,11 @@ export async function getFarmData(
   HISTORY_TYPES.forEach((sensorType, index) => {
     const result = readingResults[index];
 
-    readings[sensorType] =
-      result?.status === "fulfilled"
-        ? result.value
-        : null;
+    readings[sensorType] = result?.status === "fulfilled" ? result.value : null;
   });
 
   const sensorByType = Object.fromEntries(
-    sensors.map((sensor) => [sensor.sensor_type, sensor])
+    sensors.map((sensor) => [sensor.sensor_type, sensor]),
   );
 
   const activeCycle =
@@ -294,12 +297,11 @@ export async function getFarmData(
       : null;
 
   const harvestHistory =
-    harvestResult.status === "fulfilled"
-      ? harvestResult.value.history
-      : null;
+    harvestResult.status === "fulfilled" ? harvestResult.value.history : null;
 
   const analyses =
-    analysisResult.status === "fulfilled" && Array.isArray(analysisResult.value.executions)
+    analysisResult.status === "fulfilled" &&
+    Array.isArray(analysisResult.value.executions)
       ? analysisResult.value.executions
       : [];
 
@@ -315,47 +317,40 @@ export async function getFarmData(
         ec: mapSensor(sensorByType.ec, readings.ec),
         temperature: mapSensor(
           sensorByType.ambient_temperature,
-          readings.ambient_temperature
+          readings.ambient_temperature,
         ),
         waterTemperature: mapSensor(
           sensorByType.water_temperature,
-          readings.water_temperature
+          readings.water_temperature,
         ),
         humidity: mapSensor(sensorByType.humidity, readings.humidity),
         dewPoint: mapSensor(sensorByType.dew_point, readings.dew_point),
-        waterLevel: mapSensor(
-          sensorByType.water_level,
-          readings.water_level
-        )
+        waterLevel: mapSensor(sensorByType.water_level, readings.water_level),
       },
       camera: cameras[0]
         ? {
-            status: String(cameras[0].status || "").toLowerCase()
+            status: String(cameras[0].status || "").toLowerCase(),
           }
         : null,
       cameras,
       levels: buildLevels(cameras),
-      harvest: buildHarvest(harvestHistory, activeCycle)
+      harvest: buildHarvest(harvestHistory, activeCycle),
     },
     insight: {
-      analyses
+      analyses,
     },
     routine: {
       activeCycle,
-      history: harvestHistory
+      history: harvestHistory,
     },
-    controls
+    controls,
   };
 }
 
-export async function getCameraImageBlob(
-  cameraId,
-  token,
-  onTokenRefresh
-) {
+export async function getCameraImageBlob(cameraId, token, onTokenRefresh) {
   let activeToken = token;
   let response = await fetch(`/api/farm/cameras/${cameraId}/image`, {
-    headers: { Authorization: `Bearer ${activeToken}` }
+    headers: { Authorization: `Bearer ${activeToken}` },
   });
 
   if (response.status === 401) {
@@ -364,7 +359,7 @@ export async function getCameraImageBlob(
     activeToken = refreshed.token;
     onTokenRefresh?.(activeToken);
     response = await fetch(`/api/farm/cameras/${cameraId}/image`, {
-      headers: { Authorization: `Bearer ${activeToken}` }
+      headers: { Authorization: `Bearer ${activeToken}` },
     });
   }
 
@@ -373,85 +368,60 @@ export async function getCameraImageBlob(
 }
 
 export function setLighting(token, onTokenRefresh, levelNo, enabled) {
-  return apiRequest(
-    "/api/farm/controls/lighting",
-    token,
-    onTokenRefresh,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        level_no: levelNo,
-        enabled
-      })
-    }
-  );
+  return apiRequest("/api/farm/controls/lighting", token, onTokenRefresh, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      level_no: levelNo,
+      enabled,
+    }),
+  });
 }
 
 export function setIrrigation(token, onTokenRefresh, enabled) {
-  return apiRequest(
-    "/api/farm/controls/irrigation",
-    token,
-    onTokenRefresh,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ enabled })
-    }
-  );
+  return apiRequest("/api/farm/controls/irrigation", token, onTokenRefresh, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ enabled }),
+  });
 }
 
 export function setFan(token, onTokenRefresh, enabled) {
-  return apiRequest(
-    "/api/farm/controls/fan",
-    token,
-    onTokenRefresh,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ enabled })
-    }
-  );
+  return apiRequest("/api/farm/controls/fan", token, onTokenRefresh, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ enabled }),
+  });
 }
 
 export function setPhTarget(token, onTokenRefresh, targetValue) {
-  return apiRequest(
-    "/api/farm/controls/ph/target",
-    token,
-    onTokenRefresh,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        target_value: Number(targetValue)
-      })
-    }
-  );
+  return apiRequest("/api/farm/controls/ph/target", token, onTokenRefresh, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      target_value: Number(targetValue),
+    }),
+  });
 }
 
 export function setEcTarget(token, onTokenRefresh, targetValue) {
-  return apiRequest(
-    "/api/farm/controls/ec/target",
-    token,
-    onTokenRefresh,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        target_value: Number(targetValue)
-      })
-    }
-  );
+  return apiRequest("/api/farm/controls/ec/target", token, onTokenRefresh, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      target_value: Number(targetValue),
+    }),
+  });
 }
 
 export function mergeFarmSensorSnapshot(data, payload) {
@@ -466,7 +436,7 @@ export function mergeFarmSensorSnapshot(data, payload) {
     ambient_temperature: "temperature",
     humidity: "humidity",
     dew_point: "dewPoint",
-    water_level: "waterLevel"
+    water_level: "waterLevel",
   };
 
   const sensors = { ...data.monitoring.sensors };
@@ -481,12 +451,8 @@ export function mergeFarmSensorSnapshot(data, payload) {
 
     const current = sensors[key] || {};
     const number = Number(reading?.value);
-    const unit = formatSensorUnit(
-      reading?.unit || current.unit
-    );
-    const valid =
-      reading?.value != null &&
-      reading?.quality_status === "VALID";
+    const unit = formatSensorUnit(reading?.unit || current.unit);
+    const valid = reading?.value != null && reading?.quality_status === "VALID";
     const history = valid
       ? appendLiveReading(current.history, number, recordedAt)
       : Array.isArray(current.history)
@@ -498,18 +464,12 @@ export function mergeFarmSensorSnapshot(data, payload) {
       value: formatSensorValue(type, reading?.value, unit),
       rawValue: Number.isFinite(number) ? number : null,
       unit,
-      status: valid
-        ? "Normal"
-        : reading?.quality_status || "Unavailable",
+      status: valid ? "Normal" : reading?.quality_status || "Unavailable",
       online: valid,
       qualityStatus: reading?.quality_status,
       recordedAt,
       history,
       trend: history.map((item) => item.value),
-      percentage:
-        type === "water_level" && Number.isFinite(number)
-          ? number
-          : current.percentage
     };
   });
 
@@ -517,8 +477,7 @@ export function mergeFarmSensorSnapshot(data, payload) {
     ...data,
     monitoring: {
       ...data.monitoring,
-      sensors
-    }
+      sensors,
+    },
   };
 }
-

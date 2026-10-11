@@ -10,10 +10,26 @@ import ManualOverrideTab from "./tabs/ManualOverrideTab";
 import styles from "./Farm.module.css";
 
 const tabs = [
-  { id: "monitoring", label: "Monitoring", Icon: Activity },
-  { id: "insight", label: "AI Insight", Icon: Brain },
-  { id: "routine", label: "Grow Routine", Icon: Sprout },
-  { id: "override", label: "Manual Override", Icon: SlidersHorizontal }
+  {
+    id: "monitoring",
+    label: "Monitoring",
+    Icon: Activity,
+  },
+  {
+    id: "insight",
+    label: "AI Insight",
+    Icon: Brain,
+  },
+  {
+    id: "routine",
+    label: "Grow Routine",
+    Icon: Sprout,
+  },
+  {
+    id: "override",
+    label: "Manual Override",
+    Icon: SlidersHorizontal,
+  },
 ];
 
 function Farm({
@@ -22,10 +38,12 @@ function Farm({
   error = "",
   token,
   onTokenRefresh,
+  onRefresh,
   user,
-  access
+  access,
 }) {
   const [activeTab, setActiveTab] = useState("monitoring");
+
   const hasError = Boolean(error);
 
   return (
@@ -48,11 +66,7 @@ function Farm({
       )}
 
       {activeTab === "insight" && (
-        <AIInsightTab
-          data={data?.insight}
-          loading={loading}
-          error={hasError}
-        />
+        <AIInsightTab data={data?.insight} loading={loading} error={hasError} />
       )}
 
       {activeTab === "routine" && (
@@ -62,6 +76,7 @@ function Farm({
           error={hasError}
           token={token}
           onTokenRefresh={onTokenRefresh}
+          onRefresh={onRefresh}
           access={access}
         />
       )}
