@@ -1,16 +1,8 @@
 import styles from "./StatusCard.module.css";
 
-function StatusCard({
-  title,
-  value,
-  note,
-  icon: Icon,
-  tone = "green"
-}) {
+function StatusCard({ title, value, note, icon: Icon, tone = "green" }) {
   const displayValue =
-    value === null || value === undefined || value === ""
-      ? "—"
-      : value;
+    value === null || value === undefined || value === "" ? "—" : value;
 
   const displayNote = note || "Not available";
 
@@ -18,10 +10,7 @@ function StatusCard({
     <div className={`${styles.card} ${styles[tone]}`}>
       <div className={styles.iconArea}>
         {Icon ? (
-          <Icon
-            className={styles.iconGraphic}
-            aria-hidden="true"
-          />
+          <Icon className={styles.iconGraphic} aria-hidden="true" />
         ) : null}
       </div>
 

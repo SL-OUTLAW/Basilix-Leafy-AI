@@ -266,7 +266,6 @@ The repository includes a separate database Docker Compose configuration.
 | [Engine README](leafy-ai/engine/README.md)               | Service lifecycle, scheduler, sensors, cameras and farm controls |
 | [AI Core README](leafy-ai/ai_core/README.md)             | AI Core documentation                                            |
 | [Vision README](leafy-ai/engine/hal/ai_vision/README.md) | Camera-image analysis and Vision configuration                   |
-| [Backend API Documentation](webapp/backend/API.md)       | API routes and service communication                             |
 
 <br></br>
 

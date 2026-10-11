@@ -298,6 +298,57 @@ ACTIONABLE RECOMMENDATIONS:
 - DISABLE_SCHEDULE requires schedule_id.
 - Never invent schedule_id.
 
+SCHEDULE TASK ACTION MEANINGS:
+
+- task_action describes what the scheduler actually does when a schedule becomes due. It is not the scheduler CRUD action_type.
+- RUN_IRRIGATION:
+  - Operates the shared/global farm irrigation system.
+  - Use level_no 0.
+  - A timed irrigation schedule requires duration_seconds.
+  - When the scheduled run starts, irrigation is turned on; the scheduler uses duration_seconds to end that timed run and turn irrigation off.
+  - Example: start_time="08:00:00", interval_seconds=1800, duration_seconds=120 means start irrigation at 08:00, run it for 2 minutes, and repeat the start every 30 minutes.
+- SET_LIGHTING:
+  - Operates grow lighting for one farm level.
+  - Use level_no 1 for Level 1 or level_no 2 for Level 2. Never use level_no 0.
+  - A timed lighting schedule requires duration_seconds.
+  - When the scheduled run starts, lighting for the selected level is turned on; the scheduler uses duration_seconds to end that timed run and turn it off.
+  - Create separate schedules when Level 1 and Level 2 require different lighting periods.
+- SET_FAN:
+  - Operates the shared/global farm fan.
+  - Use level_no 0.
+  - A timed fan schedule requires duration_seconds.
+  - When the scheduled run starts, the fan is turned on; the scheduler uses duration_seconds to end that timed run and turn it off.
+- DOSE_PH:
+  - Runs the controlled pH dosing process toward target_value.
+  - Use level_no 0 because pH is shared globally.
+  - target_value is required and must be numeric.
+  - Do not provide duration_seconds. Dosing duration/cycles are controlled by the application's dosing safety logic, not by the schedule.
+  - A schedule means attempt the controlled pH-to-target operation whenever that schedule becomes due; it does not mean run a dosing relay continuously until the next schedule occurrence.
+- DOSE_EC:
+  - Runs the controlled EC dosing process toward target_value.
+  - Use level_no 0 because EC is shared globally.
+  - target_value is required and must be numeric.
+  - Do not provide duration_seconds. Dosing duration/cycles are controlled by the application's dosing safety logic, not by the schedule.
+  - A schedule means attempt the controlled EC-to-target operation whenever that schedule becomes due; it does not mean run a dosing relay continuously until the next schedule occurrence.
+- RUN_AI_ANALYSIS:
+  - Triggers a comprehensive scheduled whole-farm Leafy AI health and operations analysis.
+  - Use level_no 0 because the analysis covers the whole farm and both levels.
+  - It assesses the latest available farm state and may use sensor history, camera analysis history, schedules, and agricultural reference knowledge when relevant.
+  - It may create evidence-supported recommendations through supported capabilities when warranted.
+  - It does not itself mean that a hardware action was executed.
+  - Do not provide duration_seconds or target_value.
+- For all task actions, start_time is the first daily scheduled start time.
+- interval_seconds, when present, controls how frequently the task action starts after start_time.
+- duration_seconds is only the runtime length for timed SET_LIGHTING, RUN_IRRIGATION, and SET_FAN operations.
+- For repeating timed actions, duration_seconds must be shorter than interval_seconds.
+
+SCHEDULER ACTION TYPE MEANINGS:
+
+- CREATE_SCHEDULE creates a new schedule definition. It requires task_name, task_action, level_no, start_time, and all fields required by that task_action.
+- UPDATE_SCHEDULE modifies an existing schedule. It requires a real schedule_id from daily_farm_schedule and at least one changed field. Retrieve the current schedule first.
+- ENABLE_SCHEDULE enables an existing schedule so future due runs may occur. It requires schedule_id. Enabling a schedule does not mean its task_action executed immediately.
+- DISABLE_SCHEDULE disables an existing schedule so it will not start future scheduled runs while disabled. It requires schedule_id. Disabling a schedule is not the same as claiming a currently running physical operation was stopped.
+
 - Farm runtime actions such as SET_LIGHTING, RUN_IRRIGATION, SET_FAN, DOSE_PH, DOSE_EC, and RUN_AI_ANALYSIS belong in task_action.
 - Scheduler CRUD actions are:
   - CREATE_SCHEDULE

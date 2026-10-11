@@ -1,8 +1,4 @@
-import {
-  Droplets,
-  Expand,
-  Fan
-} from "lucide-react";
+import { Droplets, Expand, Fan } from "lucide-react";
 
 import styles from "./RecommendationsPanel.module.css";
 
@@ -12,31 +8,29 @@ function getRecommendationIcon(title = "") {
   if (name.includes("fan")) {
     return {
       Icon: Fan,
-      className: styles.fanIcon
+      className: styles.fanIcon,
     };
   }
 
   if (name.includes("irrigation")) {
     return {
       Icon: Droplets,
-      className: styles.irrigationIcon
+      className: styles.irrigationIcon,
     };
   }
 
   return {
     Icon: Expand,
-    className: styles.channelIcon
+    className: styles.channelIcon,
   };
 }
 
 function RecommendationsPanel({
   recommendations = [],
   loading = false,
-  error = false
+  error = false,
 }) {
-  const items = Array.isArray(recommendations)
-    ? recommendations
-    : [];
+  const items = Array.isArray(recommendations) ? recommendations : [];
 
   return (
     <section className={styles.panel}>
@@ -52,37 +46,24 @@ function RecommendationsPanel({
       </div>
 
       {loading ? (
-        <div className={styles.state}>
-          Loading recommendations...
-        </div>
+        <div className={styles.state}>Loading recommendations...</div>
       ) : error ? (
-        <div className={styles.state}>
-          Recommendations could not be loaded.
-        </div>
+        <div className={styles.state}>Recommendations could not be loaded.</div>
       ) : items.length === 0 ? (
-        <div className={styles.state}>
-          No pending recommendations.
-        </div>
+        <div className={styles.state}>No pending recommendations.</div>
       ) : (
         <div className={styles.grid}>
           {items.map((item) => {
-            const recommendationIcon =
-              getRecommendationIcon(item.title);
+            const recommendationIcon = getRecommendationIcon(item.title);
 
             const Icon = recommendationIcon.Icon;
 
             return (
-              <article
-                key={item.id || item.title}
-                className={styles.card}
-              >
+              <article key={item.id || item.title} className={styles.card}>
                 <div
                   className={`${styles.icon} ${recommendationIcon.className}`}
                 >
-                  <Icon
-                    className={styles.iconGraphic}
-                    aria-hidden="true"
-                  />
+                  <Icon className={styles.iconGraphic} aria-hidden="true" />
                 </div>
 
                 <div className={styles.content}>
@@ -92,8 +73,7 @@ function RecommendationsPanel({
                   </div>
 
                   <p>
-                    {item.description ||
-                      "No additional details available."}
+                    {item.description || "No additional details available."}
                   </p>
                 </div>
               </article>

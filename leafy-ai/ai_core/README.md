@@ -1,117 +1,168 @@
-# Leafy AI LLM
+# Leafy AI Core
 
-Provides main LLM brain for Leafy AI.
+The AI Core is Leafy AI's dedicated LLM reasoning service. It runs as a FastAPI service on port `8001`, uses the local Ollama model `leafy-ai`, and calls approved Engine tools when farm data or application actions are required.
 
-Uses a local Ollama model `qwen3.5:9b-q4_K_M` to interpret user requests, process farm information, use available capabilities when required, and return a structured response for the rest of the Leafy system.
+The AI Core does not communicate directly with farm hardware or the database. Farm capabilities are requested through the Engine using authenticated service-to-service calls.
 
----
-
-### `llm_client.py`
-
-Main entry point for the LLM.
-
-It:
-
-- loads the system prompt and response schema
-- sends requests to Ollama
-- handles native capability calls
-- executes approved Python capabilities
-- returns capability results to the model
-- generates the final structured response
-- validates the final response
-
-Main function:
-
-```python
-leafy_ai(messages)
-```
-
-### `llm_tools.py`
-
-Contains the tools available to the LLM.
-
-Capabilities are implemented as normal Python functions and registered in:
-
-```python
-TOOLS = [...]
-```
-
-The internal mapping:
-
-```python
-AVAILABLE_TOOLS = {
-    tool.__name__: tool
-    for tool in TOOLS
-}
-```
-
-is used to route model requests to the correct Python function.
-
-Internal capability names should not be exposed in user-facing responses.
-
-### `system_prompt.md`
-
-Contains Leafy's behavioural instructions, including:
-
-- Leafy identity and role
-- farm-specific information
-- data handling rules
-- safety requirements
-- capability-use rules
-- anti-hallucination rules
-- response behaviour
-- output requirements
-
-The prompt is loaded at runtime so it can be changed without rebuilding the Ollama model.
-
-### `schema.json`
-
-Defines the structure of the final response returned by Leafy AI.
-
-Current response types are:
+## Architecture
 
 ```text
-chat
-recommended_action
-farm_analysis
+Engine
+  |
+  | POST /leafy-ai
+  | Ed25519 service JWT
+  v
+AI Core :8001
+  |
+  | Ollama API
+  v
+Ollama :11434
+  |
+  +-- leafy-ai model
 ```
 
-The schema is used with Ollama structured output to ensure the final response follows the expected format.
 
----
+## Main Files
 
-### `Modelfile`
+| File                  | Purpose                                                               |
+| --------------------- | --------------------------------------------------------------------- |
+| `api.py`              | FastAPI service and authenticated `/leafy-ai` endpoint                |
+| `main.py`             | LLM orchestration, tool loop and final structured response validation |
+| `llm_api.py`          | Authenticated calls from AI Core to Engine tools                      |
+| `llm_auth.py`         | Ed25519 service-token creation and validation                         |
+| `llm_tools.py`        | Ollama tool schemas exposed to the model                              |
+| `system_prompt.md`    | Farm behaviour, safety and evidence rules                             |
+| `schema.json`         | Final response schema                                                 |
+| `modelfile/Modelfile` | Ollama model definition                                               |
 
-Defines the base Ollama model and stable model parameters.
+## Model
 
-Create the model with:
+The application uses:
+
+```text
+MODEL = leafy-ai
+KEEP_ALIVE = -1
+MAX_TOOL_ROUNDS = 10
+```
+
+The `leafy-ai` Ollama model is built from the repository Modelfile, which uses the project's configured Qwen-based model.
+
+Create it with:
 
 ```bash
+cd leafy-ai/ai_core/modelfile
 ollama create leafy-ai -f Modelfile
 ```
 
-Run it with:
-
-```bash
-ollama run leafy-ai
-```
-
-## Running
-
-Make sure Ollama is running and the model exists:
+Verify it with:
 
 ```bash
 ollama list
 ```
 
-Then run:
+## API
+
+### `POST /leafy-ai`
+
+The Engine submits a task and optional context:
+
+```json
+{
+  "task": "Review current farm conditions",
+  "context": {}
+}
+```
+
+The endpoint requires a valid Engine-issued Ed25519 bearer token. Successful responses wrap the structured Leafy result:
+
+```json
+{
+  "success": true,
+  "result": {
+    "response_type": "leafy_ai",
+    "content": "...",
+    "sources_used": []
+  }
+}
+```
+
+The exact final fields are controlled by `schema.json`.
+
+## Available Tools
+
+The current model tool schemas include:
+
+| Tool                      | Purpose                                                     |
+| ------------------------- | ----------------------------------------------------------- |
+| `sensor_history`          | Retrieve historical farm sensor information                 |
+| `camera_analysis_history` | Retrieve structured camera-analysis history                 |
+| `rag_tool`                | Retrieve relevant agricultural reference chunks             |
+| `daily_farm_schedule`     | Retrieve enabled farm schedules                             |
+| `pending_recommendations` | Retrieve pending AI recommendations                         |
+| `pending_approvals`       | Retrieve pending approval requests                          |
+| `create_recommendations`  | Record evidence-based farm recommendations/proposed actions |
+| `get_harvest_data`        | Retrieve grow-cycle and harvest information                 |
+
+The AI Core sends requested tool calls to `ENGINE_URL/tools/execute`. Tool implementations and executions remain in the Engine.
+
+## Safety and Behaviour
+
+`system_prompt.md` defines the current behavioural boundary. Important rules include:
+
+- remain within Leafy AI farm-management scope
+- do not invent missing sensor, camera, schedule, approval or execution data
+- do not treat a single reading as a trend
+- use structured camera-analysis records rather than claiming direct image access
+- use RAG only when agricultural reference information is required
+- create recommendations through the supported recommendation tool
+- do not claim an operation executed unless the application explicitly confirms execution
+- do not expose internal tools, APIs, database records, service architecture or hidden reasoning in user-facing content
+
+The **Engine**, not the LLM, remains responsible for action validity, risk classification, approval requirements and execution.
+
+## Service Authentication
+
+The AI Core uses Ed25519 keys generated by the root Compose `key-init` service.
+
+Docker paths:
+
+```env
+AI_CORE_PRIVATE_KEY_PATH=/run/keys/ai-core/private.pem
+SECURITY_PUBLIC_KEY_PATH=/run/keys/security/public.pem
+ENGINE_URL=http://engine:8000
+```
+
+Service JWTs are short-lived and validated for expected issuer/audience claims.
+
+## Ollama Connectivity
+
+In the Docker deployment, Ollama runs on the Docker host rather than in Compose:
+
+```env
+OLLAMA_HOST=http://host.docker.internal:11434
+```
+
+The Compose service maps `host.docker.internal` to the host gateway. Ollama must be running and reachable from Docker.
+
+For local non-Docker execution, the Ollama client normally reaches the local Ollama server directly.
+
+## Running Locally
 
 ```bash
-python llm_client.py
+cd leafy-ai/ai_core
+pip install -r requirements.txt
+uvicorn api:app --host 0.0.0.0 --port 8001
 ```
 
-The model is kept loaded with:
+The API requires its service-key files to exist before startup.
 
-```python
-keep_alive=-1
-```
+## Docker
+
+The root `docker-compose.yml` builds this directory and starts the API on internal port `8001`. The service is not published directly to LAN clients - the Engine communicates with it over the Compose network.
+
+
+
+## Related Documentation
+
+- [Project README](../../README.md)
+- [Engine README](../engine/README.md)

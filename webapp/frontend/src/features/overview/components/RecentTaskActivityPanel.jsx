@@ -9,7 +9,12 @@ function statusIcon(status) {
   return Clock3;
 }
 
-function RecentTaskActivityPanel({ executions = [], loading = false, error = false, onOpenSchedule }) {
+function RecentTaskActivityPanel({
+  executions = [],
+  loading = false,
+  error = false,
+  onOpenSchedule,
+}) {
   return (
     <section className={styles.panel}>
       <div className={styles.header}>
@@ -18,7 +23,9 @@ function RecentTaskActivityPanel({ executions = [], loading = false, error = fal
           <p>Latest scheduled farm and AI task executions.</p>
         </div>
         {onOpenSchedule && (
-          <button type="button" onClick={onOpenSchedule}>Open Schedule</button>
+          <button type="button" onClick={onOpenSchedule}>
+            Open Schedule
+          </button>
         )}
       </div>
 
@@ -36,7 +43,9 @@ function RecentTaskActivityPanel({ executions = [], loading = false, error = fal
               <article key={item.execution_id} className={styles.row}>
                 <ActionIcon type={item.task_action} size={18} />
                 <div>
-                  <strong>{item.task_name || item.task_action || "Scheduled task"}</strong>
+                  <strong>
+                    {item.task_name || item.task_action || "Scheduled task"}
+                  </strong>
                   <span>{item.time}</span>
                 </div>
                 <span className={styles.status}>
