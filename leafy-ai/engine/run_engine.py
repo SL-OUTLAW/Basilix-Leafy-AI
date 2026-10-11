@@ -12,7 +12,7 @@ def selector_loop_factory():
 
 async def main():
     config = uvicorn.Config(
-        "engine.main:app",
+        "main:app",
         host="127.0.0.1",
         port=8000,
     )

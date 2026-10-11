@@ -1,6 +1,6 @@
 from typing import Any
 
-from engine.managers.db_manager import run_query
+from managers.db_manager import run_query
 
 
 async def pending_recommendations(

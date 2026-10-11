@@ -1,8 +1,8 @@
 from datetime import datetime, timezone
 from typing import Any
 
-from engine.ai_core_client import run_ai
-from engine.security.emergency_stop import ai_enabled
+from ai_core_client import run_ai
+from security.emergency_stop import ai_enabled
 
 
 def create_ai_analysis_handler(

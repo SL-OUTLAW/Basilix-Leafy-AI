@@ -6,8 +6,8 @@ import httpx
 
 from fastapi.encoders import jsonable_encoder
 
-from engine.security.engine_auth import create_token
-from engine.security.emergency_stop import ai_enabled
+from security.engine_auth import create_token
+from security.emergency_stop import ai_enabled
 
 AI_CORE_URL = os.getenv(
     "AI_CORE_URL",

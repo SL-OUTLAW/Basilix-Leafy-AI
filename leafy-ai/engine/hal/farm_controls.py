@@ -3,12 +3,12 @@ import json
 
 from typing import Any
 
-from engine.hal.drivers import (
+from hal.drivers import (
     SixOutletPowerSystem,
 )
-from engine.logger.logger import audit_log
-from engine.managers.db_manager import get_connection, run_query
-from engine.managers.settings_manager import settings
+from logger.logger import audit_log
+from managers.db_manager import get_connection, run_query
+from managers.settings_manager import settings
 
 
 class FarmControls:

@@ -1,0 +1,132 @@
+services:
+  key-init:
+    image: alpine
+    restart: "no"
+    volumes:
+      - security-private:/keys/security-private
+      - security-public:/keys/security-public
+      - backend-private:/keys/backend-private
+      - backend-public:/keys/backend-public
+      - ai-core-private:/keys/ai-core-private
+      - ai-core-public:/keys/ai-core-public
+    command:
+      - /bin/sh
+      - -c
+      - |
+        set -eu
+        apk add --no-cache openssl
+
+        for name in security backend ai-core; do
+          priv=/keys/$${name}-private/private.pem
+          pub=/keys/$${name}-public/public.pem
+
+          [ -f "$$priv" ] || openssl genpkey -algorithm Ed25519 -out "$$priv"
+          [ -f "$$pub" ]  || openssl pkey -in "$$priv" -pubout -out "$$pub"
+
+          chmod 600 "$$priv"
+          chmod 644 "$$pub"
+        done
+
+  db:
+    build:
+      context: ./database
+      dockerfile: Dockerfile
+    container_name: leafy-ai-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:?Set DB_NAME in the root .env file}
+      POSTGRES_USER: ${DB_USER:?Set DB_USER in the root .env file}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in the root .env file}
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - leafy_ai_data:/var/lib/postgresql
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+    networks:
+      - leafy-network
+
+  engine:
+    build:
+      context: ./leafy-ai/engine
+      dockerfile: Dockerfile
+
+    container_name: leafy-ai-engine
+    restart: unless-stopped
+
+    environment:
+      DB_NAME: ${DB_NAME:?Set DB_NAME in the root .env file}
+      DB_USER: ${DB_USER:?Set DB_USER in the root .env file}
+      DB_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in the root .env file}
+      DB_HOST: ${DB_HOST:?Set DB_HOST in the root .env file}
+      DB_PORT: ${DB_PORT:-5432}
+
+      AI_CORE_PUBLIC_KEY_PATH: /run/keys/ai-core/public.pem
+      WEBAPP_BACKEND_PUBLIC_KEY_PATH: /run/keys/backend/public.pem
+      SECURITY_PRIVATE_KEY_PATH: /run/keys/security/private.pem
+
+      AI_CORE_URL: ${AI_CORE_URL:?Set AI_CORE_URL in the root .env file}
+
+      GEMINI_VISION_ENABLED: ${GEMINI_VISION_ENABLED:-false}
+      GEMINI_VISION_MODEL: ${GEMINI_VISION_MODEL:-gemini-3.8-flash}
+      GEMINI_VISION_THINKING_LEVEL: ${GEMINI_VISION_THINKING_LEVEL:-low}
+      GEMINI_VISION_BATCH_SIZE: ${GEMINI_VISION_BATCH_SIZE:-4}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_API_KEY_FILE: ${GEMINI_API_KEY_FILE:-}
+
+      CAMERA_IMAGE_DIR: /data/camera
+
+    volumes:
+      - ai-core-public:/run/keys/ai-core:ro
+      - backend-public:/run/keys/backend:ro
+      - security-private:/run/keys/security:ro
+
+      - camera-images:/data/camera:rw
+
+    depends_on:
+      key-init:
+        condition: service_completed_successfully
+
+      db:
+        condition: service_healthy
+
+    networks:
+      - leafy-network
+
+  ai-core:
+    build:
+      context: ./leafy-ai/ai_core
+      dockerfile: Dockerfile
+
+    container_name: leafy-ai-ai-core
+    restart: unless-stopped
+
+    environment:
+      SECURITY_PUBLIC_KEY_PATH: /run/keys/security/public.pem
+      AI_CORE_PRIVATE_KEY_PATH: /run/keys/ai-core/private.pem
+
+    volumes:
+      - ai-core-private:/run/keys/ai-core:ro
+      - security-public:/run/keys/security:ro
+
+    networks:
+      - leafy-network
+
+networks:
+  leafy-network:
+    driver: bridge
+
+volumes:
+  security-private:
+  security-public:
+  backend-private:
+  backend-public:
+  ai-core-private:
+  ai-core-public:
+  camera-images:
+  leafy_ai_data:

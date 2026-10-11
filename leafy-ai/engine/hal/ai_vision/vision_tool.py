@@ -6,10 +6,10 @@ from typing import Any
 
 from psycopg.types.json import Jsonb
 
-from engine.hal.ai_vision.detector import MODEL_NAME, VisionError, analyse_image
-from engine.logger.logger import audit_log
-from engine.managers.db_manager import get_connection, run_query
-from engine.managers.settings_manager import settings
+from hal.ai_vision.detector import MODEL_NAME, VisionError, analyse_image
+from logger.logger import audit_log
+from managers.db_manager import get_connection, run_query
+from managers.settings_manager import settings
 
 logger = logging.getLogger(__name__)
 MAX_IMAGE_ATTEMPTS = 3

@@ -4,11 +4,11 @@ import os
 import re
 from pathlib import Path
 
-from engine.hal.ai_vision.vision_prompt import (
+from hal.ai_vision.vision_prompt import (
     VISION_SYSTEM_PROMPT,
     VISION_USER_PROMPT,
 )
-from engine.hal.ai_vision.vision_schema import VisionAssessment
+from hal.ai_vision.vision_schema import VisionAssessment
 
 MODEL_NAME = os.getenv("GEMINI_VISION_MODEL", "gemini-3.8-flash")
 THINKING_LEVEL = os.getenv("GEMINI_VISION_THINKING_LEVEL", "low").strip().lower()

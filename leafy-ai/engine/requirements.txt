@@ -1,0 +1,14 @@
+fastapi
+uvicorn
+httpx
+psycopg[binary]
+psycopg-pool
+python-dotenv
+PyJWT
+slowapi
+python-kasa
+ollama
+google-genai>=2.0,<3.0
+pydantic>=2.7,<3
+Pillow>=11,<13
+opencv-python-headless>=4.10,<5

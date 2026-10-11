@@ -1,8 +1,8 @@
-from engine.managers.db_manager import run_query
-from engine.managers.notifications_manager import (
+from managers.db_manager import run_query
+from managers.notifications_manager import (
     create_notification,
 )
-from engine.managers.settings_manager import (
+from managers.settings_manager import (
     manage_settings,
 )
 

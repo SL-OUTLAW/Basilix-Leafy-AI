@@ -7,7 +7,7 @@ The browser authenticates to the Node backend with the normal webapp access toke
 ```env
 ENGINE_URL=http://127.0.0.1:8000
 ENGINE_TIMEOUT_MS=15000
-ENGINE_PRIVATE_KEY_PATH=../../secrets/webapp_backend_private_key
+WEBAPP_BACKEND_PRIVATE_KEY_PATH=
 ```
 
 If the backend and Engine run in Docker Compose, use the Engine service hostname instead of localhost, for example `ENGINE_URL=http://engine:8000`.

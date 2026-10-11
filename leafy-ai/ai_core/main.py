@@ -4,8 +4,8 @@ from typing import Any
 
 import ollama
 
-from ai_core.llm_tools import TOOLS
-from ai_core.llm_api import execute_tool
+from llm_tools import TOOLS
+from llm_api import execute_tool
 
 MODEL = "leafy-ai"
 MAX_TOOL_ROUNDS = 10

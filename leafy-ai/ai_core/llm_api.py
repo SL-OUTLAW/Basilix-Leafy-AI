@@ -2,7 +2,7 @@ from typing import Any
 import httpx
 import os
 
-from ai_core.llm_auth import create_token
+from llm_auth import create_token
 
 ENGINE_URL = os.getenv(
     "ENGINE_URL",

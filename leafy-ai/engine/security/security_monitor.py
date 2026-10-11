@@ -2,16 +2,16 @@ import asyncio
 from typing import Any
 
 
-from engine.logger.logger import audit_log
-from engine.managers.db_manager import (
+from logger.logger import audit_log
+from managers.db_manager import (
     get_connection,
     run_query,
 )
-from engine.managers.notifications_manager import (
+from managers.notifications_manager import (
     create_notification,
     resolve_sensor_notification,
 )
-from engine.managers.settings_manager import settings
+from managers.settings_manager import settings
 
 loop = False
 

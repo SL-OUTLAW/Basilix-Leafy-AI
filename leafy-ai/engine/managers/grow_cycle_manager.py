@@ -2,7 +2,7 @@ from typing import Any
 
 from psycopg import AsyncConnection
 
-from engine.managers.db_manager import (
+from managers.db_manager import (
     get_connection,
     run_query,
 )

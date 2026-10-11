@@ -2,9 +2,9 @@ from typing import Any
 
 from psycopg.types.json import Jsonb
 
-from engine.managers.db_manager import get_connection
-from engine.security.risk_checker import get_action_risk
-from engine.managers.scheduler import queue_scheduler_action
+from managers.db_manager import get_connection
+from security.risk_checker import get_action_risk
+from managers.scheduler import queue_scheduler_action
 
 VALID_RECOMMENDATION_TYPES = {
     "PH",

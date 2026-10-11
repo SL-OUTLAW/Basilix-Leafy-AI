@@ -1,6 +1,6 @@
 from typing import Any
 
-from engine.managers.grow_cycle_manager import (
+from managers.grow_cycle_manager import (
     get_harvest_data as load_harvest_data,
 )
 
