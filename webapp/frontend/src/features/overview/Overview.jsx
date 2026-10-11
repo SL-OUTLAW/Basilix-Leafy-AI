@@ -164,7 +164,6 @@ function Overview({
           status={sensors.waterLevel?.status || unavailableNote}
           tone={sensors.waterLevel?.tone || "neutral"}
           trend={sensors.waterLevel?.trend}
-          percentage={sensors.waterLevel?.percentage}
         />
       </section>
 

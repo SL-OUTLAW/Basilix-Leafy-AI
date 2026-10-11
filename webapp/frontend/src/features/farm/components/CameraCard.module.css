@@ -8,14 +8,18 @@
   background: var(--color-bg-card);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-medium);
+
+  overflow: hidden;
 }
 
 .header {
-  margin-bottom: var(--card-gap);
+  min-height: 40px;
+  margin-bottom: 10px;
 
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
+
   gap: 12px;
 }
 
@@ -23,163 +27,252 @@
   margin: 0;
 
   color: var(--color-text-primary);
-  font-size: 15.75px;
+  font-size: 15px;
   font-weight: 600;
+}
+
+.header p {
+  margin: 3px 0 0;
+
+  color: var(--color-text-muted);
+  font-size: 11px;
 }
 
 .expandButton {
-  width: 22.5px;
-  height: 22.5px;
+  width: 27px;
+  height: 27px;
+  padding: 0;
 
-  display: flex;
+  flex: 0 0 auto;
+
+  display: inline-flex;
   align-items: center;
   justify-content: center;
 
-  padding: 0;
-
-  border: 1px solid var(--color-border);
-  border-radius: 4.5px;
+  border: 1px solid var(--icon-neutral-border);
+  border-radius: 5px;
 
   background: var(--icon-neutral-bg);
   color: var(--icon-neutral);
-  border-color: var(--icon-neutral-border);
+
+  cursor: pointer;
+}
+
+.expandButton:hover:not(:disabled) {
+  background: var(--color-bg-card-inner);
+  color: var(--color-text-primary);
+}
+
+.expandButton:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.expandButton svg {
+  width: 14px;
+  height: 14px;
 }
 
 .cameraArea {
-  min-height: 240px;
-  flex: 1;
+  position: relative;
+
+  width: 100%;
+  aspect-ratio: 4 / 3;
+
+  min-width: 0;
+  min-height: 0;
+
+  overflow: hidden;
 
   display: flex;
   align-items: center;
   justify-content: center;
 
-  border: 1px dashed var(--color-border);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-medium);
 
-  background: var(--color-bg-card-inner);
+  background: #080b0c;
+}
+
+.cameraImage {
+  position: absolute;
+  inset: 0;
+
+  width: 100%;
+  height: 100%;
+
+  display: block;
+
+  object-fit: contain;
+  object-position: center;
+}
+
+.message {
+  padding: 20px;
+
   color: var(--color-text-secondary);
+
   font-size: 12px;
+  text-align: center;
 }
 
 .controls {
-  min-height: 42px;
-  margin-top: var(--card-gap);
+  min-height: 38px;
+  margin-top: 9px;
 
   display: grid;
-  grid-template-columns: 60px 1fr 60px;
+  grid-template-columns:
+    minmax(35px, 1fr)
+    auto
+    minmax(35px, 1fr);
+
   align-items: center;
+
+  gap: 10px;
 }
 
 .count {
+  justify-self: start;
+
   color: var(--color-text-primary);
+
   font-size: 12px;
   font-weight: 600;
 }
 
-.levelControls {
+.cameraControls {
   grid-column: 2;
 
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10.5px;
+
+  gap: 8px;
 }
 
-.levelControls button {
-  width: 28.5px;
-  height: 28.5px;
+.cameraControls button {
+  width: 29px;
+  height: 29px;
+  padding: 0;
+
+  flex: 0 0 auto;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 
   border: 1px solid var(--color-border);
-  border-radius: 5.25px;
+  border-radius: 5px;
 
   background: var(--color-bg-card-inner);
   color: var(--color-text-secondary);
 
-  font-size: 18px;
+  cursor: pointer;
 }
 
-.levelControls span {
-  min-width: 112.5px;
-  padding: 7.5px 12px;
+.cameraControls button:hover:not(:disabled) {
+  color: var(--color-text-primary);
+  border-color: var(--color-green);
+}
+
+.cameraControls button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.cameraControls button svg {
+  width: 14px;
+  height: 14px;
+}
+
+.cameraControls span {
+  min-width: 120px;
+  max-width: 190px;
+  padding: 6px 12px;
+
+  overflow: hidden;
 
   border: 1px solid var(--color-border);
-  border-radius: 5.25px;
+  border-radius: 5px;
 
   background: var(--color-bg-card-inner);
   color: var(--color-text-primary);
 
   font-size: 12px;
   font-weight: 600;
+
   text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .expandedCamera {
+  position: relative;
+
   width: 100%;
+  height: 100%;
+
+  min-width: 0;
   min-height: 0;
-  flex: 1;
+
+  overflow: hidden;
 
   display: flex;
   align-items: center;
   justify-content: center;
 
-  border: 1px dashed var(--color-border);
-  border-radius: var(--radius-medium);
+  background: #080b0c;
+}
 
-  background: var(--color-bg-card-inner);
-  color: var(--color-text-secondary);
+.expandedImage {
+  position: absolute;
+  inset: 0;
+
+  width: 100%;
+  height: 100%;
+
+  display: block;
+
+  object-fit: contain;
+  object-position: center;
+}
+
+[data-theme="light"] .cameraArea,
+[data-theme="light"] .expandedCamera {
+  background: #111;
+}
+
+@media (max-width: 1050px) {
+  .cameraArea {
+    aspect-ratio: 16 / 10;
+  }
 }
 
 @media (max-width: 767px) {
-  .card {
-    padding: var(--card-padding);
-  }
-
   .cameraArea {
-    min-height: 165px;
-  }
-
-  .expandedCamera {
-    min-height: 225px;
+    aspect-ratio: 4 / 3;
   }
 }
 
 @media (max-width: 520px) {
-  .cameraArea {
-    min-height: 135px;
-  }
-
   .controls {
     grid-template-columns: 1fr;
-    gap: 6px;
   }
 
   .count {
-    text-align: center;
+    justify-self: center;
   }
 
-  .levelControls {
+  .cameraControls {
     grid-column: 1;
-    gap: 6px;
+
+    width: 100%;
   }
 
-  .levelControls span {
+  .cameraControls span {
     min-width: 0;
+    max-width: none;
+
     flex: 1;
   }
-
-  .expandedCamera {
-    min-height: 165px;
-  }
-}
-.expandButton svg,
-.levelControls button svg {
-  width: 13.5px;
-  height: 13.5px;
-}
-
-.cameraImage {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  display: block;
 }

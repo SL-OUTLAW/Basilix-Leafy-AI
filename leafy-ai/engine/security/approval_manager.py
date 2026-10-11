@@ -75,18 +75,20 @@ async def approve_request(
 
             await conn.commit()
 
-    await queue_scheduler_action(
-        action_type=action_type,
-        action_data=action_data,
-        recommendation_id=recommendation_id,
-        approval_id=approval_id,
-    )
+    queued = action_type != "RECOMMENDATION_REVIEW"
+    if queued:
+        await queue_scheduler_action(
+            action_type=action_type,
+            action_data=action_data,
+            recommendation_id=recommendation_id,
+            approval_id=approval_id,
+        )
 
     return {
         "approval_id": approval_id,
         "recommendation_id": recommendation_id,
         "status": "APPROVED",
-        "queued_for_execution": True,
+        "queued_for_execution": queued,
     }
 
 

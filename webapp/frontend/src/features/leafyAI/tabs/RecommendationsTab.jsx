@@ -9,6 +9,10 @@ function RecommendationsTab({
   hasMore = false,
   loadingMore = false,
   onLoadMore,
+  canReview = false,
+  onReview,
+  reviewBusy = false,
+  reviewError = "",
 }) {
   const recommendations = !loading && !error && Array.isArray(data) ? data : [];
 
@@ -200,6 +204,28 @@ function RecommendationsTab({
               </div>
             </>
           )}
+
+        {selectedRecommendation.status === "PENDING" &&
+          selectedRecommendation.approvalId &&
+          canReview && (
+            <div className={styles.reviewActions}>
+              <button
+                type="button"
+                disabled={reviewBusy}
+                onClick={() => onReview?.(selectedRecommendation, "approve")}
+              >
+                Approve
+              </button>
+              <button
+                type="button"
+                disabled={reviewBusy}
+                onClick={() => onReview?.(selectedRecommendation, "reject")}
+              >
+                Reject
+              </button>
+            </div>
+          )}
+        {reviewError && <p role="alert">{reviewError}</p>}
 
         <h4>Reasoning</h4>
 

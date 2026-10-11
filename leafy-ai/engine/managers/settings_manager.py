@@ -14,28 +14,105 @@ DEFAULT_SETTINGS = {
         "sensor_check_interval_seconds": 5,
     },
     "risk": {
-        "DOSE_EC": "HIGH", "DOSE_PH": "HIGH", "SET_FAN": "LOW",
-        "SET_LIGHTING": "LOW", "RUN_IRRIGATION": "HIGH",
-        "CREATE_SCHEDULE": "LOW", "ENABLE_SCHEDULE": "LOW",
-        "RUN_AI_ANALYSIS": "LOW", "UPDATE_SCHEDULE": "LOW",
-        "DISABLE_SCHEDULE": "HIGH", "RUN_VISION_ANALYSIS": "LOW",
+        "DOSE_EC": "HIGH",
+        "DOSE_PH": "HIGH",
+        "SET_FAN": "LOW",
+        "SET_LIGHTING": "LOW",
+        "RUN_IRRIGATION": "HIGH",
+        "CREATE_SCHEDULE": "LOW",
+        "ENABLE_SCHEDULE": "LOW",
+        "RUN_AI_ANALYSIS": "LOW",
+        "UPDATE_SCHEDULE": "LOW",
+        "DISABLE_SCHEDULE": "HIGH",
+        "RUN_VISION_ANALYSIS": "LOW",
     },
     "sensor_security_thresholds": {
-        "ec": {"enabled": True, "lower_limit": 1500, "upper_limit": 3000, "warning_distance": 250, "critical_distance": 100},
-        "ph": {"enabled": True, "lower_limit": 5.5, "upper_limit": 6.5, "warning_distance": 0.3, "critical_distance": 0.1},
-        "humidity": {"enabled": True, "lower_limit": 40, "upper_limit": 80, "warning_distance": 5, "critical_distance": 2},
-        "dew_point": {"enabled": False, "lower_limit": 5, "upper_limit": 25, "warning_distance": 3, "critical_distance": 1},
-        "water_level": {"enabled": True, "lower_limit": 20, "upper_limit": 100, "warning_distance": 10, "critical_distance": 5},
-        "water_temperature": {"enabled": True, "lower_limit": 18, "upper_limit": 28, "warning_distance": 2, "critical_distance": 0.5},
-        "ambient_temperature": {"enabled": True, "lower_limit": 15, "upper_limit": 32, "warning_distance": 3, "critical_distance": 1},
+        "ec": {
+            "enabled": True,
+            "lower_limit": 1500,
+            "upper_limit": 3000,
+            "warning_distance": 250,
+            "critical_distance": 100,
+        },
+        "ph": {
+            "enabled": True,
+            "lower_limit": 5.5,
+            "upper_limit": 6.5,
+            "warning_distance": 0.3,
+            "critical_distance": 0.1,
+        },
+        "humidity": {
+            "enabled": True,
+            "lower_limit": 40,
+            "upper_limit": 80,
+            "warning_distance": 5,
+            "critical_distance": 2,
+        },
+        "dew_point": {
+            "enabled": False,
+            "lower_limit": 5,
+            "upper_limit": 25,
+            "warning_distance": 3,
+            "critical_distance": 1,
+        },
+        "water_level": {
+            "enabled": True,
+            "lower_limit": 20,
+            "upper_limit": 100,
+            "warning_distance": 10,
+            "critical_distance": 5,
+        },
+        "water_temperature": {
+            "enabled": True,
+            "lower_limit": 18,
+            "upper_limit": 28,
+            "warning_distance": 2,
+            "critical_distance": 0.5,
+        },
+        "ambient_temperature": {
+            "enabled": True,
+            "lower_limit": 15,
+            "upper_limit": 32,
+            "warning_distance": 3,
+            "critical_distance": 1,
+        },
     },
-    "notifications": {"global_delivery": True, "repeat_critical_notifications": False, "sensor_alert_cooldown_seconds": 300},
+    "notifications": {
+        "global_delivery": True,
+        "repeat_critical_notifications": False,
+        "sensor_alert_cooldown_seconds": 300,
+    },
     "vision": {"polling_rate": 60},
     "cameras": {"polling_rate": 10},
     "sensors": {"polling_rate": 10},
-    "farm_controls": {"outlet_mapping": {"fan": 5, "dose_ec": 6, "dose_ph": 3, "irrigation": 2, "lighting_level_1": 1, "lighting_level_2": 4}},
-    "dosing_ph": {"enabled": True, "direction": "UP", "max_cycles": 12, "dose_seconds": 10, "settle_seconds": 300, "target_tolerance": 0.1, "max_total_dose_seconds": 120},
-    "dosing_ec": {"enabled": True, "direction": "UP", "max_cycles": 12, "dose_seconds": 10, "settle_seconds": 300, "target_tolerance": 100, "max_total_dose_seconds": 120},
+    "farm_controls": {
+        "outlet_mapping": {
+            "fan": 5,
+            "dose_ec": 6,
+            "dose_ph": 3,
+            "irrigation": 2,
+            "lighting_level_1": 1,
+            "lighting_level_2": 4,
+        }
+    },
+    "dosing_ph": {
+        "enabled": True,
+        "direction": "UP",
+        "max_cycles": 12,
+        "dose_seconds": 10,
+        "settle_seconds": 300,
+        "target_tolerance": 0.1,
+        "max_total_dose_seconds": 120,
+    },
+    "dosing_ec": {
+        "enabled": True,
+        "direction": "UP",
+        "max_cycles": 12,
+        "dose_seconds": 10,
+        "settle_seconds": 300,
+        "target_tolerance": 100,
+        "max_total_dose_seconds": 120,
+    },
 }
 
 PROTECTED_SECURITY_KEYS = {"ai_enabled", "emergency_stop"}
@@ -45,13 +122,24 @@ def _merge_defaults(default: Any, value: Any) -> Any:
     if isinstance(default, dict):
         if not isinstance(value, dict):
             return copy.deepcopy(default)
-        return {key: _merge_defaults(child, value.get(key)) if key in value else copy.deepcopy(child) for key, child in default.items()}
+        return {
+            key: (
+                _merge_defaults(child, value.get(key))
+                if key in value
+                else copy.deepcopy(child)
+            )
+            for key, child in default.items()
+        }
     if value is None:
         return copy.deepcopy(default)
     if isinstance(default, bool):
         return value if isinstance(value, bool) else copy.deepcopy(default)
     if isinstance(default, (int, float)) and not isinstance(default, bool):
-        return value if isinstance(value, (int, float)) and not isinstance(value, bool) else copy.deepcopy(default)
+        return (
+            value
+            if isinstance(value, (int, float)) and not isinstance(value, bool)
+            else copy.deepcopy(default)
+        )
     return value if isinstance(value, type(default)) else copy.deepcopy(default)
 
 
@@ -61,12 +149,16 @@ def _validate_update(new_settings: dict[str, Any]) -> None:
         raise ValueError(f"Unknown setting group(s): {', '.join(sorted(unknown))}")
     security = new_settings.get("security")
     if isinstance(security, dict) and PROTECTED_SECURITY_KEYS.intersection(security):
-        raise ValueError("AI and emergency state must be changed from the Safety screen.")
+        raise ValueError(
+            "AI and emergency state must be changed from the Safety screen."
+        )
 
 
 async def manage_settings(new_settings=None):
     if new_settings is None:
-        rows = await run_query("SELECT setting_key, setting_value FROM system_settings;")
+        rows = await run_query(
+            "SELECT setting_key, setting_value FROM system_settings;"
+        )
         stored = {key: value for key, value in rows}
         settings.clear()
         for key, default in DEFAULT_SETTINGS.items():

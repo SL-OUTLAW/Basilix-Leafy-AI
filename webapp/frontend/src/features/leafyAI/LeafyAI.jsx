@@ -11,6 +11,7 @@ import {
   getMoreLeafyRecommendations,
 } from "../../services/leafyAiApi";
 import styles from "./LeafyAI.module.css";
+import { apiRequest } from "../../services/apiClient";
 
 const tabs = [
   { id: "overview", label: "Overview", Icon: Brain },
@@ -24,12 +25,15 @@ function LeafyAI({
   error = "",
   token,
   onTokenRefresh,
+  access,
 }) {
   const [activeTab, setActiveTab] = useState("overview");
   const hasError = Boolean(error);
   const [recommendations, setRecommendations] = useState([]);
   const [activity, setActivity] = useState([]);
   const [moreBusy, setMoreBusy] = useState(false);
+  const [reviewBusy, setReviewBusy] = useState(false);
+  const [reviewError, setReviewError] = useState("");
   const [recommendationsMore, setRecommendationsMore] = useState(true);
   const [activityMore, setActivityMore] = useState(true);
 
@@ -40,6 +44,37 @@ function LeafyAI({
     setActivity(Array.isArray(data?.activity) ? data.activity : []);
   }, [data]);
 
+  async function reviewRecommendation(item, decision) {
+    if (!item?.approvalId || reviewBusy) return;
+    setReviewBusy(true);
+    setReviewError("");
+    try {
+      await apiRequest(
+        `/api/approvals/${item.approvalId}/${decision}`,
+        token,
+        onTokenRefresh,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ review_note: null }),
+        },
+      );
+      setRecommendations((current) =>
+        current.map((rec) =>
+          rec.id === item.id
+            ? {
+                ...rec,
+                status: decision === "approve" ? "APPROVED" : "REJECTED",
+              }
+            : rec,
+        ),
+      );
+    } catch (err) {
+      setReviewError(err.message || "Review failed");
+    } finally {
+      setReviewBusy(false);
+    }
+  }
   async function loadMoreRecommendations() {
     setMoreBusy(true);
     try {
@@ -90,6 +125,10 @@ function LeafyAI({
           hasMore={recommendationsMore}
           loadingMore={moreBusy}
           onLoadMore={loadMoreRecommendations}
+          canReview={Boolean(access?.allowed?.APPROVAL_REVIEW)}
+          onReview={reviewRecommendation}
+          reviewBusy={reviewBusy}
+          reviewError={reviewError}
         />
       )}
 

@@ -16,19 +16,75 @@ function getStatusClass(status) {
   return styles.statusNeutral;
 }
 
+function formatMetadataKey(key) {
+  return String(key)
+    .replaceAll("_", " ")
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function formatMetadataValue(value) {
+  if (value == null || value === "") {
+    return "-";
+  }
+
+  if (typeof value === "boolean") {
+    return value ? "Yes" : "No";
+  }
+
+  if (Array.isArray(value)) {
+    if (value.length === 0) {
+      return "-";
+    }
+
+    return value
+      .map((item) =>
+        typeof item === "object" ? JSON.stringify(item) : String(item),
+      )
+      .join(", ");
+  }
+
+  if (typeof value === "object") {
+    return JSON.stringify(value, null, 2);
+  }
+
+  return String(value);
+}
+
+function MetadataValue({ value }) {
+  if (value !== null && typeof value === "object") {
+    return (
+      <pre
+        style={{
+          margin: 0,
+          whiteSpace: "pre-wrap",
+          overflowWrap: "anywhere",
+          font: "inherit",
+        }}
+      >
+        {formatMetadataValue(value)}
+      </pre>
+    );
+  }
+
+  return formatMetadataValue(value);
+}
+
 function AuditDetails({ log, onClose }) {
   if (!log) {
     return null;
   }
 
-  const details = log.details ?? {};
-  const context = log.context ?? {};
+  const metadata =
+    log.metadata && typeof log.metadata === "object" ? log.metadata : {};
+
+  const metadataEntries = Object.entries(metadata);
 
   return (
     <aside className={styles.detailsPanel}>
       <div className={styles.detailsHeader}>
         <div>
           <h2>Audit Details</h2>
+
           <strong>{log.event}</strong>
 
           <p>
@@ -67,9 +123,8 @@ function AuditDetails({ log, onClose }) {
 
           <div>
             <dt>Status</dt>
-            <dd className={getStatusClass(log.status)}>
-              {log.status}
-            </dd>
+
+            <dd className={getStatusClass(log.status)}>{log.status}</dd>
           </div>
 
           <div>
@@ -84,62 +139,23 @@ function AuditDetails({ log, onClose }) {
         </dl>
       </div>
 
-      <div className={styles.detailSection}>
-        <h3>Details</h3>
+      {metadataEntries.length > 0 && (
+        <div className={styles.detailSection}>
+          <h3>Metadata</h3>
 
-        <dl>
-          <div>
-            <dt>Requested</dt>
-            <dd>{details.requested ?? "—"}</dd>
-          </div>
+          <dl>
+            {metadataEntries.map(([key, value]) => (
+              <div key={key}>
+                <dt>{formatMetadataKey(key)}</dt>
 
-          <div>
-            <dt>Target EC</dt>
-            <dd>{details.targetEC ?? "—"}</dd>
-          </div>
-
-          <div>
-            <dt>Target pH</dt>
-            <dd>{details.targetPH ?? "—"}</dd>
-          </div>
-
-          <div>
-            <dt>Scheduled</dt>
-            <dd>{details.scheduled ?? "—"}</dd>
-          </div>
-
-          <div>
-            <dt>Requested By</dt>
-            <dd>{details.requestedBy ?? "—"}</dd>
-          </div>
-
-          <div>
-            <dt>Request ID</dt>
-            <dd>{details.requestId ?? "—"}</dd>
-          </div>
-        </dl>
-      </div>
-
-      <div className={styles.detailSection}>
-        <h3>Context</h3>
-
-        <dl>
-          <div>
-            <dt>Water Level</dt>
-            <dd>{context.waterLevel ?? "—"}</dd>
-          </div>
-
-          <div>
-            <dt>Current EC</dt>
-            <dd>{context.currentEC ?? "—"}</dd>
-          </div>
-
-          <div>
-            <dt>Current pH</dt>
-            <dd>{context.currentPH ?? "—"}</dd>
-          </div>
-        </dl>
-      </div>
+                <dd>
+                  <MetadataValue value={value} />
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+      )}
     </aside>
   );
 }

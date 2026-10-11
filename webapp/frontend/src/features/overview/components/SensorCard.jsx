@@ -12,12 +12,7 @@ function SensorIcon({ type }) {
 
   const Icon = getSystemIcon({ sensorType });
 
-  return (
-    <Icon
-      className={styles.iconGraphic}
-      aria-hidden="true"
-    />
-  );
+  return <Icon className={styles.iconGraphic} aria-hidden="true" />;
 }
 
 function Sparkline({ values = [] }) {
@@ -37,11 +32,9 @@ function Sparkline({ values = [] }) {
 
   const points = numericValues
     .map((value, index) => {
-      const x =
-        (index / (numericValues.length - 1)) * 100;
+      const x = (index / (numericValues.length - 1)) * 100;
 
-      const y =
-        30 - ((value - min) / range) * 24;
+      const y = 30 - ((value - min) / range) * 24;
 
       return `${x},${y}`;
     })
@@ -66,19 +59,11 @@ function SensorCard({
   status,
   tone = "neutral",
   trend = [],
-  percentage = null
 }) {
   const displayValue =
-    value === null || value === undefined || value === ""
-      ? "—"
-      : value;
+    value === null || value === undefined || value === "" ? "—" : value;
 
   const displayStatus = status || "Not available";
-
-  const validPercentage =
-    Number.isFinite(percentage)
-      ? Math.max(0, Math.min(100, percentage))
-      : null;
 
   return (
     <div className={`${styles.card} ${styles[tone]}`}>
@@ -89,26 +74,13 @@ function SensorCard({
       <div className={styles.content}>
         <h3>{title}</h3>
 
-        <p className={styles.value}>
-          {displayValue}
-        </p>
+        <p className={styles.value}>{displayValue}</p>
 
-        <span className={styles.status}>
-          {displayStatus}
-        </span>
+        <span className={styles.status}>{displayStatus}</span>
       </div>
 
       <div className={styles.visual}>
-        {type === "water" && validPercentage !== null ? (
-          <div className={styles.waterTrack}>
-            <div
-              className={styles.waterFill}
-              style={{ height: `${validPercentage}%` }}
-            />
-          </div>
-        ) : (
-          <Sparkline values={trend} />
-        )}
+        <Sparkline values={trend} />
       </div>
     </div>
   );

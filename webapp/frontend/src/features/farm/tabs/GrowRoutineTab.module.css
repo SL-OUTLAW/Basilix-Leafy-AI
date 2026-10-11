@@ -23,56 +23,351 @@
   font-size: 12px;
 }
 
-@media (max-width: 767px) {
-  .routine {
-    min-height: 165px;
-    margin-top: 10.5px;
-    padding: 13.5px;
-  }
-}
 .content {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+
   gap: 12px;
+
   margin-top: 12px;
   margin-bottom: 14px;
 }
 
 .cycleCard {
+  min-width: 0;
   padding: 12px;
+
   border: 1px solid var(--color-border);
   border-radius: var(--radius-medium);
+
   background: var(--color-bg-card-inner);
   color: var(--color-text-primary);
 }
 
 .cycleCard h3 {
   margin: 8px 0 4px;
+
   font-size: 14px;
 }
 
-.cycleCard ul {
+.cycleCard button,
+.actionForm button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 6px;
+
+  border: 1px solid var(--color-border);
+  border-radius: 7px;
+
+  padding: 8px 11px;
+
+  background: var(--color-bg-card-inner);
+  color: var(--color-text-primary);
+
+  cursor: pointer;
+}
+
+.cycleCard button:disabled,
+.actionForm button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.viewRecordsButton {
+  margin-top: 10px;
+}
+
+.historyEmpty {
+  margin-top: 10px !important;
+}
+
+.historyList {
   margin: 10px 0 0;
   padding: 0;
+
   list-style: none;
 }
 
-.cycleCard li {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 7px 0;
+.historyList li {
+  margin: 0;
+  padding: 0;
+
   border-bottom: 1px solid var(--color-border);
+}
+
+.historyList li:last-child {
+  border-bottom: 0;
+}
+
+.historyButton {
+  width: 100%;
+  min-width: 0;
+
+  padding: 8px 6px !important;
+
+  display: grid !important;
+  grid-template-columns:
+    minmax(0, 1fr)
+    auto
+    auto;
+
+  align-items: center;
+
+  gap: 10px;
+
+  border: 0 !important;
+  border-radius: 6px !important;
+
+  background: transparent !important;
+
+  text-align: left;
+}
+
+.historyButton:hover {
+  background: var(--color-bg-card) !important;
+}
+
+.historyButtonSelected {
+  background: var(--color-green-soft) !important;
+
+  color: var(--color-green) !important;
+}
+
+.historyName {
+  min-width: 0;
+
+  overflow: hidden;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.historyWeight {
+  color: var(--color-text-secondary);
+  font-weight: 600;
+}
+
+.actionForm {
+  display: grid;
+  grid-template-columns:
+    repeat(3, minmax(0, 1fr))
+    auto;
+
+  gap: 9px;
+
+  margin-top: 14px;
+  padding: 14px;
+
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+
+  background: var(--color-bg-card);
+}
+
+.actionForm h3 {
+  grid-column: 1 / -1;
+
+  display: flex;
+  align-items: center;
+
+  gap: 7px;
+
+  margin: 0;
+
+  color: var(--color-text-primary);
+}
+
+.actionForm input {
+  min-width: 0;
+
+  border: 1px solid var(--color-border);
+  border-radius: 7px;
+
+  padding: 9px;
+
+  background: var(--color-bg-card-inner);
+  color: var(--color-text-primary);
+}
+
+.actionRow,
+.editForm > div {
+  display: flex;
+  flex-wrap: wrap;
+
+  gap: 8px;
+
+  margin-top: 10px;
+}
+
+.actionRow button,
+.editForm button {
+  display: flex;
+  align-items: center;
+
+  gap: 5px;
+}
+
+.danger {
+  color: var(--color-red) !important;
+}
+
+.editForm {
+  display: grid;
+
+  gap: 8px;
+
+  margin-top: 10px;
+}
+
+.editForm input,
+.editForm textarea {
+  width: 100%;
+
+  padding: 9px;
+
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+
+  background: var(--color-bg-card);
+  color: var(--color-text-primary);
+}
+
+.harvestRecords {
+  margin-top: 14px;
+
+  overflow: hidden;
+
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+
+  background: var(--color-bg-card-inner);
+}
+
+.recordsHeader {
+  min-height: 68px;
+  padding: 14px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 16px;
+
+  border-bottom: 1px solid var(--color-border);
+}
+
+.recordsHeader h3 {
+  margin: 0;
+
+  color: var(--color-text-primary);
+
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.recordsHeader p {
+  margin: 3px 0 0;
+
+  color: var(--color-text-secondary);
+
+  font-size: 11px;
+}
+
+.recordCount {
+  flex: 0 0 auto;
+
+  padding: 5px 9px;
+
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+
+  color: var(--color-text-secondary);
+
+  font-size: 10px;
+}
+
+.recordsEmpty {
+  min-height: 100px;
+  padding: 20px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: var(--color-text-muted);
+
+  font-size: 12px;
+  text-align: center;
+}
+
+.recordsTableWrap {
+  width: 100%;
+
+  overflow-x: auto;
+}
+
+.recordsTable {
+  width: 100%;
+
+  border-collapse: collapse;
+
+  color: var(--color-text-primary);
+
   font-size: 12px;
 }
 
-@media (max-width: 767px) {
-  .content {
+.recordsTable th,
+.recordsTable td {
+  padding: 11px 14px;
+
+  border-bottom: 1px solid var(--color-border);
+
+  text-align: left;
+  vertical-align: top;
+}
+
+.recordsTable th {
+  color: var(--color-text-muted);
+
+  font-size: 10px;
+  font-weight: 600;
+
+  text-transform: uppercase;
+}
+
+.recordsTable tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.message {
+  margin-top: 10px !important;
+}
+
+@media (max-width: 800px) {
+  .actionForm {
     grid-template-columns: 1fr;
   }
 }
-.cycleCard button,.actionForm button{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--color-border);border-radius:7px;padding:8px 11px;background:var(--color-bg-card-inner);color:var(--color-text-primary)}.actionForm{display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) auto;gap:9px;padding:14px;border:1px solid var(--color-border);border-radius:10px;background:var(--color-bg-card)}.actionForm h3{grid-column:1/-1;display:flex;align-items:center;gap:7px;margin:0}.actionForm input{border:1px solid var(--color-border);border-radius:7px;padding:9px;background:var(--color-bg-card-inner);color:var(--color-text-primary)}@media(max-width:800px){.actionForm{grid-template-columns:1fr}}
-.actionRow, .editForm > div { display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
-.actionRow button, .editForm button { display:flex; align-items:center; gap:5px; }
-.danger { color:var(--color-red) !important; }
-.editForm { display:grid; gap:8px; margin-top:10px; } .editForm input, .editForm textarea { width:100%; padding:9px; border:1px solid var(--color-border); border-radius:6px; background:var(--color-bg-card); color:var(--color-text-primary); }
+
+@media (max-width: 767px) {
+  .routine {
+    min-height: 165px;
+    margin-top: 10.5px;
+    padding: 13.5px;
+  }
+
+  .content {
+    grid-template-columns: 1fr;
+  }
+
+  .recordsHeader {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .recordsTable {
+    min-width: 620px;
+  }
+}
