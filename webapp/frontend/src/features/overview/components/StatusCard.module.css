@@ -52,9 +52,15 @@
   border-color: rgba(0, 168, 210, 0.45);
 }
 
-.green .value { color: #34d399; }
-.orange .value { color: #ff7b00; }
-.blue .value { color: #00a8d2; }
+.green .value {
+  color: #34d399;
+}
+.orange .value {
+  color: #ff7b00;
+}
+.blue .value {
+  color: #00a8d2;
+}
 
 .content {
   min-width: 0;
@@ -111,9 +117,15 @@
   border-color: #b8d2f2;
 }
 
-[data-theme="light"] .green .value { color: #209c63; }
-[data-theme="light"] .orange .value { color: #d96500; }
-[data-theme="light"] .blue .value { color: #0063dc; }
+[data-theme="light"] .green .value {
+  color: #209c63;
+}
+[data-theme="light"] .orange .value {
+  color: #d96500;
+}
+[data-theme="light"] .blue .value {
+  color: #0063dc;
+}
 
 @media (max-width: 767px) {
   .card {

@@ -1,236 +1,260 @@
 # Leafy AI Farm Engine
 
-The Leafy AI Engine is the Python service responsible for collecting farm data, processing scheduled operations, managing farm equipment and exposing farm services to the web backend.
+The Leafy AI Engine is the central farm-side Python service. It exposes the FastAPI farm API, manages database-backed settings and schedules, runs the hardware abstraction layer (HAL), coordinates safety/approval logic, provides AI tools and communicates with the AI Core.
 
-It uses FastAPI for its HTTP API, PostgreSQL for persistent records and a hardware abstraction layer (HAL) for sensors, cameras and farm controls.
+## Current Responsibilities
 
-## How It Works
+| Area           | Responsibility                                                                  |
+| -------------- | ------------------------------------------------------------------------------- |
+| API            | Authenticated farm, safety, settings, history and control endpoints             |
+| Sensors        | Poll water and ambient sensor services and persist readings                     |
+| Cameras        | Capture RTSP camera snapshots and persist image records                         |
+| Vision         | Process pending images through Gemini and store structured assessments          |
+| Scheduler      | Execute database-backed schedules and record task executions                    |
+| Farm controls  | Control lighting, irrigation, fan and pH/EC dosing through the power board      |
+| Safety         | Emergency state, sensor threshold monitoring, risk classification and approvals |
+| AI integration | Call AI Core and execute the approved tool set                                  |
+| RAG            | Ingest reference Markdown, generate embeddings and retrieve relevant chunks     |
+| Grow records   | Manage grow cycles, harvests and harvest history                                |
 
-The Engine runs several services within one application:
-
-| Service | Responsibility |
-| --- | --- |
-| API | Exposes farm data and operations to authorised services |
-| Sensors | Collects and stores water and ambient sensor readings |
-| Cameras | Captures images and registers them in the database |
-| Vision | Processes captured images through the separate Vision worker |
-| Scheduler | Executes database-backed farm schedules |
-| Farm Controls | Communicates with lights, irrigation, fans and dosing equipment |
-| Safety | Manages emergency state, monitoring and approval boundaries |
-| AI Analysis | Performs scheduled farm assessments using available farm information |
-
-The Engine connects these services but does not replace their individual validation and safety requirements.
-
-## Project Structure
+## Structure
 
 ```text
-leafy-ai/
-├── run_engine.py
-└── engine/
-    ├── main.py
-    ├── actions/
-    ├── api/
-    ├── hal/
-    ├── logger/
-    ├── managers/
-    ├── security/
-    └── tools/
+engine/
+├── actions/
+├── api/
+├── hal/
+│   ├── ai_vision/
+│   ├── drivers/
+│   ├── cameras.py
+│   ├── farm_controls.py
+│   ├── main.py
+│   └── sensors.py
+├── logger/
+├── managers/
+├── security/
+├── sources/
+├── tools/
+├── ai_core_client.py
+├── ingest_rag.py
+├── main.py
+└── run_engine.py
 ```
 
-| File or directory | Purpose |
-| --- | --- |
-| `run_engine.py` | Uvicorn entry point |
-| `engine/main.py` | FastAPI application and service lifecycle |
-| `engine/api/engine_api.py` | Engine HTTP endpoints |
-| `engine/actions/` | Registered scheduler action handlers |
-| `engine/hal/sensors.py` | Sensor collection and data publishing |
-| `engine/hal/cameras.py` | Camera capture and image records |
-| `engine/hal/farm_controls.py` | Equipment operations |
-| `engine/managers/scheduler.py` | Schedule execution and task history |
-| `engine/managers/db_manager.py` | PostgreSQL connection pool |
-| `engine/managers/settings_manager.py` | Database-backed settings |
-| `engine/security/` | Safety, approval and service-access functions |
-| `engine/tools/` | Farm data and recommendation tools |
+## Startup Lifecycle
 
-Vision processing has its own documentation under `engine/hal/ai_vision/`.
+`main.py` manages the FastAPI lifespan. Current startup performs:
 
-## Running the Engine
+1. Open the PostgreSQL connection pool.
+2. Load/repair database-backed system settings.
+3. Construct and start the HAL.
+4. Start sensor, camera and vision loops.
+5. Initialize farm controls.
+6. Start the scheduler and security-monitoring tasks.
+7. Serve the Engine API.
 
-The tracked Engine entry point is `leafy-ai/run_engine.py`.
+Shutdown stops scheduler/security tasks, HAL services and the database pool.
 
-From the repository root:
+`run_engine.py` starts Uvicorn on:
+
+```text
+0.0.0.0:8000
+```
+
+The Docker health check calls `http://127.0.0.1:8000/health` from inside the container.
+
+## Running Locally
 
 ```bash
-cd leafy-ai
+cd leafy-ai/engine
+pip install -r requirements.txt
 python run_engine.py
 ```
 
-The configured Python environment must have the Engine's dependencies installed, and the required database and farm interfaces must be available.
-
-The reviewed repository snapshot does not contain a complete Engine-wide Python requirements file. The requirements files for individual tools or components should not be treated as a complete Engine installation guide.
-
-The entry point starts Uvicorn using `engine.main:app` at:
-
-```text
-http://127.0.0.1:8000
-```
-
-Starting the Engine also initialises its background services and attempts to initialise farm controls. Only run it in an approved development or testing environment until the hardware configuration has been verified.
-
-### Application Lifecycle
-
-Startup is managed by `engine/main.py`.
-
-1. Open the PostgreSQL connection pool.
-2. Load and validate stored system settings.
-3. Start the HAL services.
-4. Register scheduler action handlers.
-5. Start the scheduler and security-monitoring tasks.
-6. Expose the Engine API through FastAPI.
-
-During shutdown, the Engine stops the background tasks, shuts down the HAL and closes the database connection pool.
+The Engine may immediately attempt database and farm-hardware connections. Use a safe development/test configuration when live equipment should not be operated.
 
 ## Engine API
 
-HTTP routes are defined in `engine/api/engine_api.py`.
+The web browser is not intended to call these endpoints directly. The Node backend authenticates the user, creates a short-lived service JWT and forwards trusted user context to the Engine.
 
-| Endpoint group | Purpose |
-| --- | --- |
-| `/health` | Engine health response |
-| `/farm/state` | Current farm state |
-| `/farm/sensors` | Current sensor readings |
-| `/farm/sensors/stream` | Sensor updates |
-| `/farm/cameras` | Camera information |
-| `/farm/cameras/{camera_id}/image` | Camera image retrieval |
-| `/farm/cameras/{camera_id}/analysis` | Camera analysis retrieval |
-| `/farm/schedule` | Growing schedules |
-| `/farm/controls` | Equipment state and control requests |
-| `/ai/recommendations` | Recommendations |
-| `/ai/activity` | Analysis and activity history |
-| `/approvals` | Approval requests and decisions |
-| `/safety/state` | Safety state |
-| `/notifications` | Notifications |
-| `/audit-logs` | Audit records |
-| `/grow-cycles` | Grow-cycle records |
-| `/harvest/history` | Harvest history |
-| `/task-executions` | Task execution records |
-| `/settings` | System settings |
+Routes include:
 
-Individual operations have their own HTTP methods, request formats, validation and access requirements.
+| Routes                 | Purpose                                                             |
+| ---------------------- | ------------------------------------------------------------------- |
+| `GET /health`          | Engine process health                                               |
+| `POST /tools/execute`  | AI Core tool execution                                              |
+| `/farm/state`          | Current farm state                                                  |
+| `/farm/sensors`        | Current, raw historical and aggregated sensor data                  |
+| `/farm/sensors/stream` | Server-sent sensor updates                                          |
+| `/farm/cameras`        | Camera registration/listing, latest image and analysis              |
+| `/farm/schedule`       | Schedule CRUD and enable/disable                                    |
+| `/farm/controls`       | Lighting, irrigation, fan, pH and EC control requests               |
+| `/notifications`       | Notification listing/count/details/resolution                       |
+| `/ai/recommendations`  | AI recommendation records                                           |
+| `/ai/activity`         | AI/task activity feed                                               |
+| `/approvals`           | Approval listing and decisions                                      |
+| `/safety/*`            | Safety state, configuration, activity, emergency stop and AI toggle |
+| `/audit-logs`          | Create/list audit events                                            |
+| `/grow-cycles`         | Grow-cycle CRUD, completion/cancellation and harvests               |
+| `/harvest/history`     | Harvest history                                                     |
+| `/task-executions`     | Execution history/details/summary                                   |
+| `/settings`            | Settings load, update, reload and reset                             |
 
-The web backend is the intended interface between the browser and the Engine. The browser should not directly bypass the backend to request farm operations.
+## HAL
 
-## Camera and Vision Processing
+### Sensors
 
-Camera capture is handled by `engine/hal/cameras.py`. Captured images are saved locally and registered in `camera_images`, including their camera ID and capture time.
+`sensors.py` polls two network sensor sources:
 
-The separate Vision worker processes pending images and saves the assessment results in `plant_image_analysis`. Model configuration, image validation and processing details are documented in the [Vision README](hal/ai_vision/README.md).
+- water-quality sensors
+- ambient/environment sensors
 
-## Scheduler
+Readings are normalized, stored in PostgreSQL and exposed as the latest sensor state. The water-sensor fallback address and ambient-sensor host are hardcoded in the HAL.
 
-The scheduler is implemented in `engine/managers/scheduler.py`.
+### Cameras
 
-The database is the source of truth for scheduled operations.
+`cameras.py` loads active cameras from the database and captures JPEG snapshots from configured RTSP devices. Camera files are stored under `CAMERA_IMAGE_DIR` and registered in `camera_images`.
 
-| Database table | Purpose |
-| --- | --- |
-| `farm_schedule` | Scheduled actions and timing information |
-| `task_executions` | Execution state and outcomes |
-| `system_settings` | Runtime configuration |
+The web interface displays latest snapshots and it is not a continuous browser video stream.
 
-The scheduler checks for due tasks, processes registered actions, handles timed operations and records execution results.
+### Vision
 
-It supports scheduled operations and interval-based tasks. The default polling interval is five seconds and can be changed through system settings.
+`hal/ai_vision/` contains the Gemini-based worker. Camera capture and vision analysis are independent loops so image capture can continue when Gemini processing is delayed or unavailable.
 
-### Registered Actions
+See [Vision README](hal/ai_vision/README.md).
 
-Actions are registered in `engine/actions/register_actions.py`.
+### Farm Controls
 
-| Action | Operation |
-| --- | --- |
-| `RUN_AI_ANALYSIS` | Run a scheduled farm analysis |
-| `SET_LIGHTING` | Set lighting state for a farm level |
-| `RUN_IRRIGATION` | Operate irrigation |
-| `SET_FAN` | Set fan state |
-| `DOSE_PH` | Process a pH target |
-| `DOSE_EC` | Process an EC target |
+`hal/farm_controls.py` uses the power-board driver under `hal/drivers/` and `python-kasa` to control configured outlets.
 
-The farm-control handlers are defined in `engine/actions/farm_controls.py`.
+Current logical outlet mapping is database-backed under the `farm_controls` settings group. The current power-board network address remains hardcoded.
 
-The Engine's control mapping currently handles lighting for levels 1 and 2 and a single fan control. Per-level fan support must be confirmed against the physical installation and implementation.
-
-### Task Execution
-
-The scheduler reads due tasks from `farm_schedule` and runs the corresponding registered action. Execution results are recorded in `task_executions`.
-
-Actions involving farm equipment are handled through the HAL. A successful API response does not necessarily confirm that the physical equipment completed the requested operation.
-
-## Sensors and Farm Controls
-
-The sensor service manages water and ambient readings, database storage and recent reading updates.
-
-The farm-control service supports:
+Supported operations include:
 
 - Lighting
 - Irrigation
-- Fan operation
-- Equipment outlet state
+- Fan
 - pH dosing
 - EC dosing
 
-Dosing operations include target and limit validation. Equipment connections and safety behavior must be verified before operating the live farm.
+## Scheduler
 
-If farm-control initialisation fails, the Engine may continue without available farm controls. A running API must not be interpreted as confirmation that hardware is operational.
+The scheduler uses PostgreSQL as the schedule source of truth.
 
-## Safety Boundaries
+Key tables:
 
-The farm has shared irrigation, EC and pH systems. Operations affecting those systems cannot be treated as independent level-specific actions.
+- `farm_schedule`
+- `task_executions`
+- `system_settings`
 
-The project requires:
+Registered scheduler actions include:
 
-- Safety validation before hardware execution.
-- Human approval for irrigation and dosing during the initial operating stage.
-- Supporting trend evidence for medium- and high-risk decisions.
-- Controlled dosing limits.
-- Appropriate permissions for protected operations.
-- Emergency handling and audit records.
+- `RUN_AI_ANALYSIS`
+- `SET_LIGHTING`
+- `RUN_IRRIGATION`
+- `SET_FAN`
+- `DOSE_PH`
+- `DOSE_EC`
 
-The presence of an API endpoint or action handler does not establish that all safety requirements have passed end-to-end testing.
+Schedules support create/update, enable/disable and deletion. Execution records are retained separately so historical task activity can remain available when schedules change.
 
-The Engine must be tested against the actual farm equipment before live automated operation.
+## Safety, Risk and Approvals
 
-## Configuration and Database
+The Engine contains separate modules for:
 
-Runtime settings are managed by `engine/managers/settings_manager.py` and stored in `system_settings`.
+- service authentication
+- action risk classification
+- approval handling
+- emergency-stop state
+- sensor-security monitoring
 
-The settings include scheduler timing, sensor and camera intervals, Vision polling, equipment mappings, dosing limits and monitoring behaviour.
+Sensor security thresholds are loaded from `system_settings`. The current monitor supports EC, pH, humidity, dew point, water level, water temperature and ambient temperature configuration. It records alert state and creates threshold/recovery notifications on state transitions.
 
-Database connection management is implemented in `engine/managers/db_manager.py`.
+AI enablement and emergency-stop state are protected settings and are changed through the Safety API rather than ordinary settings updates.
 
-Database schema and initialisation files are maintained in the repository's `database/` directory.
+Restricted recommendation/action workflows use approval records. Approval does not bypass Engine safety validation.
 
-Configuration values must be appropriate for the deployment environment. Do not assume that default equipment mappings or operating limits are correct for every installation.
+## Settings
 
-## Verification
+`managers/settings_manager.py` maintains an in-memory settings dictionary backed by the `system_settings` table. Missing or invalid stored values are repaired from defaults during load.
 
-Before deployment, verify:
+Current groups are:
 
-- Database connection and application startup.
-- HAL service initialisation and shutdown.
-- Sensor collection and camera capture.
-- Vision result retrieval.
-- Scheduler timing and execution records.
-- Equipment state confirmation.
-- Approval and safety enforcement.
-- Dosing validation and emergency handling.
-- Communication with the web backend.
+- `scheduler`
+- `security`
+- `risk`
+- `sensor_security_thresholds`
+- `notifications`
+- `vision`
+- `cameras`
+- `sensors`
+- `farm_controls`
+- `dosing_ph`
+- `dosing_ec`
 
-A successful HTTP health response confirms that the endpoint is responding. It does not prove that every farm device or background operation is functioning correctly.
+
+## AI Core Integration
+
+`ai_core_client.py` sends authenticated analysis requests to:
+
+```env
+AI_CORE_URL=http://ai-core:8001
+```
+
+The Engine signs short-lived Ed25519 JWTs with the security private key. AI Core responses are treated as application input; executable actions remain subject to Engine rules.
+
+## RAG
+
+RAG implementation is under `tools/rag_tool/`.
+
+- source Markdown: `sources/`
+- source manifest: `sources/source_metadata.json`
+- chunk size: 500 words
+- overlap: 75 words
+- embedding model: `nomic-embed-text`
+- expected embedding dimensions: 768
+- storage: pgvector columns in PostgreSQL
+
+Run ingestion locally from this directory with:
+
+```bash
+python ingest_rag.py
+```
+
+The root Compose file also defines a one-shot `rag-ingest` service. In the Docker layout it runs `python ingest_rag.py` from `/usr/src/app`.
+
+Document content hashes are used to avoid re-inserting unchanged source content.
+
+## Docker Configuration
+
+The Engine container receives:
+
+```env
+DB_HOST=db
+DB_PORT=5432
+AI_CORE_URL=http://ai-core:8001
+AI_CORE_PUBLIC_KEY_PATH=/run/keys/ai-core/public.pem
+WEBAPP_BACKEND_PUBLIC_KEY_PATH=/run/keys/backend/public.pem
+SECURITY_PRIVATE_KEY_PATH=/run/keys/security/private.pem
+CAMERA_IMAGE_DIR=/data/camera
+```
+
+Gemini configuration is supplied through `GEMINI_VISION_*` plus an API key or API-key file when enabled.
+
+## Current Limitations
+
+- Three farm network endpoints are still hardcoded in HAL/control source and should be migrated to settings.
+- Hardware availability is independent of API process health; `/health` returning 200 does not prove sensors, cameras or farm controls are reachable.
+- `.local` hostname resolution may not work reliably inside every Docker/LAN environment.
+- Farm-control discovery/communication can fail across Docker networking even when the Engine itself is healthy.
+- RAG and AI functionality depend on host Ollama availability.
+- Vision depends on Gemini availability when enabled.
+- Physical sensor calibration and actuator fail-safe behaviour must be validated on the real farm.
+- The scheduler/action architecture should continue to be tested for restart recovery and idempotency.
 
 ## Related Documentation
 
 - [Project README](../../README.md)
-- [System Requirements](../../REQUIREMENTS.md)
-- [Backend README](../../webapp/backend/README.md)
-- [Backend API Documentation](../../webapp/backend/API.md)
+- [AI Core README](../ai_core/README.md)
 - [Vision README](hal/ai_vision/README.md)
+- [Backend README](../../webapp/backend/README.md)

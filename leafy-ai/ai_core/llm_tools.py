@@ -317,6 +317,14 @@ TOOLS = [
                                                 "ENABLE_SCHEDULE",
                                                 "DISABLE_SCHEDULE",
                                             ],
+                                            "description": (
+                                                "Scheduler management operation. "
+                                                "CREATE_SCHEDULE creates a new recurring schedule definition. "
+                                                "UPDATE_SCHEDULE changes fields on an existing schedule and requires schedule_id. "
+                                                "ENABLE_SCHEDULE re-enables an existing disabled schedule and requires schedule_id. "
+                                                "DISABLE_SCHEDULE prevents an existing schedule from starting future runs and requires schedule_id. "
+                                                "This is different from task_action, which describes what the schedule executes when due."
+                                            ),
                                         },
                                         "action_data": {
                                             "type": "object",
@@ -341,6 +349,16 @@ TOOLS = [
                                                         "DOSE_EC",
                                                         "RUN_AI_ANALYSIS",
                                                     ],
+                                                    "description": (
+                                                        "Operation executed whenever the schedule becomes due. "
+                                                        "RUN_IRRIGATION turns the shared/global irrigation on, then the scheduler turns it off after duration_seconds; use level_no 0. "
+                                                        "SET_LIGHTING turns lighting on for Level 1 or Level 2, then the scheduler turns it off after duration_seconds; use level_no 1 or 2. "
+                                                        "SET_FAN turns the shared/global farm fan on, then the scheduler turns it off after duration_seconds; use level_no 0. "
+                                                        "DOSE_PH runs the controlled pH dosing process toward target_value; use level_no 0 and do not provide duration_seconds. "
+                                                        "DOSE_EC runs the controlled EC dosing process toward target_value; use level_no 0 and do not provide duration_seconds. "
+                                                        "RUN_AI_ANALYSIS triggers a comprehensive scheduled whole-farm Leafy AI analysis using current farm state and available historical/context capabilities; use level_no 0 and no duration_seconds. "
+                                                        "interval_seconds controls how often any of these task actions start; it never describes how long the action runs."
+                                                    ),
                                                 },
                                                 "interval_seconds": {
                                                     "type": "integer",
