@@ -5,15 +5,13 @@ import uvicorn
 
 
 def selector_loop_factory():
-    return asyncio.SelectorEventLoop(
-        selectors.SelectSelector()
-    )
+    return asyncio.SelectorEventLoop(selectors.SelectSelector())
 
 
 async def main():
     config = uvicorn.Config(
         "main:app",
-        host="127.0.0.1",
+        host="0.0.0.0",
         port=8000,
     )
 

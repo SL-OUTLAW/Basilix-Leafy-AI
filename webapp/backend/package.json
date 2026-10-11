@@ -7,8 +7,7 @@
     "test": "tests"
   },
   "scripts": {
-    "start": "node src/server.js",
-    "generate:engine-keys": "node src/services/engineKeygen.js"
+    "start": "node src/server.js"
   },
   "keywords": [],
   "author": "",

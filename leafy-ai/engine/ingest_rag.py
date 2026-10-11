@@ -2,8 +2,8 @@ import asyncio
 import selectors
 from pathlib import Path
 
-from engine.managers.db_manager import open_pool
-from engine.tools.rag_tool.ingestion import ingest_cleaned_folder
+from managers.db_manager import open_pool
+from tools.rag_tool.ingestion import ingest_cleaned_folder
 
 
 async def main():
