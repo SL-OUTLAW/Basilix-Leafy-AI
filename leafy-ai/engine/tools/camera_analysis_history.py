@@ -5,7 +5,7 @@ from datetime import (
 )
 from typing import Any
 
-from engine.managers.db_manager import run_query
+from managers.db_manager import run_query
 
 TIME_RANGES = {
     "1h": timedelta(hours=1),

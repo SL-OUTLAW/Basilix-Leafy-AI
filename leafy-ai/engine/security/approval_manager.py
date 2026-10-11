@@ -1,7 +1,7 @@
 from typing import Any
 
-from engine.managers.db_manager import get_connection
-from engine.managers.scheduler import queue_scheduler_action
+from managers.db_manager import get_connection
+from managers.scheduler import queue_scheduler_action
 
 
 async def approve_request(

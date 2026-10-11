@@ -15,18 +15,18 @@ from fastapi import (
 from fastapi.responses import FileResponse, StreamingResponse
 from pydantic import BaseModel, Field
 
-from engine.api.rate_limit import limiter
-from engine.hal.ai_vision.vision_tool import VisionAnalysis
-from engine.managers import scheduler
-from engine.logger.logger import audit_log
-from engine.managers.db_manager import get_connection, run_query
-from engine.managers.emergency_manager import (
+from api.rate_limit import limiter
+from hal.ai_vision.vision_tool import VisionAnalysis
+from managers import scheduler
+from logger.logger import audit_log
+from managers.db_manager import get_connection, run_query
+from managers.emergency_manager import (
     activate_emergency_stop,
     clear_emergency_stop,
     disable_ai,
     enable_ai,
 )
-from engine.managers.grow_cycle_manager import (
+from managers.grow_cycle_manager import (
     cancel_grow_cycle,
     complete_grow_cycle,
     create_grow_cycle,
@@ -36,23 +36,23 @@ from engine.managers.grow_cycle_manager import (
     update_grow_cycle,
     delete_grow_cycle,
 )
-from engine.managers.notifications_manager import (
+from managers.notifications_manager import (
     get_notification,
     get_notifications,
     resolve_notification,
 )
-from engine.managers.settings_manager import manage_settings, reset_settings
-from engine.managers.tool_manager import execute_tools as run_tools
-from engine.security.approval_manager import (
+from managers.settings_manager import manage_settings, reset_settings
+from managers.tool_manager import execute_tools as run_tools
+from security.approval_manager import (
     approve_request,
     reject_request,
 )
-from engine.security.emergency_stop import ai_enabled
-from engine.security.engine_auth import (
+from security.emergency_stop import ai_enabled
+from security.engine_auth import (
     validate_ai_token,
     validate_webapp_token,
 )
-from engine.tools.sensor_history import sensor_history
+from tools.sensor_history import sensor_history
 
 router = APIRouter()
 

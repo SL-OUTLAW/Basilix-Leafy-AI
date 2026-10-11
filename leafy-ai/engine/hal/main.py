@@ -1,7 +1,7 @@
-from engine.hal.sensors import Sensors
-from engine.hal.cameras import Cameras
-from engine.hal.ai_vision.vision_tool import VisionAnalysis
-from engine.hal.farm_controls import FarmControls
+from hal.sensors import Sensors
+from hal.cameras import Cameras
+from hal.ai_vision.vision_tool import VisionAnalysis
+from hal.farm_controls import FarmControls
 
 import asyncio
 

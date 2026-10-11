@@ -10,10 +10,10 @@ function base64Url(value) {
 }
 
 function getPrivateKey() {
-  const configuredPath = process.env.ENGINE_PRIVATE_KEY_PATH;
+  const configuredPath = process.env.WEBAPP_BACKEND_PRIVATE_KEY_PATH;
 
   if (!configuredPath) {
-    const error = new Error("ENGINE_PRIVATE_KEY_PATH is not configured");
+    const error = new Error("WEBAPP_BACKEND_PRIVATE_KEY_PATH is not configured");
     error.code = "ENGINE_AUTH_NOT_CONFIGURED";
     throw error;
   }
@@ -22,10 +22,7 @@ function getPrivateKey() {
     ? configuredPath
     : path.resolve(process.cwd(), configuredPath);
 
-  if (
-    cachedPrivateKey &&
-    cachedPrivateKeyPath === resolvedPath
-  ) {
+  if (cachedPrivateKey && cachedPrivateKeyPath === resolvedPath) {
     return cachedPrivateKey;
   }
 
@@ -40,7 +37,7 @@ function createEngineToken() {
 
   const header = {
     alg: "EdDSA",
-    typ: "JWT"
+    typ: "JWT",
   };
 
   const payload = {
@@ -49,28 +46,24 @@ function createEngineToken() {
     aud: "security",
     iat: now,
     exp: now + 180,
-    jti: crypto.randomUUID()
+    jti: crypto.randomUUID(),
   };
 
-  const encodedHeader = base64Url(
-    JSON.stringify(header)
-  );
+  const encodedHeader = base64Url(JSON.stringify(header));
 
-  const encodedPayload = base64Url(
-    JSON.stringify(payload)
-  );
+  const encodedPayload = base64Url(JSON.stringify(payload));
 
   const signingInput = `${encodedHeader}.${encodedPayload}`;
 
   const signature = crypto.sign(
     null,
     Buffer.from(signingInput),
-    getPrivateKey()
+    getPrivateKey(),
   );
 
   return `${signingInput}.${signature.toString("base64url")}`;
 }
 
 module.exports = {
-  createEngineToken
+  createEngineToken,
 };

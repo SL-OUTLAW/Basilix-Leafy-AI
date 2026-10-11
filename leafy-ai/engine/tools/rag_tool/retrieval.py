@@ -1,7 +1,7 @@
 from typing import Any
 
-from engine.managers.db_manager import run_query
-from engine.tools.rag_tool.embedding import embed_text
+from managers.db_manager import run_query
+from tools.rag_tool.embedding import embed_text
 
 DEFAULT_TOP_K = 5
 MAX_TOP_K = 10

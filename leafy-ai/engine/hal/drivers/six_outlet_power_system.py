@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from engine.hal.drivers.kasa_powerboard_driver import (
+from hal.drivers.kasa_powerboard_driver import (
     KasaPowerBoardSystem,
     PowerBoardConfig,
 )

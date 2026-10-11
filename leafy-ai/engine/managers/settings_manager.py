@@ -2,7 +2,7 @@ import copy
 import json
 from typing import Any
 
-from engine.managers.db_manager import run_query
+from managers.db_manager import run_query
 
 settings: dict[str, Any] = {}
 

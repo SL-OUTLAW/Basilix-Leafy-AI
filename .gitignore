@@ -1,88 +1,167 @@
-### venv ###
+### Python ###
+
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyd
+*.so
+
+### Python virtual environments ###
+
+.venv/
+venv/
+env/
+ENV/
+
 .Python
-[Bb]in
-[Ii]nclude
-[Ll]ib
-[Ll]ib64
-[Ll]ocal
-[Ss]cripts
+[Bb]in/
+[Ii]nclude/
+[Ll]ib/
+[Ll]ib64/
+[Ll]ocal/
+[Ss]cripts/
 pyvenv.cfg
-.venv
 pip-selfcheck.json
 
-# Local History for Visual Studio Code
-.history/
 
-# Built Visual Studio Code Extensions
+### Environment files ###
+
+.env
+.env.*
+!.env.example
+
+
+### Secrets / certificates / keys ###
+
+secrets/
+*.pem
+*.key
+*.p12
+*.pfx
+
+
+### Python tooling / caches ###
+
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.pyright/
+.coverage
+.coverage.*
+htmlcov/
+
+pip-log.txt
+pip-delete-this-directory.txt
+
+
+### VS Code ###
+
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+!.vscode/*.code-snippets
+
+.history/
+.ionide
 *.vsix
 
-### VisualStudioCode Patch ###
-# Ignore all local history of files
-.history
-.ionide
 
 ### Windows ###
-# Windows thumbnail cache files
+
 Thumbs.db
 Thumbs.db:encryptable
 ehthumbs.db
 ehthumbs_vista.db
 
-# Dump file
 *.stackdump
 
-# Folder config file
 [Dd]esktop.ini
 
-# Recycle Bin used on file shares
 $RECYCLE.BIN/
 
-# Windows Installer files
 *.cab
 *.msi
 *.msix
 *.msm
 *.msp
 
-# Windows shortcuts
 *.lnk
+
+
+### Node.js ###
+
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+.npm/
+.yarn/
+
+
+### Frontend build ###
+
+webapp/frontend/dist/
+
+
+### Logs ###
+
+*.log
+logs/
+
+
+### Temporary files ###
+
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo
+*~
+
+
+### Docker / local runtime data ###
+
+docker-data/
+
+
+### Leafy AI runtime camera data ###
+
+leafy-ai/engine/camera_images/
+leafy-ai/engine/hal/camera_images/
+
+
+### Leafy AI generated / analysed images ###
+
+leafy-ai/engine/context_manager/vision_context/analysed_images/
+
+
+### AI / ML training data and generated runs ###
+
 leafy-ai/ai/vision/dataset/
 runs/
+
+
+### ML model weights ###
+
 *.pt
 
+# Explicitly tracked model files
 !leafy-ai/ai/vision/models/
 !leafy-ai/ai/vision/models/health_classifier_v1.pt
 !leafy-ai/ai/vision/models/health_detector_v2.pt
-
-
-__pycache__/
-*.pyc
 !leafy-ai/ai/vision/models/basil_health_yolo26s_final.pt
 
-# Current Vision models
+!leafy-ai/engine/context_manager/vision_context/models/
 !leafy-ai/engine/context_manager/vision_context/models/basil_health_yolo26s_final.pt
 !leafy-ai/engine/context_manager/vision_context/models/basil_segmentation_yolo26s.pt
 !leafy-ai/engine/context_manager/vision_context/models/basil_canopy_deeplabv3.pt
-leafy-ai/engine/context_manager/vision_context/analysed_images/
 
-leafy-ai/engine/hal/camera_images/
 
-secrets/
+### OS / IDE miscellaneous ###
 
-.env
-!.env.example
-
-### Node.js ###
-node_modules/
-npm-debug.log*
-
-### Frontend build ###
-webapp/frontend/dist/
-
-### VisualStudioCode ###
-.vscode/
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
-!.vscode/*.code-snippets
+.DS_Store
+.idea/

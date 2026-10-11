@@ -1,12 +1,12 @@
-from engine.managers.scheduler import (
+from managers.scheduler import (
     register_action_handler,
 )
 
-from engine.actions.ai_analysis_handler import (
+from actions.ai_analysis_handler import (
     create_ai_analysis_handler,
 )
 
-from engine.actions.farm_controls import (
+from actions.farm_controls import (
     create_farm_control_handlers,
 )
 

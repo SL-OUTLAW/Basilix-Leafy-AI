@@ -8,8 +8,8 @@ from fastapi import (
 
 from pydantic import BaseModel
 
-from ai_core.main import leafy_ai
-from ai_core.llm_auth import validate_token
+from main import leafy_ai
+from llm_auth import validate_token
 
 app = FastAPI(
     title="Leafy AI Core",

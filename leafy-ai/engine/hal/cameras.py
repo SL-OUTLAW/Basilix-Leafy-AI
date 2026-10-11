@@ -9,9 +9,9 @@ from typing import Any
 
 import cv2
 
-from engine.managers.settings_manager import settings
-from engine.logger.logger import audit_log
-from engine.managers.db_manager import (
+from managers.settings_manager import settings
+from logger.logger import audit_log
+from managers.db_manager import (
     get_connection,
     run_query,
     open_pool,

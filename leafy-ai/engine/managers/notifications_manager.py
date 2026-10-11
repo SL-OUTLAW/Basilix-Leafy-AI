@@ -2,7 +2,7 @@ from typing import Any
 
 from psycopg.types.json import Jsonb
 
-from engine.managers.db_manager import run_query
+from managers.db_manager import run_query
 
 
 VALID_SEVERITIES = {

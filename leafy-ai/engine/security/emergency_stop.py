@@ -1,4 +1,4 @@
-from engine.managers.settings_manager import settings
+from managers.settings_manager import settings
 
 
 def emergency_stop_active() -> bool:

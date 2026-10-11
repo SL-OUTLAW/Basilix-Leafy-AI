@@ -1,4 +1,4 @@
-from engine.managers.settings_manager import settings
+from managers.settings_manager import settings
 
 VALID_RISK_LEVELS = {
     "LOW",

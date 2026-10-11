@@ -6,9 +6,9 @@ from typing import Any
 
 import httpx
 
-from engine.logger.logger import audit_log
-from engine.managers.settings_manager import settings
-from engine.managers.db_manager import (
+from logger.logger import audit_log
+from managers.settings_manager import settings
+from managers.db_manager import (
     get_connection,
     run_query,
 )

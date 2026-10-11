@@ -2,7 +2,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Any
 import statistics
 
-from engine.managers.db_manager import run_query, open_pool, close_pool
+from managers.db_manager import run_query, open_pool, close_pool
 
 import asyncio, selectors
 
