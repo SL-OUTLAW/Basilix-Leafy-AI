@@ -92,15 +92,6 @@ function LogsToolbar({
           <ListFilter size={18} />
           Filter
         </button>
-
-        <button
-          type="button"
-          className={styles.toolbarButton}
-          disabled
-        >
-          <Download size={18} />
-          Export
-        </button>
       </div>
     </section>
   );

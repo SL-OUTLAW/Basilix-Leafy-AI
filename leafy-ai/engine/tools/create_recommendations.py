@@ -625,7 +625,7 @@ async def create_recommendations(
 
                 approval_id = None
 
-                if proposed_action is not None and approval_required:
+                if recommendation_status == "PENDING":
 
                     await cur.execute(
                         """
@@ -649,9 +649,13 @@ async def create_recommendations(
                         """,
                         (
                             recommendation_id,
-                            action_type,
-                            Jsonb(action_data),
-                            risk_level,
+                            (
+                                action_type
+                                if proposed_action is not None
+                                else "RECOMMENDATION_REVIEW"
+                            ),
+                            Jsonb(action_data if proposed_action is not None else {}),
+                            risk_level or "LOW",
                         ),
                     )
 

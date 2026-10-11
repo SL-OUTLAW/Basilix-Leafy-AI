@@ -1,173 +1,165 @@
-import { useEffect, useState } from "react";
-
 import { ChevronLeft, ChevronRight, Expand } from "lucide-react";
 
-import { getCameraImageBlob } from "../../../services/farmApi";
-import ExpandModal from "./ExpandModal";
+import { useEffect, useMemo, useState } from "react";
+
+import Modal from "../../../components/common/Modal/Modal";
 import styles from "./CameraCard.module.css";
 
 function CameraCard({
-  data = null,
-  levels = [],
+  title,
+  level,
+  cameras = [],
   loading = false,
   error = false,
-  token,
-  onTokenRefresh,
 }) {
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [selectedLevelId, setSelectedLevelId] = useState(null);
-  const [imageUrl, setImageUrl] = useState("");
-  const [imageError, setImageError] = useState(false);
+  const [cameraIndex, setCameraIndex] = useState(0);
 
-  const farmLevels = Array.isArray(levels) ? levels : [];
+  const [expanded, setExpanded] = useState(false);
 
-  const selectedIndex = Math.max(
-    0,
-    farmLevels.findIndex((level) => level.id === selectedLevelId),
+  const levelCameras = useMemo(
+    () =>
+      cameras
+        .filter((camera) => Number(camera.level_no) === Number(level))
+        .sort((a, b) => Number(a.camera_id) - Number(b.camera_id)),
+    [cameras, level],
   );
 
-  const selectedLevel = farmLevels[selectedIndex] || null;
-
-  const cameraId = selectedLevel?.camera?.id;
-
   useEffect(() => {
-    if (!selectedLevelId && farmLevels[0]?.id) {
-      setSelectedLevelId(farmLevels[0].id);
-    }
-  }, [farmLevels, selectedLevelId]);
-
-  useEffect(() => {
-    let active = true;
-    let objectUrl = "";
-
-    setImageUrl("");
-    setImageError(false);
-
-    if (!cameraId || !token) {
-      return undefined;
-    }
-
-    getCameraImageBlob(cameraId, token, onTokenRefresh)
-      .then((blob) => {
-        if (!active) {
-          return;
-        }
-
-        objectUrl = URL.createObjectURL(blob);
-        setImageUrl(objectUrl);
-      })
-      .catch(() => {
-        if (active) {
-          setImageError(true);
-        }
-      });
-
-    return () => {
-      active = false;
-
-      if (objectUrl) {
-        URL.revokeObjectURL(objectUrl);
+    setCameraIndex((current) => {
+      if (current >= levelCameras.length) {
+        return 0;
       }
-    };
-  }, [cameraId, token, onTokenRefresh]);
 
-  const cameraStatus = selectedLevel?.camera?.status || data?.status || "";
+      return current;
+    });
+  }, [levelCameras.length]);
 
-  let cameraMessage = "Latest image unavailable";
+  const selectedCamera = levelCameras[cameraIndex] ?? null;
 
-  if (loading) {
-    cameraMessage = "Loading camera status...";
-  } else if (error || imageError) {
-    cameraMessage = "Camera image unavailable";
-  } else if (cameraStatus === "connecting") {
-    cameraMessage = "Waiting for latest camera image...";
-  } else if (cameraStatus === "offline") {
-    cameraMessage = "Camera offline";
-  } else if (!imageUrl) {
-    cameraMessage = "Loading latest image...";
-  }
+  const imageUrl =
+    selectedCamera?.image_url ??
+    selectedCamera?.latest_image_url ??
+    selectedCamera?.latest_image ??
+    selectedCamera?.url ??
+    null;
 
-  const selectLevel = (index) => {
-    const level = farmLevels[index];
+  const cameraName =
+    selectedCamera?.camera_name ??
+    selectedCamera?.name ??
+    `Camera ${cameraIndex + 1}`;
 
-    if (level) {
-      setSelectedLevelId(level.id);
+  const previousCamera = () => {
+    if (levelCameras.length <= 1) {
+      return;
     }
+
+    setCameraIndex((current) =>
+      current === 0 ? levelCameras.length - 1 : current - 1,
+    );
   };
 
-  const canGoBack = selectedIndex > 0;
+  const nextCamera = () => {
+    if (levelCameras.length <= 1) {
+      return;
+    }
 
-  const canGoForward = selectedIndex < farmLevels.length - 1;
+    setCameraIndex((current) =>
+      current === levelCameras.length - 1 ? 0 : current + 1,
+    );
+  };
 
-  const renderCamera = () => {
-    if (imageUrl && !loading && !error && !imageError) {
-      return (
+  const cameraContent = (
+    <>
+      {loading ? (
+        <div className={styles.message}>Loading latest image...</div>
+      ) : error ? (
+        <div className={styles.message}>Camera data unavailable.</div>
+      ) : !selectedCamera ? (
+        <div className={styles.message}>
+          No active camera configured for Level {level}.
+        </div>
+      ) : !imageUrl ? (
+        <div className={styles.message}>
+          No image available for this camera.
+        </div>
+      ) : (
         <img
           className={styles.cameraImage}
           src={imageUrl}
-          alt={`${selectedLevel?.name || "Farm"} latest camera capture`}
+          alt={`Latest image from ${cameraName}`}
         />
-      );
-    }
-
-    return <span>{cameraMessage}</span>;
-  };
+      )}
+    </>
+  );
 
   return (
     <>
       <section className={styles.card}>
         <div className={styles.header}>
-          <h2>Latest Farm Image</h2>
+          <div>
+            <h2>{title}</h2>
+
+            <p>Latest captured farm image</p>
+          </div>
 
           <button
-            className={styles.expandButton}
             type="button"
-            aria-label="Expand latest farm image"
-            onClick={() => setIsExpanded(true)}
+            className={styles.expandButton}
+            onClick={() => setExpanded(true)}
+            disabled={!imageUrl}
+            aria-label={`Expand ${title}`}
           >
-            <Expand aria-hidden="true" />
+            <Expand />
           </button>
         </div>
 
-        <div className={styles.cameraArea}>{renderCamera()}</div>
+        <div className={styles.cameraArea}>{cameraContent}</div>
 
         <div className={styles.controls}>
           <span className={styles.count}>
-            {farmLevels.length
-              ? `${selectedIndex + 1} / ${farmLevels.length}`
-              : "— / —"}
+            {levelCameras.length > 0
+              ? `${cameraIndex + 1}/${levelCameras.length}`
+              : "0/0"}
           </span>
 
-          <div className={styles.levelControls}>
+          <div className={styles.cameraControls}>
             <button
               type="button"
-              disabled={!canGoBack}
-              onClick={() => selectLevel(selectedIndex - 1)}
+              onClick={previousCamera}
+              disabled={levelCameras.length <= 1}
+              aria-label="Previous camera"
             >
-              <ChevronLeft aria-hidden="true" />
+              <ChevronLeft />
             </button>
 
-            <span>{selectedLevel?.name || "Farm Level —"}</span>
+            <span>{selectedCamera ? cameraName : `Level ${level}`}</span>
 
             <button
               type="button"
-              disabled={!canGoForward}
-              onClick={() => selectLevel(selectedIndex + 1)}
+              onClick={nextCamera}
+              disabled={levelCameras.length <= 1}
+              aria-label="Next camera"
             >
-              <ChevronRight aria-hidden="true" />
+              <ChevronRight />
             </button>
           </div>
         </div>
       </section>
 
-      {isExpanded && (
-        <ExpandModal
-          title="Latest Farm Image"
-          onClose={() => setIsExpanded(false)}
-          fullScreen
+      {expanded && imageUrl && (
+        <Modal
+          title={`${title} - ${cameraName}`}
+          onClose={() => setExpanded(false)}
+          size="fullscreen"
         >
-          <div className={styles.expandedCamera}>{renderCamera()}</div>
-        </ExpandModal>
+          <div className={styles.expandedCamera}>
+            <img
+              className={styles.expandedImage}
+              src={imageUrl}
+              alt={`Expanded view from ${cameraName}`}
+            />
+          </div>
+        </Modal>
       )}
     </>
   );

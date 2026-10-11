@@ -960,6 +960,62 @@ async def disable_schedule_route(
     }
 
 
+@router.delete("/farm/schedule/{schedule_id}")
+@limiter.limit("20/minute")
+async def delete_schedule_route(
+    request: Request,
+    schedule_id: int,
+    authorization: str | None = Header(default=None),
+    x_user_id: str | None = Header(default=None, alias="X-User-ID"),
+    x_user_role: str | None = Header(default=None, alias="X-User-Role"),
+):
+    _require_webapp_token(authorization)
+    user_id, _ = _user_context(x_user_id, x_user_role, {"OPERATOR", "ADMIN"})
+
+    schedule = await _get_schedule(schedule_id)
+
+    if schedule is None:
+        raise HTTPException(status_code=404, detail="Schedule not found")
+
+    await run_query(
+        """
+        DELETE FROM farm_schedule
+        WHERE schedule_id = %s
+        RETURNING schedule_id;
+        """,
+        (schedule_id,),
+    )
+
+    async with get_connection() as conn:
+        await audit_log(
+            conn=conn,
+            user_id=user_id,
+            action_type="SCHEDULE_DELETED",
+            entity_type="farm_schedule",
+            entity_id=schedule_id,
+            description="A scheduled farm task was deleted.",
+            metadata={
+                "task_name": schedule.get("task_name"),
+                "task_action": schedule.get("task_action"),
+                "level_no": schedule.get("level_no"),
+                "start_time": schedule.get("start_time"),
+                "interval_seconds": schedule.get("interval_seconds"),
+                "duration_seconds": schedule.get("duration_seconds"),
+                "target_value": schedule.get("target_value"),
+                "unit": schedule.get("unit"),
+                "enabled": schedule.get("enabled"),
+                "status": schedule.get("status"),
+            },
+        )
+
+    return {
+        "success": True,
+        "deleted": True,
+        "schedule_id": schedule_id,
+        "task_name": schedule.get("task_name"),
+    }
+
+
 @router.get("/farm/controls")
 @limiter.limit("60/minute")
 async def get_farm_controls(
@@ -1200,7 +1256,10 @@ async def get_recommendations(
             proposed_action,
             created_at,
             reviewed_by,
-            reviewed_at
+            reviewed_at,
+            (SELECT ap.approval_id FROM approval_requests ap
+             WHERE ap.recommendation_id = ai_recommendations.recommendation_id
+             ORDER BY ap.approval_id DESC LIMIT 1) AS approval_id
         FROM ai_recommendations
         WHERE (%s::varchar IS NULL OR status = %s)
           AND (%s::integer IS NULL OR level_no = %s)
@@ -1232,6 +1291,7 @@ async def get_recommendations(
                 "status": row[8],
                 "proposed_action": row[9],
                 "created_at": row[10].isoformat(),
+                "approval_id": row[13],
                 "reviewed_by": row[11],
                 "reviewed_at": row[12].isoformat() if row[12] is not None else None,
             }
@@ -1283,7 +1343,7 @@ async def get_ai_activity(
                 fs.task_name,
                 fs.task_action
             FROM task_executions te
-            JOIN farm_schedule fs ON fs.schedule_id = te.schedule_id
+            LEFT JOIN farm_schedule fs ON fs.schedule_id = te.schedule_id
         ) activity
         WHERE (%s::integer IS NULL OR occurred_at >= NOW() - make_interval(hours => %s))
         ORDER BY occurred_at DESC, entity_id DESC
@@ -1511,7 +1571,7 @@ async def get_safety_activity(
                    COALESCE(te.completed_at, te.started_at, te.created_at),
                    NULL::varchar, te.result
             FROM task_executions te
-            JOIN farm_schedule fs ON fs.schedule_id = te.schedule_id
+            LEFT JOIN farm_schedule fs ON fs.schedule_id = te.schedule_id
             WHERE te.status IN ('FAILED', 'SKIPPED', 'BLOCKED', 'AWAITING_APPROVAL')
                OR (
                     te.status = 'COMPLETED'
@@ -2148,7 +2208,7 @@ async def list_task_executions(
             fs.task_name,
             fs.task_action
         FROM task_executions te
-        JOIN farm_schedule fs ON fs.schedule_id = te.schedule_id
+        LEFT JOIN farm_schedule fs ON fs.schedule_id = te.schedule_id
         WHERE (%s::varchar IS NULL OR te.status = %s)
           AND (%s::bigint IS NULL OR te.schedule_id = %s)
           AND (%s::varchar IS NULL OR fs.task_action = %s)

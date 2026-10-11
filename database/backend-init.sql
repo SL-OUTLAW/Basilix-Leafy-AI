@@ -104,9 +104,9 @@ VALUES
     ('CLEAR_EMERGENCY_STOP', 'ADMIN', 'Clear emergency stop'),
     ('AI_TOGGLE', 'ADMIN', 'Enable or disable AI'),
     ('APPROVAL_REVIEW', 'ADMIN', 'Approve or reject protected actions'),
-    ('MANUAL_CONTROLS', 'OPERATOR', 'Use manual farm controls'),
+    ('MANUAL_CONTROLS', 'OPERATOR', 'Use farm controls overrides'),
     ('DOSING_TARGETS', 'ADMIN', 'Set pH and EC dosing targets'),
-    ('SCHEDULE_MANAGE', 'OPERATOR', 'Create, edit, enable or disable schedules'),
+    ('SCHEDULE_MANAGE', 'OPERATOR', 'Manage schedules'),
     ('GROW_CYCLE_MANAGE', 'OPERATOR', 'Manage grow cycles'),
     ('HARVEST_RECORD', 'OPERATOR', 'Record harvest data'),
     ('SETTINGS_MANAGE', 'ADMIN', 'Edit Engine settings')

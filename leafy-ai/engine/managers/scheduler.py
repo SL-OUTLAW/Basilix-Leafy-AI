@@ -213,33 +213,24 @@ async def _create_schedule(
 
     existing = await run_query(
         """
-        SELECT
-            schedule_id
-        FROM farm_schedule
-        WHERE task_action = %s
-          AND level_no = %s
-          AND start_time = %s::time
-          AND (
-              interval_seconds = %s
-              OR (
-                  interval_seconds IS NULL
-                  AND %s IS NULL
-              )
-          )
-          AND enabled = TRUE
-          AND status = 'ACTIVE'
-        LIMIT 1;
-        """,
+    SELECT schedule_id
+    FROM farm_schedule
+    WHERE task_action = %s
+      AND level_no = %s
+      AND start_time = %s::time
+      AND interval_seconds IS NOT DISTINCT FROM %s::INTEGER
+      AND enabled = TRUE
+      AND status = 'ACTIVE'
+    LIMIT 1;
+    """,
         (
             action_data.get("task_action"),
             action_data.get("level_no"),
             action_data.get("start_time"),
             interval_seconds,
-            interval_seconds,
         ),
         conn=conn,
     )
-
     if existing:
 
         raise ValueError("Equivalent active schedule already exists.")

@@ -90,12 +90,6 @@ function sensorDisplay(sensor) {
     status,
     tone,
     trend: [],
-
-    percentage:
-      sensor.sensor_type === "water_level" &&
-      Number.isFinite(Number(sensor.value))
-        ? Number(sensor.value)
-        : undefined,
   };
 }
 
@@ -315,8 +309,6 @@ export function mergeOverviewSensorSnapshot(data, payload) {
 
     const unit = formatSensorUnit(reading?.unit);
 
-    const number = Number(reading?.value);
-
     sensors[key] = {
       ...(sensors[key] || {}),
 
@@ -328,11 +320,6 @@ export function mergeOverviewSensorSnapshot(data, payload) {
           : reading?.quality_status || "Unavailable",
 
       tone: reading?.quality_status === "VALID" ? "green" : "orange",
-
-      percentage:
-        type === "water_level" && Number.isFinite(number)
-          ? number
-          : sensors[key]?.percentage,
     };
   });
 

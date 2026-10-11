@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import AppShell from "./components/layout/AppShell/AppShell";
 import GoogleLogin from "./components/auth/GoogleLogin";
 import Settings from "./components/settings/Settings";
@@ -43,7 +43,10 @@ const pages = {
     title: "Safety Management",
     subtitle: "Manage AI, approvals, emergency controls and safety",
   },
-  logs: { title: "Audit Logs", subtitle: "Track and review system activities" },
+  logs: {
+    title: "Audit Logs",
+    subtitle: "Track and review system activities",
+  },
   schedule: {
     title: "Task Schedule",
     subtitle: "Manage scheduled tasks and execution history",
@@ -82,24 +85,38 @@ const pageToPath = {
 };
 
 function emptyPageState() {
-  return { data: null, loading: false, error: "" };
+  return {
+    data: null,
+    loading: false,
+    error: "",
+  };
 }
 
 function App() {
   const [pathname, setPathname] = useState(() => window.location.pathname);
+
   const activePage = pathToPage[pathname] || "overview";
+
   const [theme, setTheme] = useState(
     () => localStorage.getItem("theme") || "dark",
   );
+
   const [token, setToken] = useState("");
   const [user, setUser] = useState(null);
   const [authChecked, setAuthChecked] = useState(false);
+
   const [access, setAccess] = useState(null);
+
   const [globalSafety, setGlobalSafety] = useState(null);
+
   const [overview, setOverview] = useState(emptyPageState);
+
   const [farm, setFarm] = useState(emptyPageState);
+
   const [leafyAI, setLeafyAI] = useState(emptyPageState);
+
   const [safety, setSafety] = useState(emptyPageState);
+
   const [logs, setLogs] = useState(emptyPageState);
 
   const handleTokenRefresh = useCallback((nextToken, refreshedUser = null) => {
@@ -109,11 +126,39 @@ function App() {
       setUser(refreshedUser);
     }
   }, []);
+
+  const refreshFarmData = useCallback(async () => {
+    if (!token) {
+      return null;
+    }
+
+    try {
+      const data = await getFarmData(token, handleTokenRefresh);
+
+      setFarm({
+        data,
+        loading: false,
+        error: "",
+      });
+
+      return data;
+    } catch (error) {
+      console.error("Farm refresh failed:", error);
+
+      throw error;
+    }
+  }, [token, handleTokenRefresh]);
+
   const navigatePath = useCallback((path, replace = false) => {
-    if (replace) window.history.replaceState({}, "", path);
-    else window.history.pushState({}, "", path);
+    if (replace) {
+      window.history.replaceState({}, "", path);
+    } else {
+      window.history.pushState({}, "", path);
+    }
+
     setPathname(path);
   }, []);
+
   const handleNavigate = useCallback(
     (page) => navigatePath(pageToPath[page] || "/overview"),
     [navigatePath],
@@ -121,12 +166,17 @@ function App() {
 
   useEffect(() => {
     const onPopState = () => setPathname(window.location.pathname);
+
     window.addEventListener("popstate", onPopState);
+
     return () => window.removeEventListener("popstate", onPopState);
   }, []);
 
   useEffect(() => {
-    if (!authChecked || !user) return;
+    if (!authChecked || !user) {
+      return;
+    }
+
     if (
       !pathToPage[pathname] ||
       (pathToPage[pathname] === "admin" && user.role !== "ADMIN")
@@ -137,17 +187,22 @@ function App() {
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
+
     localStorage.setItem("theme", theme);
   }, [theme]);
 
   useEffect(() => {
     let cancelled = false;
+
     async function checkAuthentication() {
       try {
         const refreshed = await refreshSession();
+
         const data = await getCurrentUser(refreshed.token);
+
         if (!cancelled) {
           setToken(refreshed.token);
+
           setUser(data.user);
         }
       } catch {
@@ -156,43 +211,61 @@ function App() {
           setUser(null);
         }
       } finally {
-        if (!cancelled) setAuthChecked(true);
+        if (!cancelled) {
+          setAuthChecked(true);
+        }
       }
     }
+
     checkAuthentication();
+
     return () => {
       cancelled = true;
     };
   }, []);
 
   useEffect(() => {
-    if (!token) return undefined;
+    if (!token) {
+      return undefined;
+    }
+
     let active = true;
+
     async function loadGlobalState() {
       try {
         const [accessData, safetyData] = await Promise.all([
           getMyAccess(token, handleTokenRefresh),
           getSafetyState(token, handleTokenRefresh),
         ]);
+
         if (active) {
           setAccess(accessData);
+
           setGlobalSafety(safetyData.safety || {});
         }
       } catch (error) {
         console.error("Global state refresh failed:", error);
       }
     }
+
     loadGlobalState();
+
     const timer = window.setInterval(loadGlobalState, 5000);
+
     return () => {
       active = false;
+
       window.clearInterval(timer);
     };
   }, [token, handleTokenRefresh]);
 
   useEffect(() => {
-    if (!token) return undefined;
+    if (!token) {
+      return undefined;
+    }
+
     const controller = new AbortController();
+
     streamSensors(
       token,
       handleTokenRefresh,
@@ -205,6 +278,7 @@ function App() {
               }
             : current,
         );
+
         setOverview((current) =>
           current.data
             ? {
@@ -216,39 +290,80 @@ function App() {
       },
       controller.signal,
     ).catch((error) => {
-      if (error.name !== "AbortError")
+      if (error.name !== "AbortError") {
         console.error("Sensor stream failed:", error);
+      }
     });
+
     return () => controller.abort();
   }, [token, handleTokenRefresh]);
 
   useEffect(() => {
-    if (!token) return;
+    if (!token) {
+      return;
+    }
+
     const loaders = {
-      overview: { load: getOverviewData, set: setOverview },
-      farm: { load: getFarmData, set: setFarm },
-      leafyAI: { load: getLeafyAiData, set: setLeafyAI },
-      safety: { load: getSafetyData, set: setSafety },
-      logs: { load: getLogsData, set: setLogs },
+      overview: {
+        load: getOverviewData,
+        set: setOverview,
+      },
+      farm: {
+        load: getFarmData,
+        set: setFarm,
+      },
+      leafyAI: {
+        load: getLeafyAiData,
+        set: setLeafyAI,
+      },
+      safety: {
+        load: getSafetyData,
+        set: setSafety,
+      },
+      logs: {
+        load: getLogsData,
+        set: setLogs,
+      },
     };
+
     const selected = loaders[activePage];
-    if (!selected) return;
+
+    if (!selected) {
+      return;
+    }
+
     let cancelled = false;
+
     async function loadPage() {
-      selected.set((current) => ({ ...current, loading: true, error: "" }));
+      selected.set((current) => ({
+        ...current,
+        loading: true,
+        error: "",
+      }));
+
       try {
         const data = await selected.load(token, handleTokenRefresh);
-        if (!cancelled) selected.set({ data, loading: false, error: "" });
+
+        if (!cancelled) {
+          selected.set({
+            data,
+            loading: false,
+            error: "",
+          });
+        }
       } catch (error) {
-        if (!cancelled)
+        if (!cancelled) {
           selected.set({
             data: null,
             loading: false,
             error: error.message || `Unable to load ${activePage} data.`,
           });
+        }
       }
     }
+
     loadPage();
+
     return () => {
       cancelled = true;
     };
@@ -257,25 +372,36 @@ function App() {
   const handleLogin = useCallback(
     (data) => {
       setToken(data.token);
+
       setUser(data.user);
+
       setAuthChecked(true);
+
       navigatePath("/overview", true);
     },
     [navigatePath],
   );
+
   const handleLogout = useCallback(async () => {
     try {
       await logout();
     } catch {}
+
     setToken("");
     setUser(null);
     setAccess(null);
     setGlobalSafety(null);
+
     setOverview(emptyPageState());
+
     setFarm(emptyPageState());
+
     setLeafyAI(emptyPageState());
+
     setSafety(emptyPageState());
+
     setLogs(emptyPageState());
+
     navigatePath("/overview", true);
   }, [navigatePath]);
 
@@ -284,10 +410,13 @@ function App() {
       !window.confirm(
         "Activate emergency stop? Farm automation will be stopped.",
       )
-    )
+    ) {
       return;
+    }
+
     try {
       const result = await activateEmergencyStop(token, handleTokenRefresh);
+
       setGlobalSafety(
         result.safety || {
           ...globalSafety,
@@ -305,10 +434,13 @@ function App() {
       !window.confirm(
         "Clear emergency stop and allow farm operation to resume?",
       )
-    )
+    ) {
       return;
+    }
+
     try {
       const result = await clearEmergencyStop(token, handleTokenRefresh);
+
       setGlobalSafety(
         result.safety || {
           ...globalSafety,
@@ -321,7 +453,7 @@ function App() {
     }
   }
 
-  if (!authChecked)
+  if (!authChecked) {
     return (
       <main
         style={{
@@ -335,7 +467,11 @@ function App() {
         Checking sign in...
       </main>
     );
-  if (!token || !user) return <GoogleLogin onLogin={handleLogin} />;
+  }
+
+  if (!token || !user) {
+    return <GoogleLogin onLogin={handleLogin} />;
+  }
 
   const currentPage = pages[activePage];
 
@@ -370,6 +506,7 @@ function App() {
           error={farm.error}
           token={token}
           onTokenRefresh={handleTokenRefresh}
+          onRefresh={refreshFarmData}
           user={user}
           access={access}
         />
@@ -380,6 +517,7 @@ function App() {
           error={leafyAI.error}
           token={token}
           onTokenRefresh={handleTokenRefresh}
+          access={access}
         />
       ) : activePage === "safety" ? (
         <Safety
@@ -391,7 +529,12 @@ function App() {
           user={user}
           access={access}
           onDataChange={(data) => {
-            setSafety({ data, loading: false, error: "" });
+            setSafety({
+              data,
+              loading: false,
+              error: "",
+            });
+
             setGlobalSafety(data?.state || globalSafety);
           }}
         />
