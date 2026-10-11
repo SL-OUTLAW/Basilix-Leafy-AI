@@ -213,6 +213,9 @@ services:
       engine:
         condition: service_healthy
 
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
     networks:
       - leafy-network
 
@@ -325,6 +328,9 @@ services:
     depends_on:
       backend:
         condition: service_healthy
+
+      key-init:
+        condition: service_completed_successfully
 
     networks:
       - leafy-network

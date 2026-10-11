@@ -138,29 +138,6 @@ leafy-ai/engine/hal/camera_images/
 
 leafy-ai/engine/context_manager/vision_context/analysed_images/
 
-
-### AI / ML training data and generated runs ###
-
-leafy-ai/ai/vision/dataset/
-runs/
-
-
-### ML model weights ###
-
-*.pt
-
-# Explicitly tracked model files
-!leafy-ai/ai/vision/models/
-!leafy-ai/ai/vision/models/health_classifier_v1.pt
-!leafy-ai/ai/vision/models/health_detector_v2.pt
-!leafy-ai/ai/vision/models/basil_health_yolo26s_final.pt
-
-!leafy-ai/engine/context_manager/vision_context/models/
-!leafy-ai/engine/context_manager/vision_context/models/basil_health_yolo26s_final.pt
-!leafy-ai/engine/context_manager/vision_context/models/basil_segmentation_yolo26s.pt
-!leafy-ai/engine/context_manager/vision_context/models/basil_canopy_deeplabv3.pt
-
-
 ### OS / IDE miscellaneous ###
 
 .DS_Store
