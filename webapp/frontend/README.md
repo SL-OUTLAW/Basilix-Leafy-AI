@@ -146,25 +146,9 @@ The layout includes responsive navigation for smaller screens and supports the a
 
 Charts are rendered using ECharts, and interface icons use Lucide React.
 
-## Verification
-
-The frontend currently defines these npm scripts:
-
-| Command | Purpose |
-| --- | --- |
-| `npm run dev` | Start the Vite development server |
-| `npm run build` | Create a production build |
-| `npm run preview` | Preview the production build |
-
-There is no dedicated test or lint script defined in the current frontend package.
-
-A successful build verifies compilation, but does not establish that backend requests or farm operations work.
-
-Application testing should cover authentication, page navigation, permissions, sensor and camera data, schedules, approvals, notifications and responsive layouts.
 
 ## Related Documentation
 
 - [Project README](../../README.md)
-- [System Requirements](../../REQUIREMENTS.md)
 - [Backend README](../backend/README.md)
 - [Backend API Documentation](../backend/API.md)

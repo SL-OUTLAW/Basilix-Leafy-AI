@@ -2,7 +2,7 @@
 
 ### Leafy AI Vision relies on Gemini AI API
 
-The Engine camera loop captures a frame, stores its path in `plant_images` and
+The Engine camera loop captures a frame, stores its path in `camera_images` and
 the independent HAL vision worker processes unanalysed captures in chronological
 order. Each request sends exactly one sanitized JPEG to Gemini, validates the
 structured result with Pydantic, then stores the JSON in `plant_image_analysis`.
@@ -24,7 +24,7 @@ The output is limited to visually observable information:
 From `leafy-ai/`:
 
 ```bash
-pip install -r engine/hal/ai_vision/requirements.txt
+pip install -r requirements.txt
 ```
 
 The Gemini integration uses the Google GenAI SDK.
@@ -46,10 +46,10 @@ development only.
 
 `GEMINI_VISION_BATCH_SIZE` is clamped to 1-20. It limits how many pending images
 are sent during one vision-loop iteration; it does not discard older images.
-Pending images remain in `plant_images` and are processed on later iterations.
+Pending images remain in `camera_images` and are processed on later iterations.
 
 `CAMERA_IMAGE_DIR` must point to the same persistent directory used by the camera
-capture loop and should be mounted as a Docker volume.
+capture loop and should be mounted as a Docker volume (if Docker is used)
 
 ## Security boundary
 
@@ -116,7 +116,7 @@ model, camera and image metadata. The main assessment sections are:
 
 ## Processing behavior
 
-1. Camera capture saves the JPEG and inserts `plant_images`.
+1. Camera capture saves the JPEG and inserts `camera_images`.
 2. The vision loop queries the oldest unanalysed images for the configured model.
 3. A processing job is claimed in `vision_analysis_jobs`.
 4. The sanitized single image is sent to Gemini.

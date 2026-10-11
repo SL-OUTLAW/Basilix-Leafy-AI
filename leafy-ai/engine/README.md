@@ -122,7 +122,7 @@ The web backend is the intended interface between the browser and the Engine. Th
 
 ## Camera and Vision Processing
 
-Camera capture is handled by `engine/hal/cameras.py`. Captured images are saved locally and registered in `plant_images`, including their camera ID and capture time.
+Camera capture is handled by `engine/hal/cameras.py`. Captured images are saved locally and registered in `camera_images`, including their camera ID and capture time.
 
 The separate Vision worker processes pending images and saves the assessment results in `plant_image_analysis`. Model configuration, image validation and processing details are documented in the [Vision README](hal/ai_vision/README.md).
 

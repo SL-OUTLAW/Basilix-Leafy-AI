@@ -1,4 +1,4 @@
-# Basilix — Leafy AI
+# Leafy AI - Team Basilix
 
 Leafy AI is a smart hydroponic farming system developed by Team Basilix at La Trobe University. The project supports sweet basil production in the university's multi-level Nutrient Film Technique (NFT) vertical farm.
 
@@ -12,8 +12,6 @@ Managing the growing environment involves monitoring several connected factors, 
 
 Leafy AI is designed to bring these operations into one system, allowing farm information to be monitored, growing routines to be managed and recommendations to be reviewed before actions are taken.
 
-The project builds on the existing farm installation rather than replacing or redesigning its hardware.
-
 ## Features
 
 ### Farm Monitoring
@@ -22,7 +20,7 @@ The dashboard provides access to farm conditions, sensor history, camera images 
 
 - Current water and environmental sensor readings
 - Historical sensor trends and charts
-- Camera images associated with farm locations
+- Camera images
 - Farm and equipment status
 - Notifications and recent operational activity
 
@@ -30,7 +28,7 @@ The dashboard provides access to farm conditions, sensor history, camera images 
 
 Camera capture and image analysis are handled separately.
 
-Captured images are saved and registered in `plant_images`. The Vision worker processes stored images and records structured assessments in `plant_image_analysis`.
+The Vision worker processes stored images and records structured assessments in `plant_image_analysis`.
 
 The assessments cover observable characteristics such as plant size, canopy coverage, crowding, overall appearance and visible signs of plant stress.
 
@@ -48,9 +46,7 @@ Task execution records allow the application to track scheduled operations and t
 
 The system includes farm recommendations and analysis activity intended to support growing decisions.
 
-Grow-cycle and harvest records provide information for reviewing previous growing routines and assessing crop outcomes.
-
-The Leafy AI dashboard displays recommendations and activity records; it does not provide an interactive chat interface.
+Grow-cycle and harvest records provide information for reviewing previous growing routines and assessing crop outcomes and are also used by Leafy AI to evaluate crop growth and yield.
 
 ### Safety and Farm Controls
 
@@ -69,25 +65,21 @@ Farm actions remain subject to the Engine's validation and the approval requirem
 
 Leafy AI consists of a React frontend, an Express backend, a Python farm engine, supporting analysis components and a PostgreSQL database.
 
-| Component | Technology | Responsibility |
-| --- | --- | --- |
-| Frontend | React 19, Vite 8 | Dashboard, monitoring and user interactions |
-| Backend | Node.js, Express 5 | Authentication, application APIs and Engine communication |
-| Farm Engine | Python, FastAPI | Sensor collection, camera capture, scheduling and farm controls |
-| AI Core | Python | Farm analysis and recommendations |
-| Vision | Python | Camera-image processing and plant assessment |
-| Database | PostgreSQL, TimescaleDB | Farm and application records |
-| Infrastructure | Docker, Nginx | Database container and web server configuration |
+| Component      | Technology                        | Responsibility                                                  |
+| -------------- | --------------------------------- | --------------------------------------------------------------- |
+| Frontend       | React 19, Vite 8                  | Dashboard, monitoring and user interactions                     |
+| Backend        | Node.js, Express 5                | Authentication, application APIs and Engine communication       |
+| Farm Engine    | Python, FastAPI                   | Sensor collection, camera capture, scheduling and farm controls |
+| AI Core        | Python, Ollama                    | Farm analysis and recommendations                               |
+| Vision         | Python, Gemini API                | Camera-image processing and plant assessment                    |
+| Database       | PostgreSQL, TimescaleDB, pgvector | Farm and application records                                    |
+| Infrastructure | Docker, Nginx, Ollama             | Database container, web server configuration and LLM hosting    |
 
 ### Web Application
 
-The frontend sends API requests to the Express backend.
-
 The backend handles authentication, user access and application operations. Farm-related requests are passed to the Python Engine through its API.
 
-During development, Vite forwards requests beginning with `/api` to the backend on port `3000`.
-
-### Farm Engine
+## Farm Engine
 
 The Engine provides the farm-side services used by the application.
 
@@ -106,6 +98,8 @@ The AI Core is maintained separately and supports the project's farm analysis an
 ### Database
 
 PostgreSQL and TimescaleDB provide persistent storage for the system.
+
+pgvector is used to let Leafy AI have a comprehensive RAG system.
 
 Stored information includes sensor readings, camera records, image assessments, growing schedules, task executions, recommendations, approvals, notifications, audit logs and grow-cycle records.
 
@@ -143,14 +137,13 @@ The frontend, backend, Engine, AI Core and Vision components have separate imple
 
 ### Requirements
 
-Local development requires:
+Local deployments requires:
 
-- Node.js and npm
-- Python with the required Engine dependencies
-- Docker or an existing PostgreSQL/TimescaleDB installation
-- Local configuration for the services being used
+- Docker
+- Ollama
+- Local configurations for the services being used
 
-The backend provides `.env.example` as a configuration reference. Keep local credentials and environment files out of version control.
+The `.env.example` provides the environment configurations that will be used by the Docker-compose.
 
 ### 1. Database
 
@@ -236,23 +229,6 @@ Use an approved development or test setup before running the Engine against farm
 
 See the [Engine README](leafy-ai/engine/README.md) for its lifecycle, scheduler, HAL services and operational requirements.
 
-## Farm Hardware and Operating Constraints
-
-The system must work within the capabilities of the existing NFT farm.
-
-| Farm component | Operating constraint |
-| --- | --- |
-| Irrigation | Shared across the farm |
-| EC and pH | Shared across the farm |
-| Lighting | Controllable by farm level |
-| Fans | Per-level control is part of the farm design; actual software mapping must be verified |
-| Dosing pumps | Relay-controlled, with software safety limits |
-| NFT channels | Telescopic expansion is a manual operation |
-
-Irrigation and dosing initially require human approval. Medium- and high-risk decisions require supporting sensor trends and safety validation.
-
-Recommendations are separate from physical execution. Equipment operations must pass through the appropriate control and safety mechanisms.
-
 ## Development and Testing
 
 The repository contains independent frontend, backend and Python services. Changes to API contracts, database records or equipment operations may affect multiple components.
@@ -278,23 +254,23 @@ These checks cover compilation, JavaScript syntax and known npm dependency advis
 
 Authentication, database communication, schedules, approvals and hardware operations should be verified in an appropriate development environment before deployment.
 
-The repository includes a separate database Docker Compose configuration. A complete root-level deployment process has not yet been verified.
+The repository includes a separate database Docker Compose configuration.
 
 ## Documentation
 
-| Document | Contents |
-| --- | --- |
-| [System Requirements](REQUIREMENTS.md) | Project requirements, farm constraints and verification criteria |
-| [Frontend README](webapp/frontend/README.md) | Application pages, navigation, authentication and API services |
-| [Backend README](webapp/backend/README.md) | Express API, database operations and Engine communication |
-| [Engine README](leafy-ai/engine/README.md) | Service lifecycle, scheduler, sensors, cameras and farm controls |
-| [AI Core README](leafy-ai/ai_core/README.md) | AI Core documentation |
-| [Vision README](leafy-ai/engine/hal/ai_vision/README.md) | Camera-image analysis and Vision configuration |
-| [Backend API Documentation](webapp/backend/API.md) | API routes and service communication |
+| Document                                                 | Contents                                                         |
+| -------------------------------------------------------- | ---------------------------------------------------------------- |
+|                                                          |
+| [Frontend README](webapp/frontend/README.md)             | Application pages, navigation, authentication and API services   |
+| [Backend README](webapp/backend/README.md)               | Express API, database operations and Engine communication        |
+| [Engine README](leafy-ai/engine/README.md)               | Service lifecycle, scheduler, sensors, cameras and farm controls |
+| [AI Core README](leafy-ai/ai_core/README.md)             | AI Core documentation                                            |
+| [Vision README](leafy-ai/engine/hal/ai_vision/README.md) | Camera-image analysis and Vision configuration                   |
+| [Backend API Documentation](webapp/backend/API.md)       | API routes and service communication                             |
 
-## Project Team
+<br></br>
 
 **Team Basilix**
 La Trobe University
 
-Developed as a university capstone project focused on smart hydroponic farming.
+Developed as a university 2026 Capstone project focused on smart hydroponic farming.
