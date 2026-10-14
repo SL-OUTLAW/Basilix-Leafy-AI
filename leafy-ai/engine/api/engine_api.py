@@ -1070,6 +1070,11 @@ async def control_lighting(
         )
     except ValueError as error:
         _raise_bad_request(error)
+    except RuntimeError as error:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=str(error),
+        ) from error
 
     return {"success": True, "result": result}
 

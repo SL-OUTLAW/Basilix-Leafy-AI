@@ -44,20 +44,33 @@ npm run preview
 
 The development proxy is not a production API configuration. Production hosting must route API requests to the backend separately.
 
+## Docker Startup
+
+From the repository root, build and start the complete HTTPS application with:
+
+```bash
+docker compose up -d --build
+```
+
+The frontend is served by Nginx on ports `80` and `443`. Nginx proxies API
+requests to the backend service inside the Compose network. The production
+frontend is therefore opened at `https://localhost`, not the Vite development
+server address.
+
 ## Pages
 
 Page paths are defined in `src/App.jsx`.
 
-| Path | Page | Purpose |
-| --- | --- | --- |
-| `/overview` | System Overview | Farm status, sensors, recommendations and recent activity |
-| `/farm` | Farm Management | Monitoring, cameras, routines and farm controls |
-| `/leafy-ai` | Leafy AI | Recommendations and analysis activity |
-| `/safety` | Safety Management | Safety state, approvals and configuration |
-| `/schedule` | Task Schedule | Scheduled operations and execution history |
-| `/logs` | Audit Logs | System activity records |
-| `/settings` | Settings | Application and farm settings |
-| `/admin` | Admin | User and access management |
+| Path        | Page              | Purpose                                                   |
+| ----------- | ----------------- | --------------------------------------------------------- |
+| `/overview` | System Overview   | Farm status, sensors, recommendations and recent activity |
+| `/farm`     | Farm Management   | Monitoring, cameras, routines and farm controls           |
+| `/leafy-ai` | Leafy AI          | Recommendations and analysis activity                     |
+| `/safety`   | Safety Management | Safety state, approvals and configuration                 |
+| `/schedule` | Task Schedule     | Scheduled operations and execution history                |
+| `/logs`     | Audit Logs        | System activity records                                   |
+| `/settings` | Settings          | Application and farm settings                             |
+| `/admin`    | Admin             | User and access management                                |
 
 The root path `/` also opens the Overview page.
 
@@ -109,22 +122,22 @@ The application stores the selected theme in browser local storage.
 
 API requests are organised under `src/services/`.
 
-| File | Responsibility |
-| --- | --- |
-| `apiClient.js` | Shared HTTP requests |
-| `authApi.js` | Authentication requests |
-| `overviewApi.js` | Overview dashboard data |
-| `farmApi.js` | Sensors, cameras, schedules and farm controls |
-| `sensorStream.js` | Sensor event stream |
-| `leafyAiApi.js` | Recommendations and activity |
-| `scheduleApi.js` | Schedule operations |
-| `taskExecutionApi.js` | Execution records |
-| `safetyApi.js` | Safety state and approvals |
-| `notificationApi.js` | Notifications |
-| `logsApi.js` | Audit logs |
-| `growCycleApi.js` | Grow-cycle and harvest records |
-| `settingsApi.js` | System settings |
-| `adminApi.js` | User administration and access information |
+| File                  | Responsibility                                |
+| --------------------- | --------------------------------------------- |
+| `apiClient.js`        | Shared HTTP requests                          |
+| `authApi.js`          | Authentication requests                       |
+| `overviewApi.js`      | Overview dashboard data                       |
+| `farmApi.js`          | Sensors, cameras, schedules and farm controls |
+| `sensorStream.js`     | Sensor event stream                           |
+| `leafyAiApi.js`       | Recommendations and activity                  |
+| `scheduleApi.js`      | Schedule operations                           |
+| `taskExecutionApi.js` | Execution records                             |
+| `safetyApi.js`        | Safety state and approvals                    |
+| `notificationApi.js`  | Notifications                                 |
+| `logsApi.js`          | Audit logs                                    |
+| `growCycleApi.js`     | Grow-cycle and harvest records                |
+| `settingsApi.js`      | System settings                               |
+| `adminApi.js`         | User administration and access information    |
 
 API request formats and permissions are handled by the backend. See the [Backend API documentation](../backend/API.md) for the available interfaces.
 
@@ -145,7 +158,6 @@ The interface uses CSS Modules for component-specific styles and shared styles f
 The layout includes responsive navigation for smaller screens and supports the application's light and dark themes.
 
 Charts are rendered using ECharts, and interface icons use Lucide React.
-
 
 ## Related Documentation
 

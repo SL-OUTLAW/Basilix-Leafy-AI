@@ -21,7 +21,6 @@ Ollama :11434
   +-- leafy-ai model
 ```
 
-
 ## Main Files
 
 | File                  | Purpose                                                               |
@@ -156,11 +155,20 @@ uvicorn api:app --host 0.0.0.0 --port 8001
 
 The API requires its service-key files to exist before startup.
 
+For the integrated deployment, start AI Core from the repository root:
+
+```bash
+docker compose up -d --build ai-core
+docker compose logs -f ai-core
+```
+
+The Compose service connects to the Engine at `http://engine:8000` and to
+host Ollama through `OLLAMA_HOST`. AI Core is not published directly to the
+LAN.
+
 ## Docker
 
 The root `docker-compose.yml` builds this directory and starts the API on internal port `8001`. The service is not published directly to LAN clients - the Engine communicates with it over the Compose network.
-
-
 
 ## Related Documentation
 

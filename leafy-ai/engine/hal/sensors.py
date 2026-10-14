@@ -1,4 +1,5 @@
 import asyncio
+import os
 import socket
 
 from datetime import datetime, timezone
@@ -16,8 +17,26 @@ from managers.db_manager import (
 
 class Sensors:
     def __init__(self):
-        self.ws_fallback_ip = "192.168.1.100"
-        self.as_base_url = "Leafy-AI.local:8080"
+        self.ws_host = (
+            os.getenv(
+                "WATER_SENSOR_HOST",
+                "WaterSensors.local",
+            ).strip()
+            or "WaterSensors.local"
+        )
+        self.ws_fallback_ip = (
+            os.getenv(
+                "WATER_SENSOR_FALLBACK_IP",
+                "192.168.1.100",
+            ).strip()
+            or "192.168.1.100"
+        )
+        self.as_base_url = os.getenv(
+            "AMBIENT_SENSOR_HOST",
+            "AmbientLevelSensors.local:8080",
+        ).strip()
+        if not self.as_base_url:
+            self.as_base_url = "AmbientLevelSensors.local:8080"
 
         self.latest: dict[str, Any] = {}
 
@@ -26,7 +45,7 @@ class Sensors:
         self.loop = False
 
         try:
-            resolved_ip = socket.gethostbyname("WaterSensors.local")
+            resolved_ip = socket.gethostbyname(self.ws_host)
 
             self.ws_base_url = resolved_ip
 
@@ -39,7 +58,7 @@ class Sensors:
 
     async def read_sensors(
         self,
-    ) -> None:
+    ) -> bool:
 
         ws_result, as_result = await asyncio.gather(
             self.client.get(
@@ -59,17 +78,32 @@ class Sensors:
             return_exceptions=True,
         )
 
-        await asyncio.gather(
+        results = await asyncio.gather(
             self.handle_water_sensors(ws_result),
             self.handle_ambient_sensors(as_result),
+            return_exceptions=True,
         )
 
-        self.publish_latest()
+        successful = True
+        for result in results:
+            if isinstance(result, BaseException):
+                successful = False
+                print(
+                    "Sensor polling handler failed: "
+                    f"{type(result).__name__}: {result}"
+                )
+            elif result is not True:
+                successful = False
+
+        if successful:
+            self.publish_latest()
+
+        return successful
 
     async def handle_water_sensors(
         self,
         result: httpx.Response | BaseException,
-    ) -> None:
+    ) -> bool:
 
         if isinstance(
             result,
@@ -80,7 +114,7 @@ class Sensors:
                 error=result,
             )
 
-            return
+            return False
 
         if isinstance(
             result,
@@ -97,7 +131,7 @@ class Sensors:
                 error=error,
             )
 
-            return
+            return False
 
         try:
             data = result.json()
@@ -121,7 +155,7 @@ class Sensors:
                 error=error,
             )
 
-            return
+            return False
 
         await self.save_water_readings(data)
 
@@ -145,10 +179,12 @@ class Sensors:
             }
         )
 
+        return True
+
     async def handle_ambient_sensors(
         self,
         result: httpx.Response | BaseException,
-    ) -> None:
+    ) -> bool:
 
         if isinstance(
             result,
@@ -159,7 +195,7 @@ class Sensors:
                 error=result,
             )
 
-            return
+            return False
 
         if isinstance(
             result,
@@ -176,7 +212,7 @@ class Sensors:
                 error=error,
             )
 
-            return
+            return False
 
         try:
             data = result.json()
@@ -200,7 +236,7 @@ class Sensors:
                 error=error,
             )
 
-            return
+            return False
 
         await self.save_ambient_readings(data)
 
@@ -228,6 +264,8 @@ class Sensors:
                 },
             }
         )
+
+        return True
 
     async def save_water_readings(
         self,
@@ -563,9 +601,23 @@ class Sensors:
         self.loop = True
 
         while self.loop:
-            await self.read_sensors()
+            try:
+                successful = await self.read_sensors()
+            except asyncio.CancelledError:
+                raise
+            except Exception as error:
+                successful = False
+                print(
+                    "Sensor polling cycle failed: " f"{type(error).__name__}: {error}"
+                )
 
-            await asyncio.sleep(settings.get("sensors").get("polling_rate", 10.0))
+            if successful:
+                polling_rate = settings.get("sensors").get("polling_rate", 10.0)
+            else:
+                polling_rate = 30.0
+                print("Sensor polling will retry in 30 seconds.")
+
+            await asyncio.sleep(polling_rate)
 
     async def stop(
         self,

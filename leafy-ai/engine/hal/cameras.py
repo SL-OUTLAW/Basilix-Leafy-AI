@@ -32,11 +32,13 @@ class Camera:
         level: int,
         name: str,
         ip: str,
+        rtsp_path: str | None = None,
     ):
         self.camera_id = camera_id
         self.level = level
         self.name = name
         self.ip = ip
+        self.rtsp_path = rtsp_path
 
 
 class Cameras:
@@ -73,7 +75,8 @@ class Cameras:
                 camera_id,
                 level_no,
                 camera_name,
-                ip_address
+                ip_address,
+                rtsp_path
             FROM cameras
             WHERE status = 'ACTIVE'
             ORDER BY
@@ -89,6 +92,7 @@ class Cameras:
                 level=row[1],
                 name=row[2],
                 ip=row[3],
+                rtsp_path=row[4],
             )
             for row in rows
         ]
@@ -98,7 +102,10 @@ class Cameras:
         camera: Camera,
     ) -> cv2.VideoCapture:
 
-        url = f"rtsp://{camera.ip}:{RTSP_PORT}/"
+        rtsp_path = (camera.rtsp_path or "/").strip()
+        if not rtsp_path.startswith("/"):
+            rtsp_path = f"/{rtsp_path}"
+        url = f"rtsp://{camera.ip}:{RTSP_PORT}{rtsp_path}"
 
         capture = cv2.VideoCapture(
             url,

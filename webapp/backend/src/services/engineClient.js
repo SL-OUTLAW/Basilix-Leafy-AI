@@ -5,12 +5,42 @@ const { createEngineToken } = require("./engineAuth");
 const engineClient = axios.create({
   baseURL: process.env.ENGINE_URL || "http://127.0.0.1:8000",
   timeout: Number(process.env.ENGINE_TIMEOUT_MS || 15000),
-  validateStatus: () => true
+  validateStatus: () => true,
 });
+
+function formatErrorValue(value) {
+  if (value == null) {
+    return "Engine request failed";
+  }
+
+  if (typeof value === "string") {
+    return value;
+  }
+
+  if (Array.isArray(value)) {
+    return value.map(formatErrorValue).filter(Boolean).join("; ");
+  }
+
+  if (typeof value === "object") {
+    const preferred = value.message || value.detail || value.error;
+
+    if (preferred && preferred !== value) {
+      return formatErrorValue(preferred);
+    }
+
+    try {
+      return JSON.stringify(value);
+    } catch {
+      return "Engine request failed";
+    }
+  }
+
+  return String(value);
+}
 
 function getEngineServiceHeaders() {
   return {
-    Authorization: `Bearer ${createEngineToken()}`
+    Authorization: `Bearer ${createEngineToken()}`,
   };
 }
 
@@ -18,7 +48,7 @@ function getEngineHeaders(req) {
   return {
     ...getEngineServiceHeaders(),
     "X-User-ID": String(req.user.userId),
-    "X-User-Role": req.user.role
+    "X-User-Role": req.user.role,
   };
 }
 
@@ -28,7 +58,7 @@ async function engineRequest({
   path,
   params,
   data,
-  responseType = "json"
+  responseType = "json",
 }) {
   return engineClient.request({
     method,
@@ -36,7 +66,7 @@ async function engineRequest({
     params,
     data,
     responseType,
-    headers: getEngineHeaders(req)
+    headers: getEngineHeaders(req),
   });
 }
 
@@ -45,7 +75,7 @@ async function engineServiceRequest({
   path,
   params,
   data,
-  responseType = "json"
+  responseType = "json",
 }) {
   return engineClient.request({
     method,
@@ -53,32 +83,28 @@ async function engineServiceRequest({
     params,
     data,
     responseType,
-    headers: getEngineServiceHeaders()
+    headers: getEngineServiceHeaders(),
   });
 }
 
 function engineErrorPayload(response) {
   if (!response) {
     return {
-      error: "Leafy Engine is unavailable"
+      error: "Leafy Engine is unavailable",
     };
   }
 
   const data = response.data;
 
-  if (
-    data &&
-    typeof data === "object" &&
-    !Buffer.isBuffer(data)
-  ) {
+  if (data && typeof data === "object" && !Buffer.isBuffer(data)) {
     return {
       ...data,
-      error: data.error || data.detail || "Engine request failed"
+      error: formatErrorValue(data.error ?? data.detail),
     };
   }
 
   return {
-    error: "Engine request failed"
+    error: "Engine request failed",
   };
 }
 
@@ -87,20 +113,18 @@ function sendEngineResponse(res, response) {
     return res.status(response.status).json(response.data);
   }
 
-  return res
-    .status(response.status || 502)
-    .json(engineErrorPayload(response));
+  return res.status(response.status || 502).json(engineErrorPayload(response));
 }
 
 function sendEngineFailure(res, error) {
   console.error(
     "Engine request failed:",
-    error.response?.data || error.message
+    error.response?.data || error.message,
   );
 
   if (error.code === "ENGINE_AUTH_NOT_CONFIGURED") {
     return res.status(500).json({
-      error: error.message
+      error: error.message,
     });
   }
 
@@ -111,7 +135,7 @@ function sendEngineFailure(res, error) {
   }
 
   return res.status(502).json({
-    error: "Leafy Engine is unavailable"
+    error: "Leafy Engine is unavailable",
   });
 }
 
@@ -121,5 +145,5 @@ module.exports = {
   getEngineHeaders,
   getEngineServiceHeaders,
   sendEngineResponse,
-  sendEngineFailure
+  sendEngineFailure,
 };

@@ -156,6 +156,11 @@ services:
       GEMINI_API_KEY_FILE: ${GEMINI_API_KEY_FILE:-}
 
       CAMERA_IMAGE_DIR: /data/camera
+      WATER_SENSOR_HOST: ${WATER_SENSOR_HOST:-WaterSensors.local}
+      WATER_SENSOR_FALLBACK_IP: ${WATER_SENSOR_FALLBACK_IP:-192.168.1.100}
+      KASA_BOARD_1_HOST: ${KASA_BOARD_1_HOST:-192.168.1.102}
+      KASA_BOARD_2_HOST: ${KASA_BOARD_2_HOST:-192.168.1.103}
+      AMBIENT_SENSOR_HOST: ${AMBIENT_SENSOR_HOST:-AmbientLevelSensors.local:8080}
 
     volumes:
       - ai-core-public:/run/keys/ai-core:ro

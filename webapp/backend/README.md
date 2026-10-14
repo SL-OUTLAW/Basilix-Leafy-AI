@@ -250,6 +250,17 @@ npm start
 
 When running outside Docker, set `ENGINE_URL` to an address reachable from the host process, such as `http://127.0.0.1:8000`. The Docker service hostname `engine` only resolves inside the Compose network.
 
+For integrated startup from the repository root:
+
+```bash
+docker compose up -d --build backend
+docker compose logs -f backend
+```
+
+The Compose deployment starts the database and Engine first, generates the
+backend Ed25519 key pair through `key-init`, and exposes the backend through
+the HTTPS frontend rather than publishing port `3000` directly.
+
 ## Docker
 
 The backend is not published directly to the LAN. Nginx reaches it by Docker DNS:

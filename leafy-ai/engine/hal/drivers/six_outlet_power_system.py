@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import os
 
 from hal.drivers.kasa_powerboard_driver import (
     KasaPowerBoardSystem,
@@ -66,12 +67,12 @@ class SixOutletPowerSystem:
             configs = [
                 PowerBoardConfig(
                     name="board_1",
-                    host="192.168.1.102",
+                    host=os.getenv("KASA_BOARD_1_HOST").strip(),
                     model="KP303",
                 ),
                 PowerBoardConfig(
                     name="board_2",
-                    host="192.168.1.103",
+                    host=os.getenv("KASA_BOARD_2_HOST").strip(),
                     model="KP303",
                 ),
             ]

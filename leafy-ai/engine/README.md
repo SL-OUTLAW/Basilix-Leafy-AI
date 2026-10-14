@@ -73,6 +73,16 @@ python run_engine.py
 
 The Engine may immediately attempt database and farm-hardware connections. Use a safe development/test configuration when live equipment should not be operated.
 
+For the complete system, start the Engine through the root Compose file:
+
+```bash
+docker compose up -d --build engine
+docker compose logs -f engine
+```
+
+The Engine container receives its database, key, camera, AI Core and sensor
+configuration from the root `.env` and `docker-compose.yml`.
+
 ## Engine API
 
 The web browser is not intended to call these endpoints directly. The Node backend authenticates the user, creates a short-lived service JWT and forwards trusted user context to the Engine.
@@ -109,7 +119,12 @@ Routes include:
 - water-quality sensors
 - ambient/environment sensors
 
-Readings are normalized, stored in PostgreSQL and exposed as the latest sensor state. The water-sensor fallback address and ambient-sensor host are hardcoded in the HAL.
+Readings are normalized, stored in PostgreSQL and exposed as the latest sensor state.
+The water sensor is resolved from `WaterSensors.local` with a fallback address.
+The water endpoint is configured with `WATER_SENSOR_HOST` and falls back to
+`WATER_SENSOR_FALLBACK_IP`. The ambient endpoint is configured with
+`AMBIENT_SENSOR_HOST`, defaulting to `AmbientLevelSensors.local:8080`. Use
+fixed LAN addresses when Docker cannot resolve `.local` hostnames.
 
 ### Cameras
 
@@ -192,7 +207,6 @@ Current groups are:
 - `dosing_ph`
 - `dosing_ec`
 
-
 ## AI Core Integration
 
 `ai_core_client.py` sends authenticated analysis requests to:
@@ -237,13 +251,17 @@ AI_CORE_PUBLIC_KEY_PATH=/run/keys/ai-core/public.pem
 WEBAPP_BACKEND_PUBLIC_KEY_PATH=/run/keys/backend/public.pem
 SECURITY_PRIVATE_KEY_PATH=/run/keys/security/private.pem
 CAMERA_IMAGE_DIR=/data/camera
+WATER_SENSOR_HOST=WaterSensors.local
+WATER_SENSOR_FALLBACK_IP=192.168.1.100
+AMBIENT_SENSOR_HOST=AmbientLevelSensors.local:8080
+KASA_BOARD_1_HOST=192.168.1.102
+KASA_BOARD_2_HOST=192.168.1.103
 ```
 
 Gemini configuration is supplied through `GEMINI_VISION_*` plus an API key or API-key file when enabled.
 
 ## Current Limitations
 
-- Three farm network endpoints are still hardcoded in HAL/control source and should be migrated to settings.
 - Hardware availability is independent of API process health; `/health` returning 200 does not prove sensors, cameras or farm controls are reachable.
 - `.local` hostname resolution may not work reliably inside every Docker/LAN environment.
 - Farm-control discovery/communication can fail across Docker networking even when the Engine itself is healthy.

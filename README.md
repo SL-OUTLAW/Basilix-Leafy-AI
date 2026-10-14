@@ -109,158 +109,152 @@ The web backend and farm engine have separate database responsibilities.
 
 ```text
 Basilix-Leafy-AI/
+├── .env.example
+├── docker-compose.yml
 ├── database/
+│   ├── Dockerfile
 │   ├── init.sql
-│   ├── backend-init.sql
-│   └── docker-compose.yml
+│   └── backend-init.sql
 ├── leafy-ai/
 │   ├── ai_core/
+│   │   ├── api.py
+│   │   ├── main.py
+│   │   ├── llm_api.py
+│   │   ├── llm_auth.py
+│   │   ├── llm_tools.py
+│   │   ├── modelfile/
+│   │   │   └── Modelfile
+│   │   ├── schema.json
+│   │   ├── system_prompt.md
+│   │   ├── Dockerfile
+│   │   └── README.md
 │   ├── engine/
 │   │   ├── actions/
 │   │   ├── api/
 │   │   ├── hal/
+│   │   │   └── ai_vision/
+│   │   ├── logger/
 │   │   ├── managers/
 │   │   ├── security/
-│   │   └── tools/
-│   └── run_engine.py
+│   │   ├── sources/
+│   │   ├── tools/
+│   │   ├── ai_core_client.py
+│   │   ├── ingest_rag.py
+│   │   ├── main.py
+│   │   ├── run_engine.py
+│   │   ├── Dockerfile
+│   │   └── README.md
+│   └── requirements.txt
 ├── webapp/
 │   ├── backend/
+│   │   ├── src/
+│   │   ├── package.json
+│   │   ├── Dockerfile
+│   │   └── README.md
 │   ├── frontend/
+│   │   ├── public/
+│   │   ├── src/
+│   │   ├── package.json
+│   │   ├── vite.config.js
+│   │   ├── Dockerfile
+│   │   └── README.md
 │   └── nginx/
+│       └── nginx.conf
 ├── README.md
 └── REQUIREMENTS.md
 ```
 
 The frontend, backend, Engine, AI Core and Vision components have separate implementation directories and documentation.
 
-## Getting Started
+## Installation and Startup
+
+The supported deployment is Docker Compose. It starts the database, Engine,
+AI Core, backend, HTTPS frontend and the one-shot RAG ingestion and key-init jobs. Docker
+managed volumes retain the database, generated keys and camera images.
 
 ### Requirements
 
-Local deployments requires:
+- Docker Desktop with Compose
+- A Google OAuth web client ID for sign-in
+- Ollama on the host for AI Core features
+- A Gemini API key only when Vision analysis is enabled
+- Network access to the Farm network
 
-- Docker
-- Ollama
-- Local configurations for the services being used
+### 1. Configure the environment
 
-The `.env.example` provides the environment configurations that will be used by the Docker-compose.
-
-### 1. Database
-
-Database configuration and initialization scripts are located in `database/`.
-
-For a local development database, the supplied Docker Compose configuration can be used:
+From the repository root copy .env.example to .env
 
 ```bash
-docker compose -f database/docker-compose.yml up -d
+cp .env.example .env
 ```
 
-The database service exposes PostgreSQL on port `5432` by default.
+Edit `.env` and set at least:
 
-Use a dedicated development database when testing operations that may create, update or delete records. Do not reinitialize an existing database containing important farm information.
+```env
+DB_PASSWORD=replace_with_a_strong_password
+GOOGLE_CLIENT_ID=your_google_client_id
+VITE_GOOGLE_CLIENT_ID=your_google_client_id
+JWT_SECRET=replace_with_a_long_random_secret
+AI_CORE_URL=http://ai-core:8001
+OLLAMA_HOST=http://host.docker.internal:11434
+WATER_SENSOR_HOST=WaterSensors.local
+WATER_SENSOR_FALLBACK_IP=192.168.1.100
+AMBIENT_SENSOR_HOST=AmbientLevelSensors.local:8080
+```
 
-### 2. Backend
+If Docker cannot resolve `.local` sensor names, use the sensors' LAN addresses
+instead, for example:
+
+```env
+WATER_SENSOR_HOST=192.168.1.100
+AMBIENT_SENSOR_HOST=192.168.1.101:8080
+```
+
+For AI Core, make sure Ollama is running and the configured model exists:
+
+```bash
+ollama serve
+ollama list
+```
+
+To build the repository model when required:
+
+```bash
+cd leafy-ai/ai_core/modelfile
+ollama create leafy-ai -f Modelfile
+```
+
+### 2. Build and start the complete system
 
 From the repository root:
 
 ```bash
-cd webapp/backend
-npm ci
-npm start
+docker compose up -d --build
 ```
 
-The backend starts through `src/server.js` and requires a working PostgreSQL connection.
+The first startup generates service keys and the local HTTPS certificate.
+Open the application at [https://localhost](https://localhost). A browser
+warning may appear until the generated local CA certificate is trusted.
 
-With the default port configuration, the health endpoint is available at:
+The frontend publishes ports `80` and `443`. The Engine and backend are kept
+inside the Compose network. The database is bound to `127.0.0.1:5432`.
 
-```text
-http://localhost:3000/health
-```
+### Local service development
 
-The endpoint returns:
+The services can also be run individually for development, but Docker remains
+the recommended integration environment. See the service READMEs for local
+commands:
 
-```json
-{
-  "status": "ok"
-}
-```
+- [Engine README](leafy-ai/engine/README.md)
+- [AI Core README](leafy-ai/ai_core/README.md)
+- [Backend README](webapp/backend/README.md)
+- [Frontend README](webapp/frontend/README.md)
 
-Farm-related API requests also depend on the Python Engine and its supporting services.
-
-See the [Backend README](webapp/backend/README.md) for the route structure, authentication and Engine communication.
-
-### 3. Frontend
-
-Open a separate terminal from the repository root:
-
-```bash
-cd webapp/frontend
-npm ci
-npm run dev
-```
-
-Vite prints the local development URL after startup.
-
-To create a production build:
-
-```bash
-npm run build
-```
-
-The build output is generated in `webapp/frontend/dist/`.
-
-See the [Frontend README](webapp/frontend/README.md) for application pages, navigation and API services.
-
-### 4. Farm Engine
-
-The tracked Engine entry point is:
-
-```text
-leafy-ai/run_engine.py
-```
-
-The FastAPI application is defined in `leafy-ai/engine/main.py`.
-
-The current entry point uses Uvicorn on `127.0.0.1:8000`.
-
-The Engine requires the appropriate Python environment, database connection and farm interfaces before startup. Starting it also initializes background services and may attempt hardware connections.
-
-Use an approved development or test setup before running the Engine against farm equipment.
-
-See the [Engine README](leafy-ai/engine/README.md) for its lifecycle, scheduler, HAL services and operational requirements.
-
-## Development and Testing
-
-The repository contains independent frontend, backend and Python services. Changes to API contracts, database records or equipment operations may affect multiple components.
-
-### Frontend
-
-From `webapp/frontend/`:
-
-```bash
-npm run build
-```
-
-### Backend
-
-From `webapp/backend/`:
-
-```bash
-node --check src/server.js
-npm audit
-```
-
-These checks cover compilation, JavaScript syntax and known npm dependency advisories. They do not replace runtime or integration testing.
-
-Authentication, database communication, schedules, approvals and hardware operations should be verified in an appropriate development environment before deployment.
-
-The repository includes a separate database Docker Compose configuration.
 
 ## Documentation
 
 | Document                                                 | Contents                                                         |
 | -------------------------------------------------------- | ---------------------------------------------------------------- |
-|                                                          |
 | [Frontend README](webapp/frontend/README.md)             | Application pages, navigation, authentication and API services   |
 | [Backend README](webapp/backend/README.md)               | Express API, database operations and Engine communication        |
 | [Engine README](leafy-ai/engine/README.md)               | Service lifecycle, scheduler, sensors, cameras and farm controls |
