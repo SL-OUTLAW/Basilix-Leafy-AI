@@ -5,10 +5,34 @@ import {
   setFan,
   setIrrigation,
   setLighting,
-  setPhTarget
+  setPhTarget,
 } from "../../../services/farmApi";
 
 import styles from "./ManualOverrideTab.module.css";
+
+function formatControlState(value) {
+  if (typeof value === "boolean") {
+    return value ? "On" : "Off";
+  }
+
+  if (value && typeof value === "object") {
+    if (typeof value.enabled === "boolean") {
+      return value.enabled ? "On" : "Off";
+    }
+
+    if (typeof value.is_on === "boolean") {
+      return value.is_on ? "On" : "Off";
+    }
+
+    if (typeof value.state?.is_on === "boolean") {
+      return value.state.is_on ? "On" : "Off";
+    }
+
+    return "Unavailable";
+  }
+
+  return value == null ? "Unknown" : String(value);
+}
 
 function ManualOverrideTab({
   data = null,
@@ -17,7 +41,7 @@ function ManualOverrideTab({
   token,
   onTokenRefresh,
   user,
-  access
+  access,
 }) {
   const [busy, setBusy] = useState("");
   const [message, setMessage] = useState("");
@@ -64,14 +88,14 @@ function ManualOverrideTab({
       <div className={styles.grid}>
         <div className={styles.controlCard}>
           <strong>Lighting Level 1</strong>
-          <span>Current: {String(data?.lighting_level_1 ?? "Unknown")}</span>
+          <span>Current: {formatControlState(data?.lighting_level_1)}</span>
           <div className={styles.actions}>
             <button
               type="button"
               disabled={Boolean(busy) || !access?.allowed?.MANUAL_CONTROLS}
               onClick={() =>
                 run("Lighting Level 1", () =>
-                  setLighting(token, onTokenRefresh, 1, true)
+                  setLighting(token, onTokenRefresh, 1, true),
                 )
               }
             >
@@ -82,7 +106,7 @@ function ManualOverrideTab({
               disabled={Boolean(busy) || !access?.allowed?.MANUAL_CONTROLS}
               onClick={() =>
                 run("Lighting Level 1", () =>
-                  setLighting(token, onTokenRefresh, 1, false)
+                  setLighting(token, onTokenRefresh, 1, false),
                 )
               }
             >
@@ -93,14 +117,14 @@ function ManualOverrideTab({
 
         <div className={styles.controlCard}>
           <strong>Lighting Level 2</strong>
-          <span>Current: {String(data?.lighting_level_2 ?? "Unknown")}</span>
+          <span>Current: {formatControlState(data?.lighting_level_2)}</span>
           <div className={styles.actions}>
             <button
               type="button"
               disabled={Boolean(busy) || !access?.allowed?.MANUAL_CONTROLS}
               onClick={() =>
                 run("Lighting Level 2", () =>
-                  setLighting(token, onTokenRefresh, 2, true)
+                  setLighting(token, onTokenRefresh, 2, true),
                 )
               }
             >
@@ -111,7 +135,7 @@ function ManualOverrideTab({
               disabled={Boolean(busy) || !access?.allowed?.MANUAL_CONTROLS}
               onClick={() =>
                 run("Lighting Level 2", () =>
-                  setLighting(token, onTokenRefresh, 2, false)
+                  setLighting(token, onTokenRefresh, 2, false),
                 )
               }
             >
@@ -122,14 +146,14 @@ function ManualOverrideTab({
 
         <div className={styles.controlCard}>
           <strong>Irrigation</strong>
-          <span>Current: {String(data?.irrigation ?? "Unknown")}</span>
+          <span>Current: {formatControlState(data?.irrigation)}</span>
           <div className={styles.actions}>
             <button
               type="button"
               disabled={Boolean(busy) || !access?.allowed?.MANUAL_CONTROLS}
               onClick={() =>
                 run("Irrigation", () =>
-                  setIrrigation(token, onTokenRefresh, true)
+                  setIrrigation(token, onTokenRefresh, true),
                 )
               }
             >
@@ -140,7 +164,7 @@ function ManualOverrideTab({
               disabled={Boolean(busy) || !access?.allowed?.MANUAL_CONTROLS}
               onClick={() =>
                 run("Irrigation", () =>
-                  setIrrigation(token, onTokenRefresh, false)
+                  setIrrigation(token, onTokenRefresh, false),
                 )
               }
             >
@@ -151,15 +175,13 @@ function ManualOverrideTab({
 
         <div className={styles.controlCard}>
           <strong>Fan</strong>
-          <span>Current: {String(data?.fan ?? "Unknown")}</span>
+          <span>Current: {formatControlState(data?.fan)}</span>
           <div className={styles.actions}>
             <button
               type="button"
               disabled={Boolean(busy) || !access?.allowed?.MANUAL_CONTROLS}
               onClick={() =>
-                run("Fan", () =>
-                  setFan(token, onTokenRefresh, true)
-                )
+                run("Fan", () => setFan(token, onTokenRefresh, true))
               }
             >
               On
@@ -168,9 +190,7 @@ function ManualOverrideTab({
               type="button"
               disabled={Boolean(busy) || !access?.allowed?.MANUAL_CONTROLS}
               onClick={() =>
-                run("Fan", () =>
-                  setFan(token, onTokenRefresh, false)
-                )
+                run("Fan", () => setFan(token, onTokenRefresh, false))
               }
             >
               Off
@@ -194,7 +214,7 @@ function ManualOverrideTab({
               disabled={Boolean(busy) || phTarget === ""}
               onClick={() =>
                 run("pH dosing", () =>
-                  setPhTarget(token, onTokenRefresh, phTarget)
+                  setPhTarget(token, onTokenRefresh, phTarget),
                 )
               }
             >
@@ -215,7 +235,7 @@ function ManualOverrideTab({
               disabled={Boolean(busy) || ecTarget === ""}
               onClick={() =>
                 run("EC dosing", () =>
-                  setEcTarget(token, onTokenRefresh, ecTarget)
+                  setEcTarget(token, onTokenRefresh, ecTarget),
                 )
               }
             >

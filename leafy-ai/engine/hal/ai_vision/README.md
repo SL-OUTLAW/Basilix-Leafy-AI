@@ -36,7 +36,7 @@ GEMINI_VISION_ENABLED=true
 GEMINI_VISION_MODEL=gemini-3.8-flash
 GEMINI_VISION_THINKING_LEVEL=low
 GEMINI_VISION_BATCH_SIZE=4
-CAMERA_IMAGE_DIR=/data/camera_images
+CAMERA_IMAGE_DIR=/data/camera
 GEMINI_API_KEY_FILE=/run/secrets/gemini_api_key
 ```
 
@@ -49,7 +49,17 @@ are sent during one vision-loop iteration; it does not discard older images.
 Pending images remain in `camera_images` and are processed on later iterations.
 
 `CAMERA_IMAGE_DIR` must point to the same persistent directory used by the camera
-capture loop and should be mounted as a Docker volume (if Docker is used)
+capture loop and should be mounted as a Docker volume. The root Compose file
+uses the shared `camera-images` volume at `/data/camera`.
+
+When using the integrated deployment, enable Vision in the root `.env` and
+rebuild the Engine:
+
+```bash
+GEMINI_VISION_ENABLED=true
+GEMINI_API_KEY=your_key
+docker compose up -d --build engine
+```
 
 ## Security boundary
 

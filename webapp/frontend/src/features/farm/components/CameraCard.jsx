@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight, Expand } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 import Modal from "../../../components/common/Modal/Modal";
+import { getCameraImageBlob } from "../../../services/farmApi";
 import styles from "./CameraCard.module.css";
 
 function CameraCard({
@@ -11,10 +12,15 @@ function CameraCard({
   cameras = [],
   loading = false,
   error = false,
+  token,
+  onTokenRefresh,
 }) {
   const [cameraIndex, setCameraIndex] = useState(0);
 
   const [expanded, setExpanded] = useState(false);
+  const [imageUrl, setImageUrl] = useState(null);
+  const [imageLoading, setImageLoading] = useState(false);
+  const [imageError, setImageError] = useState(false);
 
   const levelCameras = useMemo(
     () =>
@@ -36,12 +42,42 @@ function CameraCard({
 
   const selectedCamera = levelCameras[cameraIndex] ?? null;
 
-  const imageUrl =
-    selectedCamera?.image_url ??
-    selectedCamera?.latest_image_url ??
-    selectedCamera?.latest_image ??
-    selectedCamera?.url ??
-    null;
+  useEffect(() => {
+    let active = true;
+    let objectUrl = null;
+
+    setImageUrl(null);
+    setImageError(false);
+
+    if (!selectedCamera?.camera_id || !token) {
+      setImageLoading(false);
+      return () => {};
+    }
+
+    setImageLoading(true);
+    getCameraImageBlob(selectedCamera.camera_id, token, onTokenRefresh)
+      .then((blob) => {
+        if (!active) return;
+        objectUrl = URL.createObjectURL(blob);
+        setImageUrl(objectUrl);
+      })
+      .catch(() => {
+        if (active) setImageError(true);
+      })
+      .finally(() => {
+        if (active) setImageLoading(false);
+      });
+
+    return () => {
+      active = false;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [
+    selectedCamera?.camera_id,
+    selectedCamera?.last_capture_at,
+    token,
+    onTokenRefresh,
+  ]);
 
   const cameraName =
     selectedCamera?.camera_name ??
@@ -70,9 +106,9 @@ function CameraCard({
 
   const cameraContent = (
     <>
-      {loading ? (
+      {loading || imageLoading ? (
         <div className={styles.message}>Loading latest image...</div>
-      ) : error ? (
+      ) : error || imageError ? (
         <div className={styles.message}>Camera data unavailable.</div>
       ) : !selectedCamera ? (
         <div className={styles.message}>
@@ -150,7 +186,8 @@ function CameraCard({
         <Modal
           title={`${title} - ${cameraName}`}
           onClose={() => setExpanded(false)}
-          size="fullscreen"
+          size="large"
+          fullScreen
         >
           <div className={styles.expandedCamera}>
             <img
